@@ -14,6 +14,7 @@ import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
 import Link from "next/link";
 import { Navbar } from "flowbite-react";
+import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -290,7 +291,7 @@ export default function RootLayout({ children }) {
             </div>
           </aside>
           <div className="p-4 sm:ml-64">
-            <div className="p-4 rounded-lg dark:border-gray-700 mt-14">
+            <div className="rounded-lg dark:border-gray-700 mt-14">
               {children}
             </div>
           </div>

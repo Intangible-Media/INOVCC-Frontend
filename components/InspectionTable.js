@@ -6,10 +6,10 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function InspectionTable({ inspectionData }) {
   return (
-    <div className="mx-auto max-w-screen-2xl">
-      <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-        <div className="border-b dark:border-gray-700 mx-4">
-          <div className="flex items-center justify-between space-x-4 pt-3">
+    <div className="mx-auto max-w-screen-2xl pt-8">
+      <div className="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
+        <div className="border-b dark:border-gray-700 mx-8">
+          <div className="flex items-center justify-between space-x-4">
             <div className="flex-1 flex items-center space-x-3">
               <h5 className="dark:text-white font-semibold">All Tasks</h5>
             </div>
@@ -274,7 +274,7 @@ export default function InspectionTable({ inspectionData }) {
             </div>
           </div>
         </div>
-        <div className="mx-4 pb-3 flex flex-wrap">
+        <div className="mx-8 pb-3 flex flex-wrap">
           <div className="hidden md:flex items-center text-sm font-medium text-gray-900 dark:text-white mr-4 mt-3">
             Show only:
           </div>
@@ -344,7 +344,7 @@ export default function InspectionTable({ inspectionData }) {
         <div className="overflow-x-auto">
           <Table hoverable>
             <Table.Head>
-              <Table.HeadCell className="p-4">
+              <Table.HeadCell className="p-4 pl-8">
                 <Checkbox />
               </Table.HeadCell>
               <Table.HeadCell>Inspection</Table.HeadCell>
@@ -359,7 +359,7 @@ export default function InspectionTable({ inspectionData }) {
             <Table.Body className="divide-y">
               {inspectionData.map((inspection) => (
                 <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                  <Table.Cell className="p-4">
+                  <Table.Cell className="p-4 pl-8">
                     <Checkbox />
                   </Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-white">
