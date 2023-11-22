@@ -1,6 +1,8 @@
 "use client";
 
 import { Checkbox, Table, Progress } from "flowbite-react";
+import Link from "next/link";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function InspectionTable({ inspectionData }) {
   return (
@@ -397,12 +399,12 @@ export default function InspectionTable({ inspectionData }) {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    <a
-                      href="#"
+                    <Link
+                      href={`/inspections/${inspection.id}`}
                       className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
                     >
-                      Edit
-                    </a>
+                      View
+                    </Link>
                   </Table.Cell>
                 </Table.Row>
               ))}
