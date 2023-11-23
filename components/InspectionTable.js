@@ -1,17 +1,93 @@
 "use client";
 
 import { Checkbox, Table, Progress } from "flowbite-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+const ITEMS_PER_PAGE = 3; // Define how many items you want per page
+
 export default function InspectionTable({ inspectionData }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredInspectionData, setFilteredInspectionData] =
+    useState(inspectionData);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginatedData, setPaginatedData] = useState([]);
+
+  useEffect(() => {
+    // Function to perform searching and filtering
+    const searchAndFilterData = () => {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      const filteredData = inspectionData.filter((inspection) => {
+        // Assuming you want to filter by the inspection's name or client's name
+        return (
+          inspection.attributes.name.toLowerCase().includes(lowercasedQuery) ||
+          inspection.attributes.client.data.attributes.name
+            .toLowerCase()
+            .includes(lowercasedQuery)
+        );
+      });
+
+      // Reset to the first page when search query changes
+      setCurrentPage(1);
+      // Set filtered data
+      setFilteredInspectionData(filteredData);
+    };
+
+    searchAndFilterData();
+  }, [searchQuery, inspectionData]);
+
+  useEffect(() => {
+    // Function to perform pagination
+    const paginateData = () => {
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const end = start + ITEMS_PER_PAGE;
+      setPaginatedData(filteredInspectionData.slice(start, end));
+    };
+
+    paginateData();
+  }, [currentPage, filteredInspectionData]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const totalPages = Math.ceil(filteredInspectionData.length / ITEMS_PER_PAGE);
+
+  // Function to highlight the search query matches
+  const highlightMatch = (text, query) => {
+    // Ensure text is a string
+    const stringText = text?.toString() || "";
+
+    if (!query) return stringText;
+
+    const parts = stringText.split(new RegExp(`(${query})`, "gi"));
+    return (
+      <>
+        {parts.map((part, index) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <span key={index} className="bg-yellow-200">
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="mx-auto max-w-screen-2xl pt-8">
       <div className="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
         <div className="border-b dark:border-gray-700 mx-8">
           <div className="flex items-center justify-between space-x-4">
             <div className="flex-1 flex items-center space-x-3">
-              <h5 className="dark:text-white font-semibold">All Tasks</h5>
+              <h5 className="dark:text-white font-semibold">All Projects</h5>
             </div>
           </div>
           <div className="flex flex-col-reverse md:flex-row items-center justify-between md:space-x-4 py-3">
@@ -47,13 +123,9 @@ export default function InspectionTable({ inspectionData }) {
                     className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     placeholder="Search..."
                     required=""
+                    value={searchQuery}
+                    onChange={handleSearchChange}
                   />
-                  <button
-                    type="submit"
-                    className="text-white absolute right-0 bottom-0 top-0 bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-r-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-                  >
-                    Search
-                  </button>
                 </div>
               </form>
               <div className="flex items-center space-x-4">
@@ -357,19 +429,28 @@ export default function InspectionTable({ inspectionData }) {
               </Table.HeadCell>
             </Table.Head>
             <Table.Body className="divide-y">
-              {inspectionData.map((inspection) => (
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+              {paginatedData.map((inspection, index) => (
+                <Table.Row
+                  className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                  key={`${inspection.id}-${index}`}
+                >
                   <Table.Cell className="p-4 pl-8">
                     <Checkbox />
                   </Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-white">
-                    {inspection.attributes.name}
+                    {highlightMatch(inspection.attributes.name, searchQuery)}
                   </Table.Cell>
                   <Table.Cell>
-                    {inspection.attributes.client.data.attributes.name}
+                    {highlightMatch(
+                      inspection.attributes.client.data.attributes.name,
+                      searchQuery
+                    )}
                   </Table.Cell>
                   <Table.Cell className="text-center">
-                    {inspection.attributes.structures.data.length}
+                    {highlightMatch(
+                      inspection.attributes.structures.data.length,
+                      searchQuery
+                    )}
                   </Table.Cell>
                   <Table.Cell>
                     <Progress progress={50} />
@@ -411,106 +492,38 @@ export default function InspectionTable({ inspectionData }) {
             </Table.Body>
           </Table>
         </div>
-        <nav
-          className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-          aria-label="Table navigation"
-        >
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-            Showing
-            <span className="font-semibold text-gray-900 dark:text-white">
-              1-10
-            </span>
-            of
-            <span className="font-semibold text-gray-900 dark:text-white">
-              1000
-            </span>
+        <div className="flex justify-between items-center pt-4">
+          <div>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              // ... styling for the button ...
+            >
+              Previous
+            </button>
+            {/* Render page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => handlePageChange(i + 1)}
+                // ... styling for the button, highlight if it's the current page ...
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              // ... styling for the button ...
+            >
+              Next
+            </button>
+          </div>
+
+          <span>
+            Page {currentPage} of {totalPages}
           </span>
-          <ul className="inline-flex items-stretch -space-x-px">
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                <span className="sr-only">Previous</span>
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                1
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                2
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                aria-current="page"
-                className="flex items-center justify-center text-sm z-10 py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-              >
-                3
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                ...
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                100
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                <span className="sr-only">Next</span>
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </a>
-            </li>
-          </ul>
-        </nav>
+        </div>
       </div>
     </div>
   );

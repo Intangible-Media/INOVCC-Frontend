@@ -1,35 +1,31 @@
 "use client";
-
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Card } from "flowbite-react";
-import Image from "next/image";
 import InspectionTable from "../components/InspectionTable";
 import qs from "qs";
-import dynamic from "next/dynamic";
-
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { Chart } from "./page";
 
 export default function Home() {
   const [inspections, setInspections] = useState([]);
   const { data: session } = useSession();
 
-  const option = {
-    chart: {
-      id: "apexchart-example",
+  const [chartState, setChartState] = useState({
+    options: {
+      chart: {
+        id: "basic-bar",
+      },
+      xaxis: {
+        categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999],
+      },
     },
-    xaxis: {
-      categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999],
-    },
-  };
-
-  const series = [
-    {
-      name: "series-1",
-      data: [30, 40, 35, 50, 49, 60, 70, 91, 125],
-    },
-  ];
+    series: [
+      {
+        name: "series-1",
+        data: [30, 40, 45, 50, 49, 60, 70, 91],
+      },
+    ],
+  });
 
   const query = qs.stringify({
     populate: {
@@ -70,7 +66,6 @@ export default function Home() {
 
     fetchData();
   }, [session]);
-
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -121,12 +116,11 @@ export default function Home() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <div className="border-gray-300 rounded-lg dark:border-gray-600 bg-white p-4">
-          <ApexChart
+          <Chart
+            options={chartState.options}
+            series={chartState.series}
             type="bar"
-            options={option}
-            series={series}
-            height={200}
-            width={"100%"}
+            width="100%"
           />
         </div>
         <div className="rounded-lg border-gray-300 dark:border-gray-600 bg-white p-4"></div>
