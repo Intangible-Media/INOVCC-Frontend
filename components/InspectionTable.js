@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const ITEMS_PER_PAGE = 3; // Define how many items you want per page
+const ITEMS_PER_PAGE = 5; // Define how many items you want per page
 
 export default function InspectionTable({ inspectionData }) {
   const [searchQuery, setSearchQuery] = useState("");
