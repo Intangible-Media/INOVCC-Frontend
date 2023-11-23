@@ -1,6 +1,5 @@
 "use client";
-// Remember you must use an AuthProvider for
-// client components to useSession
+
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
@@ -12,9 +11,10 @@ import qs from "qs";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function dashboard() {
-  const { data: session, loading } = useSession();
+export default function Dashboard() {
+  const { data: session } = useSession();
   const [inspections, setInspections] = useState([]);
+  const [chartSeries, setChartSeries] = useState([]);
 
   const option = {
     chart: {
@@ -24,10 +24,10 @@ export default function dashboard() {
     xaxis: {
       categories: [
         "January",
-        "Febuary",
+        "February",
         "March",
         "April",
-        "Map",
+        "May",
         "June",
         "July",
         "August",
@@ -39,22 +39,24 @@ export default function dashboard() {
     },
   };
 
-  const series = [
-    {
-      name: "Wood Poles",
-      data: [30, 40, 35, 50, 49, 60, 70, 91, 125, 30, 40, 35],
+  const inspectionQuery = qs.stringify({
+    populate: {
+      structures: {
+        populate: {
+          inspectors: {
+            fields: ["username"],
+          },
+        },
+      },
+      client: {
+        populate: {
+          fields: ["name"],
+        },
+      },
     },
-    {
-      name: "Street Lights",
-      data: [40, 20, 75, 50, 109, 50, 70, 91, 12, 80, 70, 65],
-    },
-    {
-      name: "Standard Vaults",
-      data: [80, 80, 25, 60, 139, 10, 30, 151, 152, 85, 30, 95],
-    },
-  ];
+  });
 
-  const query = qs.stringify({
+  const structureQuery = qs.stringify({
     populate: {
       structures: {
         populate: {
@@ -72,27 +74,56 @@ export default function dashboard() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInspectionData = async () => {
       if (session?.accessToken) {
         try {
-          const response = await axios.get(
-            `http://localhost:1337/api/inspections?${query}`,
-            {
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`,
-              },
-            }
-          );
-          console.log(response.data.data);
-          setInspections(response.data.data);
+          const [inspectionResponse, structureResponse] = await Promise.all([
+            axios.get(
+              `http://localhost:1337/api/inspections?${inspectionQuery}`,
+              {
+                headers: { Authorization: `Bearer ${session.accessToken}` },
+              }
+            ),
+            axios.get(`http://localhost:1337/api/structures`, {
+              headers: { Authorization: `Bearer ${session.accessToken}` },
+            }),
+          ]);
+
+          console.log(structureResponse.data.data);
+
+          setInspections(inspectionResponse.data.data);
+          processStructureData(structureResponse.data.data);
         } catch (error) {
           console.error("Error fetching data", error.response || error);
         }
       }
     };
 
-    fetchData();
-  }, [session]);
+    fetchInspectionData();
+  }, [session, inspectionQuery]);
+
+  const processStructureData = (structureData) => {
+    const structureCountsByMonth = structureData.reduce((acc, structure) => {
+      const month = new Date(structure.attributes.inspectionDate).getMonth();
+      const type = structure.attributes.type;
+
+      if (!acc[type]) {
+        acc[type] = Array(12).fill(0);
+      }
+
+      acc[type][month]++;
+      return acc;
+    }, {});
+
+    const series = Object.entries(structureCountsByMonth).map(
+      ([name, data]) => ({
+        name,
+        data,
+      })
+    );
+
+    setChartSeries(series);
+  };
 
   return (
     <>
@@ -151,9 +182,9 @@ export default function dashboard() {
         <div className="flex col-span-2 items-center border-gray-300 rounded-lg dark:border-gray-600 bg-white p-8">
           <div className="w-full">
             <ApexChart
-              type="bar"
+              type="area"
               options={option}
-              series={series}
+              series={chartSeries}
               height={384}
               width={"100%"}
             />
