@@ -43,14 +43,26 @@
 }
 
 .map-container {
-  height: 24rem;
+  position: relative;
+}
+
+.map-speed-dial {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999;
+}
+.map-container,
+.map-stuctures-container {
+  height: 30rem;
 }
 
 .im-snapping {
   scroll-snap-type: both mandatory;
 }
 
-.im-snapping > li {
+.im-snapping > li,
+.im-snapping > div {
   scroll-snap-align: start;
 }
 
@@ -59,4 +71,17 @@
   padding-right: 0 !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+
+.im-marker {
+  /* Other styles remain the same */
+  -webkit-mask: url('/location-pin.svg') no-repeat 50% 50%;
+  mask: url('/location-pin.svg') no-repeat 50% 50%;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  width: 35px; /* Adjust width as needed */
+  height: 35px; /* Adjust height as needed */
+  background-color: currentColor; /* This will be the color of your SVG */
 }
