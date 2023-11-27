@@ -76,7 +76,24 @@ export default function Page({ params }) {
 
     map.current.on("click", (e) => {
       console.log(e.lngLat);
+      createMarker(e.lngLat.lng, e.lngLat.lat);
     });
+
+    const createMarker = (markerLng, markerLat) => {
+      const el = document.createElement("div");
+      el.className = "im-marker";
+      el.style.color = "rgb(250 204 21)";
+
+      new mapboxgl.Marker(el)
+        .setLngLat([markerLng, markerLat])
+        .addTo(map.current);
+
+      map.current.easeTo({
+        center: [markerLng, markerLat],
+        zoom: 18,
+        duration: 1000,
+      });
+    };
   }, []);
 
   useEffect(() => {
