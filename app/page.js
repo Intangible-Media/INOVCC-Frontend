@@ -60,7 +60,6 @@ export default function Home() {
               },
             }
           );
-          console.log(response.data.data);
           setInspections(response.data.data);
         } catch (error) {
           console.error("Error fetching data", error.response || error);

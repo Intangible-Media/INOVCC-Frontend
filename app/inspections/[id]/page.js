@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { MdLocationPin } from "react-icons/md";
+import DownloadImage from "../../../components/DownloadImage";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import qs from "qs";
@@ -19,17 +20,28 @@ export default function Page({ params }) {
   const [zoom, setZoom] = useState(16);
   const [structures, setStructures] = useState([]);
   const [mapStyle, setMapStyle] = useState("streets-v12");
+  const [structureImages, setStructureImages] = useState([]);
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
   const query = qs.stringify({
-    populate: ["structures"],
+    populate: {
+      structures: {
+        populate: "*",
+      },
+    },
   });
 
   const updateCenterOnClick = (longitude, latitude) => {
     setLng(longitude);
     setLat(latitude);
+  };
+
+  const getStructureImages = (structure) => {
+    const images = structure.attributes.images.data || [];
+
+    return setStructureImages(images);
   };
 
   const getInspectionColor = (status) => {
@@ -62,17 +74,13 @@ export default function Page({ params }) {
       map.current.setFog({}); // Optional: set the fog to enhance the 3D effect
     });
 
-    // map.current.setPitch(50, { duration: 2000 });
+    map.current.on("click", (e) => {
+      console.log(e.lngLat);
+    });
   }, []);
 
   useEffect(() => {
-    // map.current.setCenter([lng, lat]);
-
     map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
-
-    // map.current.panTo([lng, lat], { duration: 1000 });
-
-    // map.current.setZoom(20);
   }, [lng, lat]);
 
   // Fetch structures and add markers
@@ -89,6 +97,7 @@ export default function Page({ params }) {
             }
           );
           const structuresData = response.data.data.attributes.structures.data;
+          console.log(structuresData);
           setStructures(structuresData);
           setLng(structuresData[0].attributes.longitude);
           setLat(structuresData[0].attributes.latitude);
@@ -117,10 +126,10 @@ export default function Page({ params }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg overflow-hidden">
         <div
           ref={mapContainer}
-          className="map-container flex col-span-2 rounded-lg"
+          className="map-container flex col-span-2 overflow-hidden	"
         >
           <div
             data-dial-init=""
@@ -265,7 +274,7 @@ export default function Page({ params }) {
           </div>
         </div>
 
-        <div className="flex flex-col items-center rounded-lg border-gray-300 dark:border-gray-600 bg-white map-stuctures-container p-8">
+        <div className="flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white map-stuctures-container p-8">
           <div className="im-snapping overflow-x-auto w-full">
             {structures.map((structure, index) => (
               <div
@@ -277,6 +286,7 @@ export default function Page({ params }) {
                     structure.attributes.longitude,
                     structure.attributes.latitude
                   );
+                  getStructureImages(structure);
                 }}
               >
                 <MdLocationPin
@@ -309,6 +319,21 @@ export default function Page({ params }) {
                   </p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex col-span-2 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
+
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {structureImages.map((image) => (
+              <DownloadImage
+                src={`http://localhost:1337${image.attributes.formats.thumbnail.url}`}
+                filename={"somehting"}
+              />
             ))}
           </div>
         </div>

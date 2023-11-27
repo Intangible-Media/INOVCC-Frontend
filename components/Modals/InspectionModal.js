@@ -15,16 +15,21 @@ import Link from "next/link";
 import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import * as toGeoJSON from "@tmcw/togeojson";
+import { useRouter } from "next/navigation";
+
 import axios from "axios";
 
 export default function InspectionModal() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const [openModal, setOpenModal] = useState(false);
   const [clients, setClients] = useState([]);
   const [name, setName] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(""); // State to store the selected client ID
   const [isLoading, setIsLoading] = useState(false);
+  const [kmlFile, setKmlFile] = useState(null);
 
   useEffect(() => {
     const fetchInspectionData = async () => {
@@ -48,11 +53,34 @@ export default function InspectionModal() {
     fetchInspectionData();
   }, [session]);
 
+  const handleFileChange = (e) => {
+    setKmlFile(e.target.files[0]); // Update the state with the new file
+  };
+
+  const convertFileToGeoJSON = async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dom = new DOMParser().parseFromString(
+          e.target.result,
+          "text/xml"
+        );
+        try {
+          // Make sure to use the correct import for the toGeoJSON function
+          const geoJson = toGeoJSON.kml(dom); // If toGeoJSON is imported as an object
+          // const geoJson = toGeoJSON(dom); // If toGeoJSON is imported as a default function
+          resolve(geoJson);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
   const createInspection = async () => {
     setIsLoading(true);
-
-    console.log(name);
-    console.log(selectedClientId);
 
     const inspectionData = {
       data: {
@@ -60,8 +88,6 @@ export default function InspectionModal() {
         client: selectedClientId,
       },
     };
-
-    console.log("before the if statement");
 
     if (session?.accessToken) {
       console.log("inside the if statement");
@@ -76,13 +102,22 @@ export default function InspectionModal() {
 
         setIsLoading(false);
 
+        // After receiving the response from the POST request
+        const inspectionId = clientResponse.data.data.id;
+
+        // Optionally wait a second or two for the server to index the new data
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Now push to the new route
+        router
+          .push(`/inspections/${inspectionId}`)
+          .catch((e) => console.error(e));
+
         return clientResponse;
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
     }
-
-    console.log("outside the if statement");
   };
 
   return (
@@ -138,12 +173,7 @@ export default function InspectionModal() {
                   ))}
                 </Select>
               </div>
-              <div id="fileUpload" className="w-full">
-                <div className="mb-2 block">
-                  <Label htmlFor="file" value="Upload file" />
-                </div>
-                <FileInput id="file" />
-              </div>
+
               <Button type="submit">I accept</Button>
             </form>
           )}

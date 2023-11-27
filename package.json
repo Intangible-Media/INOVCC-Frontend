@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tmcw/togeojson": "^5.8.1",
     "apexcharts": "^3.44.0",
     "axios": "^1.6.1",
     "flowbite": "^2.1.1",

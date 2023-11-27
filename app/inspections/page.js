@@ -90,8 +90,6 @@ export default function Dashboard() {
             }),
           ]);
 
-          console.log(structureResponse.data.data);
-
           setInspections(inspectionResponse.data.data);
           processStructureData(structureResponse.data.data);
         } catch (error) {

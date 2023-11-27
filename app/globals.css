@@ -85,3 +85,7 @@
   height: 35px; /* Adjust height as needed */
   background-color: currentColor; /* This will be the color of your SVG */
 }
+
+.downloadable-file {
+  object-fit: cover;
+}
