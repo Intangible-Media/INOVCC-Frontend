@@ -14,7 +14,6 @@ import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
 import Link from "next/link";
 import { Navbar } from "flowbite-react";
-import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -52,13 +51,10 @@ export default function RootLayout({ children }) {
                   </button>
                   <a href="https://flowbite.com" className="flex ms-2 md:me-24">
                     <img
-                      src="https://flowbite.com/docs/images/logo.svg"
+                      src="/inovcc-logo.png"
                       className="h-8 me-3"
                       alt="FlowBite Logo"
                     />
-                    <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">
-                      Flowbite
-                    </span>
                   </a>
                 </div>
                 <div className="flex items-center">
@@ -73,7 +69,7 @@ export default function RootLayout({ children }) {
                         <span className="sr-only">Open user menu</span>
                         <img
                           className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                          src="/inovcc-logo.png"
                           alt="user photo"
                         />
                       </button>

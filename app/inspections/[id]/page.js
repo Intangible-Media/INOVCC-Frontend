@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { MdLocationPin } from "react-icons/md";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 import qs from "qs";
 
@@ -51,12 +52,17 @@ export default function Page({ params }) {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: `mapbox://styles/intangible-media/clpaieybn001e01pxcw507frn`,
+      style: "mapbox://styles/mapbox/standard-beta", // Use your custom style URL
       center: [lng, lat],
       zoom: zoom,
+      pitch: 50, // Set the initial pitch
     });
 
-    map.current.setPitch(50, { duration: 2000 });
+    map.current.on("style.load", () => {
+      map.current.setFog({}); // Optional: set the fog to enhance the 3D effect
+    });
+
+    // map.current.setPitch(50, { duration: 2000 });
   }, []);
 
   useEffect(() => {

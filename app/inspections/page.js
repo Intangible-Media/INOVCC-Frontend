@@ -7,6 +7,7 @@ import { Button, Timeline, Navbar } from "flowbite-react";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import axios from "axios";
 import InspectionTable from "../../components/InspectionTable";
+import InspectionModal from "../../components/Modals/InspectionModal";
 import qs from "qs";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -129,7 +130,9 @@ export default function Dashboard() {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 mb-4">
         <div className="flex items-center border-gray-300 rounded-lg dark:border-gray-600 bg-white p-8">
-          <div className="w-full"></div>
+          <div className="w-full">
+            <InspectionModal />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">

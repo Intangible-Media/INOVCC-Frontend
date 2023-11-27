@@ -423,7 +423,7 @@ export default function InspectionTable({ inspectionData }) {
               <Table.HeadCell>Client</Table.HeadCell>
               <Table.HeadCell>Total Structures</Table.HeadCell>
               <Table.HeadCell>Progress</Table.HeadCell>
-              <Table.HeadCell>Price</Table.HeadCell>
+              {/* <Table.HeadCell>Price</Table.HeadCell> */}
               <Table.HeadCell>
                 <span className="sr-only">Edit</span>
               </Table.HeadCell>
@@ -455,30 +455,30 @@ export default function InspectionTable({ inspectionData }) {
                   <Table.Cell>
                     <Progress progress={50} />
                   </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex -space-x-4 rtl:space-x-reverse">
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="/profile.png"
-                        alt=""
-                      />
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="/profile.png"
-                        alt=""
-                      />
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="/profile.png"
-                        alt=""
-                      />
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="/profile.png"
-                        alt=""
-                      />
-                    </div>
-                  </Table.Cell>
+                  {/* <Table.Cell>
+                      <div className="flex -space-x-4 rtl:space-x-reverse">
+                        <img
+                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
+                          src="/profile.png"
+                          alt=""
+                        />
+                        <img
+                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
+                          src="/profile.png"
+                          alt=""
+                        />
+                        <img
+                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
+                          src="/profile.png"
+                          alt=""
+                        />
+                        <img
+                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
+                          src="/profile.png"
+                          alt=""
+                        />
+                      </div>
+                    </Table.Cell> */}
                   <Table.Cell>
                     <Link
                       href={`/inspections/${inspection.id}`}
