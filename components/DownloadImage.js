@@ -1,6 +1,10 @@
 import React from "react";
+import Image from "next/image";
+import pdfIcon from "../public/file-icons/pdf.svg";
 
 const DownloadImage = ({ src, filename }) => {
+  const isPdf = src.endsWith(".pdf");
+
   const handleDownloadClick = async (event) => {
     event.preventDefault();
 
@@ -10,37 +14,58 @@ const DownloadImage = ({ src, filename }) => {
         const blob = await response.blob();
         const href = URL.createObjectURL(blob);
 
-        // Create a temporary link element and trigger the download
         const link = document.createElement("a");
         link.href = href;
-        link.download = filename || "downloaded-image";
+        link.download =
+          filename || (isPdf ? "downloaded-file.pdf" : "downloaded-image");
 
-        // Append to the body, click it, and then remove it
         document.body.appendChild(link);
         link.click();
 
-        // Clean up by revoking the ObjectURL and removing the link
         URL.revokeObjectURL(href);
         document.body.removeChild(link);
       } else {
-        throw new Error("Image download failed");
+        throw new Error("File download failed");
       }
     } catch (error) {
-      console.error("Error downloading image:", error);
+      console.error("Error downloading file:", error);
     }
   };
 
   return (
     <a
       href={src}
-      download={filename || "downloaded-image"}
+      download={
+        filename || (isPdf ? "downloaded-file.pdf" : "downloaded-image")
+      }
       onClick={handleDownloadClick}
+      className="downloadable-file-container" // Add a container class
     >
-      <img
-        src={src}
-        className="downloadable-file rounded-lg h-full w-full aspect-square"
-        alt={`Download ${filename}`}
-      />
+      {isPdf ? (
+        <div>
+          <div className="downloadable-file icon rounded-lg h-full w-full aspect-square justify-center items-center border border-2 hover-overlay">
+            <Image
+              src={pdfIcon}
+              className="rounded-lg"
+              alt="PDF Icon"
+              width={40}
+              height={40}
+            />
+          </div>
+          <p>Filename.svg</p>
+        </div>
+      ) : (
+        <div>
+          <div className="downloadable-file rounded-lg h-full w-full aspect-square hover-overlay">
+            <img
+              className="fill-in rounded-lg"
+              src={src}
+              alt={`Download ${filename}`}
+            />
+          </div>
+          <p>Filename.svg</p>
+        </div>
+      )}
     </a>
   );
 };

@@ -86,6 +86,65 @@
   background-color: currentColor; /* This will be the color of your SVG */
 }
 
-.downloadable-file {
+.downloadable-file-container {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.downloadable-file.icon {
+  display: flex;
+}
+
+.downloadable-file-container img.fill-in {
+  position: relative;
   object-fit: cover;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.downloadable-file + p {
+  font-size: 13px;
+  color: #ffffff;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)); /* Linear gradient */  bottom: 0px;
+  left: 0px;
+  transform-origin: bottom;
+  overflow: hidden;
+  z-index: 99999;
+  border-radius: 0.5rem;
+
+}
+
+.downloadable-file:hover + p {
+  opacity: 1;
+
+}
+
+.hover-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+  z-index: 1; /* Ensures the overlay is above the image */
+  overflow: hidden;
+}
+
+.hover-overlay:hover::before {
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25); /* Dark overlay on hover */
+  border-radius: 0.5rem;
 }

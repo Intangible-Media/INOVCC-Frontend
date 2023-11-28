@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
+import { Button } from "flowbite-react";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import qs from "qs";
@@ -14,6 +15,8 @@ export default function Page({ params }) {
   const { data: session, loading } = useSession();
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [openImages, setOpenImages] = useState(true);
+  const [openDocuments, setOpenDocuments] = useState(false);
   const [lng, setLng] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [lat, setLat] = useState(0);
@@ -21,9 +24,35 @@ export default function Page({ params }) {
   const [structures, setStructures] = useState([]);
   const [mapStyle, setMapStyle] = useState("streets-v12");
   const [structureImages, setStructureImages] = useState([]);
+  const [structureDocuments, setStructureDocuments] = useState([]);
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
+
+  const [chartSeries, setChartSeries] = useState([]);
+
+  const option = {
+    chart: {
+      id: "apexchart-example",
+      width: "100%",
+    },
+    xaxis: {
+      categories: [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ],
+    },
+  };
 
   const query = qs.stringify({
     populate: {
@@ -33,15 +62,26 @@ export default function Page({ params }) {
     },
   });
 
+  const openAssets = () => {
+    setOpenImages(!openImages);
+    setOpenDocuments(!openDocuments);
+  };
+
   const updateCenterOnClick = (longitude, latitude) => {
     setLng(longitude);
     setLat(latitude);
   };
 
-  const getStructureImages = (structure) => {
-    const images = structure.attributes.images.data || [];
+  const getStructureAssets = (structure) => {
+    console.log("==========");
+    console.log(structure);
+    console.log("==========");
 
-    return setStructureImages(images);
+    const images = structure.attributes.images.data || [];
+    const files = structure.attributes.documents.data || [];
+
+    setStructureImages(images);
+    setStructureDocuments(files);
   };
 
   const getInspectionColor = (status) => {
@@ -76,6 +116,7 @@ export default function Page({ params }) {
 
     map.current.on("click", (e) => {
       console.log(e.lngLat);
+
       createMarker(e.lngLat.lng, e.lngLat.lat);
     });
 
@@ -95,6 +136,27 @@ export default function Page({ params }) {
       });
     };
   }, []);
+
+  useEffect(() => {
+    structures.map((structure) => {
+      const el = document.createElement("div");
+      el.className = "im-marker";
+      el.style.color = getMarkerColor(structure);
+
+      new mapboxgl.Marker(el)
+        .setLngLat([
+          structure.attributes.longitude,
+          structure.attributes.latitude,
+        ])
+        .addTo(map.current);
+    });
+
+    map.current.easeTo({
+      center: [lng, lat],
+      zoom: 18,
+      duration: 0,
+    });
+  }, [map.current]);
 
   useEffect(() => {
     map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
@@ -292,6 +354,8 @@ export default function Page({ params }) {
         </div>
 
         <div className="flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white map-stuctures-container p-8">
+          <p className="text-lg font-semibold mb-4 mr-auto">Structures</p>
+
           <div className="im-snapping overflow-x-auto w-full">
             {structures.map((structure, index) => (
               <div
@@ -303,7 +367,7 @@ export default function Page({ params }) {
                     structure.attributes.longitude,
                     structure.attributes.latitude
                   );
-                  getStructureImages(structure);
+                  getStructureAssets(structure);
                 }}
               >
                 <MdLocationPin
@@ -341,13 +405,32 @@ export default function Page({ params }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="flex col-span-2 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <p className="text-lg font-semibold mb-4 mr-auto">Charts</p>
+        </div>
 
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <p className="text-lg font-semibold mb-4 mr-auto">Files</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {structureDocuments.map((image) => (
+              <DownloadImage
+                key={`${image.attributes.name}`}
+                src={`http://localhost:1337${image.attributes.url}`}
+                filename={"somehting"}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <p className="text-lg font-semibold mb-4 mr-auto">Images</p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {structureImages.map((image) => (
               <DownloadImage
+                key={`${image.attributes.name}`}
                 src={`http://localhost:1337${image.attributes.formats.thumbnail.url}`}
                 filename={"somehting"}
               />
