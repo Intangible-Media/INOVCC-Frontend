@@ -4,12 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { Button } from "flowbite-react";
-import "mapbox-gl/dist/mapbox-gl.css";
-
+import { Label, TextInput, Timeline, Button, Progress } from "flowbite-react";
+import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
+import { SemiCircleProgress } from "react-semicircle-progressbar";
 import qs from "qs";
+import "mapbox-gl/dist/mapbox-gl.css";
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page({ params }) {
   const { data: session, loading } = useSession();
@@ -21,15 +24,14 @@ export default function Page({ params }) {
   const [isOpen, setIsOpen] = useState(false);
   const [lat, setLat] = useState(0);
   const [zoom, setZoom] = useState(16);
+  const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
-  const [mapStyle, setMapStyle] = useState("streets-v12");
   const [structureImages, setStructureImages] = useState([]);
   const [structureDocuments, setStructureDocuments] = useState([]);
+  const [chartSeries, setChartSeries] = useState([]);
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
-
-  const [chartSeries, setChartSeries] = useState([]);
 
   const option = {
     chart: {
@@ -62,6 +64,61 @@ export default function Page({ params }) {
     },
   });
 
+  const getLocationDetails = async (longitude, latitude) => {
+    const endpoint = "mapbox.places"; // or 'mapbox.places-permanent'
+    const accessToken =
+      "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q"; // Replace with your Mapbox access token
+    const url = `https://api.mapbox.com/geocoding/v5/${endpoint}/${longitude},${latitude}.json?access_token=${accessToken}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Extracting city, state, address, and zip code from the response
+      const place = data.features.find((feature) =>
+        feature.place_type.includes("place")
+      ); // City
+      const region = data.features.find((feature) =>
+        feature.place_type.includes("region")
+      ); // State
+      const address = data.features.find((feature) =>
+        feature.place_type.includes("address")
+      ); // Address
+      const postcode = data.features.find((feature) =>
+        feature.place_type.includes("postcode")
+      ); // Zip Code
+
+      return {
+        State: region ? region.text : "Not found",
+        city: place ? place.text : "Not found",
+        address: address ? address.text : "Not found",
+        zipCode: postcode ? postcode.text : "Not found",
+      };
+    } catch (error) {
+      console.error("Error in reverse geocoding:", error);
+      return {
+        State: "Error",
+        city: "Error",
+        address: "Error",
+        zipCode: "Error",
+      };
+    }
+  };
+
+  const filterStructures = (searchTerm) => {
+    return structures.filter((structure) => {
+      const attributes = structure.attributes;
+      return (
+        attributes.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        attributes.mapSection
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        attributes.type.toLowerCase().includes(searchTerm.toLowerCase())
+        // Add more fields to check if needed
+      );
+    });
+  };
+
   const openAssets = () => {
     setOpenImages(!openImages);
     setOpenDocuments(!openDocuments);
@@ -73,10 +130,6 @@ export default function Page({ params }) {
   };
 
   const getStructureAssets = (structure) => {
-    console.log("==========");
-    console.log(structure);
-    console.log("==========");
-
     const images = structure.attributes.images.data || [];
     const files = structure.attributes.documents.data || [];
 
@@ -98,6 +151,115 @@ export default function Page({ params }) {
     else return "rgb(220 38 38)";
   };
 
+  const processStructureData = (structureData) => {
+    const structureCountsByMonth = structureData.reduce((acc, structure) => {
+      const month = new Date(structure.attributes.inspectionDate).getMonth();
+      const type = structure.attributes.type;
+
+      if (!acc[type]) {
+        acc[type] = Array(12).fill(0);
+      }
+
+      acc[type][month]++;
+      return acc;
+    }, {});
+
+    const series = Object.entries(structureCountsByMonth).map(
+      ([name, data]) => ({
+        name,
+        data,
+      })
+    );
+
+    setChartSeries(series);
+  };
+
+  const filteredStructures = filterStructures(structureSearch);
+
+  const calculateTypeFrequencies = (structures) => {
+    const typeCounts = structures.reduce((acc, structure) => {
+      const type = structure.attributes.type;
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+
+    return typeCounts;
+  };
+
+  const SemiCircleGauge = ({ value }) => {
+    const chartOptions = {
+      chart: {
+        height: 280,
+        type: "radialBar",
+      },
+      series: [67],
+      colors: ["#20E647"],
+      plotOptions: {
+        radialBar: {
+          startAngle: -135,
+          endAngle: 135,
+          track: {
+            background: "#333",
+            startAngle: -135,
+            endAngle: 135,
+          },
+          dataLabels: {
+            name: {
+              show: false,
+            },
+            value: {
+              fontSize: "30px",
+              show: true,
+            },
+          },
+        },
+      },
+      fill: {
+        type: "gradient",
+        gradient: {
+          shade: "dark",
+          type: "horizontal",
+          gradientToColors: ["#87D4F9"],
+          stops: [0, 100],
+        },
+      },
+      stroke: {
+        lineCap: "butt",
+      },
+      labels: ["Progress"],
+    };
+    // Since the import is dynamic, we need to check if ApexChart is not undefined
+    return (
+      <ApexChart
+        type="radialBar"
+        options={chartOptions}
+        series={[value]}
+        height={200}
+        width={"100%"}
+      />
+    );
+  };
+
+  const renderProgressBars = (structures) => {
+    const typeFrequencies = calculateTypeFrequencies(structures);
+    const totalStructures = structures.length;
+
+    return Object.entries(typeFrequencies).map(([type, count]) => {
+      const progress = Math.round((count / totalStructures) * 100);
+
+      return (
+        <div
+          key={type}
+          className="flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 mb-4 rounded-lg w-full h-full"
+        >
+          <SemiCircleGauge value={progress} />
+
+          <p className="font-normal text-gray-700 dark:text-gray-400">{type}</p>
+        </div>
+      );
+    });
+  };
+
   // Initialize map only once
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -115,8 +277,6 @@ export default function Page({ params }) {
     });
 
     map.current.on("click", (e) => {
-      console.log(e.lngLat);
-
       createMarker(e.lngLat.lng, e.lngLat.lat);
     });
 
@@ -159,8 +319,26 @@ export default function Page({ params }) {
   }, [map.current]);
 
   useEffect(() => {
-    map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
+    // Function to animate the map and get location details
+    const updateMapAndLocation = async () => {
+      map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
+
+      try {
+        const locationDetails = await getLocationDetails(lng, lat);
+        console.log(locationDetails);
+      } catch (error) {
+        console.error("Error getting location details:", error);
+      }
+    };
+
+    // Call the async function
+    updateMapAndLocation();
   }, [lng, lat]);
+
+  useEffect(() => {
+    processStructureData(structures);
+    console.log(structures);
+  }, [structures]);
 
   // Fetch structures and add markers
   useEffect(() => {
@@ -176,7 +354,6 @@ export default function Page({ params }) {
             }
           );
           const structuresData = response.data.data.attributes.structures.data;
-          console.log(structuresData);
           setStructures(structuresData);
           setLng(structuresData[0].attributes.longitude);
           setLat(structuresData[0].attributes.latitude);
@@ -205,6 +382,9 @@ export default function Page({ params }) {
 
   return (
     <>
+      <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
+        {renderProgressBars(structures)}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg overflow-hidden">
         <div
           ref={mapContainer}
@@ -354,10 +534,18 @@ export default function Page({ params }) {
         </div>
 
         <div className="flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white map-stuctures-container p-8">
-          <p className="text-lg font-semibold mb-4 mr-auto">Structures</p>
+          <TextInput
+            id="small"
+            type="text"
+            placeholder="Search Structures"
+            sizing="md"
+            className="w-full mb-4"
+            value={structureSearch}
+            onChange={(e) => setStructureSearch(e.target.value)}
+          />
 
           <div className="im-snapping overflow-x-auto w-full">
-            {structures.map((structure, index) => (
+            {filteredStructures.map((structure, index) => (
               <div
                 key={`${structure.id}-${index}`}
                 className="flex flex-col items-center bg-white border-2 border-gray-100 rounded-lg md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2"
@@ -406,37 +594,128 @@ export default function Page({ params }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="flex border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-4 mr-auto">Charts</p>
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <p className="text-lg font-semibold mb-4 mr-auto">Details</p>
         </div>
 
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-4 mr-auto">Files</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {structureDocuments.map((image) => (
-              <DownloadImage
-                key={`${image.attributes.name}`}
-                src={`http://localhost:1337${image.attributes.url}`}
-                filename={"somehting"}
-              />
-            ))}
-          </div>
+          <p className="text-lg font-semibold mb-4 mr-auto">Details</p>
         </div>
 
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-4 mr-auto">Images</p>
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-6 p-8 mb-4 rounded-lg">
+          <p className="text-lg font-semibold mb-0 mr-auto">Images</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {structureImages.map((image) => (
-              <DownloadImage
-                key={`${image.attributes.name}`}
-                src={`http://localhost:1337${image.attributes.formats.thumbnail.url}`}
-                filename={"somehting"}
-              />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {structureImages.length === 0 ? (
+              <div className="animate-pulse">
+                <svg
+                  className="h-full w-full text-gray-200 dark:text-gray-600"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 18"
+                >
+                  <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                </svg>
+              </div>
+            ) : (
+              <>
+                {structureImages.map((image) => (
+                  <DownloadImage
+                    key={`${image.attributes.name}`}
+                    src={`http://localhost:1337${image.attributes.formats.thumbnail.url}`}
+                    filename={"somehting"}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+
+          <p className="text-lg font-semibold mb-0 mr-auto">Files</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {structureDocuments.length === 0 ? (
+              <div className="animate-pulse">
+                <svg
+                  className="h-full w-full text-gray-200 dark:text-gray-600"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 18"
+                >
+                  <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                </svg>
+              </div>
+            ) : (
+              <>
+                {structureDocuments.map((image) => (
+                  <DownloadImage
+                    key={`${image.attributes.name}`}
+                    src={`http://localhost:1337${image.attributes.url}`}
+                    filename={"somehting"}
+                  />
+                ))}
+              </>
+            )}
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        <div className="flex flex-col col-span-2 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <div className="w-full">
+            <p className="text-lg font-semibold mb-4 mr-auto">
+              Structure Activity
+            </p>
+            <Timeline>
+              <Timeline.Item>
+                <Timeline.Point icon={HiCalendar} />
+                <Timeline.Content>
+                  <Timeline.Time>February 2022</Timeline.Time>
+                  <Timeline.Title>
+                    Application UI code in Tailwind CSS
+                  </Timeline.Title>
+                  <Timeline.Body>
+                    Get access to over 20+ pages including a dashboard layout,
+                    charts, kanban board, calendar, and pre-order E-commerce &
+                    Marketing pages.
+                  </Timeline.Body>
+                  <Button color="gray">
+                    Learn More
+                    <HiArrowNarrowRight className="ml-2 h-3 w-3" />
+                  </Button>
+                </Timeline.Content>
+              </Timeline.Item>
+              <Timeline.Item>
+                <Timeline.Point icon={HiCalendar} />
+                <Timeline.Content>
+                  <Timeline.Time>March 2022</Timeline.Time>
+                  <Timeline.Title>Marketing UI design in Figma</Timeline.Title>
+                  <Timeline.Body>
+                    All of the pages and components are first designed in Figma
+                    and we keep a parity between the two versions even as we
+                    update the project.
+                  </Timeline.Body>
+                </Timeline.Content>
+              </Timeline.Item>
+              <Timeline.Item>
+                <Timeline.Point icon={HiCalendar} />
+                <Timeline.Content>
+                  <Timeline.Time>April 2022</Timeline.Time>
+                  <Timeline.Title>
+                    E-Commerce UI code in Tailwind CSS
+                  </Timeline.Title>
+                  <Timeline.Body>
+                    Get started with dozens of web components and interactive
+                    elements built on top of Tailwind CSS.
+                  </Timeline.Body>
+                </Timeline.Content>
+              </Timeline.Item>
+            </Timeline>
+          </div>
+        </div>
+        <div className="flex flex-col col-span-1 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
+        <div className="flex flex-col col-span-1 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
       </div>
     </>
   );

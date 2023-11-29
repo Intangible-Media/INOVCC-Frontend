@@ -148,3 +148,47 @@
   background: rgba(0, 0, 0, 0.25); /* Dark overlay on hover */
   border-radius: 0.5rem;
 }
+
+/* HalfCircleProgress.css */
+.half-circle-progress-container {
+  position: relative;
+  display: inline-block;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.half-circle-progress {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.progress-bar {
+  transition: stroke-dashoffset 0.6s ease 0s;
+}
+
+.progress-text {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  color: #333;
+}
+
+.details-button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #00a2ff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 40px;
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+}
