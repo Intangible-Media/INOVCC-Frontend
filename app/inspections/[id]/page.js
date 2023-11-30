@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { Label, TextInput, Timeline, Button, Progress } from "flowbite-react";
-import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
-import { SemiCircleProgress } from "react-semicircle-progressbar";
+import { TextInput } from "flowbite-react";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -119,11 +117,6 @@ export default function Page({ params }) {
     });
   };
 
-  const openAssets = () => {
-    setOpenImages(!openImages);
-    setOpenDocuments(!openDocuments);
-  };
-
   const updateCenterOnClick = (longitude, latitude) => {
     setLng(longitude);
     setLat(latitude);
@@ -186,29 +179,33 @@ export default function Page({ params }) {
     return typeCounts;
   };
 
-  const SemiCircleGauge = ({ value }) => {
+  const SemiCircleGauge = ({ value, type }) => {
     const chartOptions = {
       chart: {
-        height: 280,
         type: "radialBar",
       },
-      series: [67],
-      colors: ["#20E647"],
+      colors: ["#27A9EF"],
       plotOptions: {
         radialBar: {
           startAngle: -135,
           endAngle: 135,
+          hollow: {
+            margin: 0,
+            size: "55%",
+            background: "transparent",
+          },
           track: {
-            background: "#333",
+            background: "#f2f2f2",
             startAngle: -135,
             endAngle: 135,
           },
           dataLabels: {
             name: {
-              show: false,
+              show: true,
+              fontSize: "15px",
             },
             value: {
-              fontSize: "30px",
+              fontSize: "15px",
               show: true,
             },
           },
@@ -219,14 +216,14 @@ export default function Page({ params }) {
         gradient: {
           shade: "dark",
           type: "horizontal",
-          gradientToColors: ["#87D4F9"],
+          gradientToColors: ["#27A9EF"],
           stops: [0, 100],
         },
       },
       stroke: {
-        lineCap: "butt",
+        lineCap: "round",
       },
-      labels: ["Progress"],
+      labels: [`${type}`],
     };
     // Since the import is dynamic, we need to check if ApexChart is not undefined
     return (
@@ -234,7 +231,7 @@ export default function Page({ params }) {
         type="radialBar"
         options={chartOptions}
         series={[value]}
-        height={200}
+        height={240}
         width={"100%"}
       />
     );
@@ -244,20 +241,22 @@ export default function Page({ params }) {
     const typeFrequencies = calculateTypeFrequencies(structures);
     const totalStructures = structures.length;
 
-    return Object.entries(typeFrequencies).map(([type, count]) => {
-      const progress = Math.round((count / totalStructures) * 100);
+    const progressBars = useMemo(() => {
+      return Object.entries(typeFrequencies).map(([type, count]) => {
+        const progress = Math.round((count / totalStructures) * 100);
 
-      return (
-        <div
-          key={type}
-          className="flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 mb-4 rounded-lg w-full h-full"
-        >
-          <SemiCircleGauge value={progress} />
+        return (
+          <div
+            key={type}
+            className="structure-graph flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 rounded-lg aspect-square w-60"
+          >
+            <SemiCircleGauge type={type} value={progress} />
+          </div>
+        );
+      });
+    }, [structures]); // Empty dependency array ensures it only runs once
 
-          <p className="font-normal text-gray-700 dark:text-gray-400">{type}</p>
-        </div>
-      );
-    });
+    return progressBars;
   };
 
   // Initialize map only once
@@ -382,9 +381,6 @@ export default function Page({ params }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
-        {renderProgressBars(structures)}
-      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg overflow-hidden">
         <div
           ref={mapContainer}
@@ -593,6 +589,12 @@ export default function Page({ params }) {
         </div>
       </div>
 
+      <div className="overflow-x-auto whitespace-nowrap mb-4">
+        <div className="structures-container inline-flex gap-4">
+          {renderProgressBars(structures)}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
           <p className="text-lg font-semibold mb-4 mr-auto">Details</p>
@@ -659,63 +661,6 @@ export default function Page({ params }) {
             )}
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        <div className="flex flex-col col-span-2 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <div className="w-full">
-            <p className="text-lg font-semibold mb-4 mr-auto">
-              Structure Activity
-            </p>
-            <Timeline>
-              <Timeline.Item>
-                <Timeline.Point icon={HiCalendar} />
-                <Timeline.Content>
-                  <Timeline.Time>February 2022</Timeline.Time>
-                  <Timeline.Title>
-                    Application UI code in Tailwind CSS
-                  </Timeline.Title>
-                  <Timeline.Body>
-                    Get access to over 20+ pages including a dashboard layout,
-                    charts, kanban board, calendar, and pre-order E-commerce &
-                    Marketing pages.
-                  </Timeline.Body>
-                  <Button color="gray">
-                    Learn More
-                    <HiArrowNarrowRight className="ml-2 h-3 w-3" />
-                  </Button>
-                </Timeline.Content>
-              </Timeline.Item>
-              <Timeline.Item>
-                <Timeline.Point icon={HiCalendar} />
-                <Timeline.Content>
-                  <Timeline.Time>March 2022</Timeline.Time>
-                  <Timeline.Title>Marketing UI design in Figma</Timeline.Title>
-                  <Timeline.Body>
-                    All of the pages and components are first designed in Figma
-                    and we keep a parity between the two versions even as we
-                    update the project.
-                  </Timeline.Body>
-                </Timeline.Content>
-              </Timeline.Item>
-              <Timeline.Item>
-                <Timeline.Point icon={HiCalendar} />
-                <Timeline.Content>
-                  <Timeline.Time>April 2022</Timeline.Time>
-                  <Timeline.Title>
-                    E-Commerce UI code in Tailwind CSS
-                  </Timeline.Title>
-                  <Timeline.Body>
-                    Get started with dozens of web components and interactive
-                    elements built on top of Tailwind CSS.
-                  </Timeline.Body>
-                </Timeline.Content>
-              </Timeline.Item>
-            </Timeline>
-          </div>
-        </div>
-        <div className="flex flex-col col-span-1 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
-        <div className="flex flex-col col-span-1 border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg"></div>
       </div>
     </>
   );

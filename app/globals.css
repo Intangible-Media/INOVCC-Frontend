@@ -11,6 +11,7 @@
 /* width */
 ::-webkit-scrollbar {
   width: 2px;
+  height: 0px;
 }
 
 /* Track */
@@ -191,4 +192,22 @@
   font-size: 16px;
   cursor: pointer;
   outline: none;
+}
+
+.structures-container {
+  scroll-snap-type: both mandatory;
+}
+
+.structures-container > .structure-graph {
+  scroll-snap-align: start;
+}
+
+.structures-container {
+  overflow-x: auto;
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+
+.structures-container::-webkit-scrollbar {
+  height: 0px; /* For Chrome, Safari, and Opera */
 }
