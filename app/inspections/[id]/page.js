@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput } from "flowbite-react";
+import { TextInput, Badge } from "flowbite-react";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -26,6 +26,14 @@ export default function Page({ params }) {
   const [structures, setStructures] = useState([]);
   const [structureImages, setStructureImages] = useState([]);
   const [structureDocuments, setStructureDocuments] = useState([]);
+  const [selectedStructure, setSelectedStructure] = useState(null);
+  const [locationDetails, setLocationDetails] = useState({
+    State: "",
+    city: "",
+    address: "",
+    zipCode: "",
+  });
+
   const [chartSeries, setChartSeries] = useState([]);
 
   mapboxgl.accessToken =
@@ -72,6 +80,8 @@ export default function Page({ params }) {
       const response = await fetch(url);
       const data = await response.json();
 
+      console.log(data);
+
       // Extracting city, state, address, and zip code from the response
       const place = data.features.find((feature) =>
         feature.place_type.includes("place")
@@ -89,7 +99,7 @@ export default function Page({ params }) {
       return {
         State: region ? region.text : "Not found",
         city: place ? place.text : "Not found",
-        address: address ? address.text : "Not found",
+        address: address ? `${address.address} ${address.text}` : "Not found",
         zipCode: postcode ? postcode.text : "Not found",
       };
     } catch (error) {
@@ -139,7 +149,7 @@ export default function Page({ params }) {
   const getMarkerColor = (structure) => {
     const { status } = structure.attributes;
 
-    if (status.toLowerCase() == "inspected") return "rgb(8 145 178)";
+    if (status.toLowerCase() == "inspected") return "#27A9EF";
     if (status.toLowerCase() == "not inspected") return "rgb(250 204 21)";
     else return "rgb(220 38 38)";
   };
@@ -171,8 +181,24 @@ export default function Page({ params }) {
 
   const calculateTypeFrequencies = (structures) => {
     const typeCounts = structures.reduce((acc, structure) => {
-      const type = structure.attributes.type;
-      acc[type] = (acc[type] || 0) + 1;
+      // Extract type and status from the structure's attributes
+      const type = structure.attributes.type.toLowerCase().replace(/ /g, "-");
+      const status = structure.attributes.status;
+
+      // Initialize the object for the type if it doesn't exist
+      if (!acc[type]) {
+        acc[type] = { totalOfType: 0, totalInspected: 0 };
+      }
+
+      // Increment the total count for this type
+      acc[type].totalOfType++;
+
+      // Increment the inspected count if the structure's status is 'inspected'
+      if (status === "Inspected") {
+        // Assuming 'Inspected' is the exact string to check
+        acc[type].totalInspected++;
+      }
+
       return acc;
     }, {});
 
@@ -216,14 +242,20 @@ export default function Page({ params }) {
         gradient: {
           shade: "dark",
           type: "horizontal",
-          gradientToColors: ["#27A9EF"],
+          gradientToColors: ["#40E0D0"],
           stops: [0, 100],
         },
       },
       stroke: {
         lineCap: "round",
       },
-      labels: [`${type}`],
+      labels: [
+        `${type
+          .replace(/-/g, " ")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")}`,
+      ],
     };
     // Since the import is dynamic, we need to check if ApexChart is not undefined
     return (
@@ -237,24 +269,42 @@ export default function Page({ params }) {
     );
   };
 
+  const SelectedStructureBadge = ({ structure }) => {
+    return (
+      <Badge
+        color="info"
+        className={`bg-${getInspectionColor(
+          structure.attributes.status
+        )}-100 text-${getInspectionColor(
+          structure.attributes.status
+        )}-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+      >
+        {structure.attributes.mapSection}
+      </Badge>
+    );
+  };
+
   const renderProgressBars = (structures) => {
     const typeFrequencies = calculateTypeFrequencies(structures);
-    const totalStructures = structures.length;
 
     const progressBars = useMemo(() => {
-      return Object.entries(typeFrequencies).map(([type, count]) => {
-        const progress = Math.round((count / totalStructures) * 100);
+      return Object.entries(typeFrequencies).map(([type, data]) => {
+        // Calculate progress as the ratio of inspected structures to total structures of that type
+        const progress =
+          data.totalOfType > 0
+            ? Math.round((data.totalInspected / data.totalOfType) * 100)
+            : 0;
 
         return (
           <div
             key={type}
-            className="structure-graph flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 rounded-lg aspect-square w-60"
+            className={`structure-graph flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 rounded-lg aspect-square w-56`}
           >
             <SemiCircleGauge type={type} value={progress} />
           </div>
         );
       });
-    }, [structures]); // Empty dependency array ensures it only runs once
+    }, [structures]); // Depend on structures to update when data changes
 
     return progressBars;
   };
@@ -324,19 +374,23 @@ export default function Page({ params }) {
 
       try {
         const locationDetails = await getLocationDetails(lng, lat);
-        console.log(locationDetails);
       } catch (error) {
         console.error("Error getting location details:", error);
       }
     };
 
+    const fetchLocationDetails = async () => {
+      const details = await getLocationDetails(lng, lat);
+      setLocationDetails(details);
+    };
+
     // Call the async function
     updateMapAndLocation();
+    fetchLocationDetails();
   }, [lng, lat]);
 
   useEffect(() => {
     processStructureData(structures);
-    console.log(structures);
   }, [structures]);
 
   // Fetch structures and add markers
@@ -378,6 +432,10 @@ export default function Page({ params }) {
 
     fetchData();
   }, [session, params.id, query]); // Make sure to add `params.id` and `query` as dependencies if they can change
+
+  useEffect(() => {
+    console.log(selectedStructure);
+  }, [selectedStructure]);
 
   return (
     <>
@@ -535,7 +593,7 @@ export default function Page({ params }) {
             type="text"
             placeholder="Search Structures"
             sizing="md"
-            className="w-full mb-4"
+            className="w-full mb-6"
             value={structureSearch}
             onChange={(e) => setStructureSearch(e.target.value)}
           />
@@ -544,7 +602,7 @@ export default function Page({ params }) {
             {filteredStructures.map((structure, index) => (
               <div
                 key={`${structure.id}-${index}`}
-                className="flex flex-col items-center bg-white border-2 border-gray-100 rounded-lg md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2"
+                className="flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2"
                 onClick={(e) => {
                   e.preventDefault();
                   updateCenterOnClick(
@@ -552,6 +610,7 @@ export default function Page({ params }) {
                     structure.attributes.latitude
                   );
                   getStructureAssets(structure);
+                  setSelectedStructure(structure);
                 }}
               >
                 <MdLocationPin
@@ -597,17 +656,51 @@ export default function Page({ params }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-4 mr-auto">Details</p>
+          <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
+            Inspectors{" "}
+            {selectedStructure && (
+              <SelectedStructureBadge structure={selectedStructure} />
+            )}
+          </p>
         </div>
 
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-4 mr-auto">Details</p>
+          <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
+            Details{" "}
+            {selectedStructure && (
+              <SelectedStructureBadge structure={selectedStructure} />
+            )}
+          </p>
+
+          <dl className="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+            <div className="flex flex-col py-3">
+              <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+                Address
+              </dt>
+              <dd className="text-md font-semibold">
+                {locationDetails.address}
+              </dd>
+            </div>
+            <div className="flex flex-col pt-3">
+              <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+                City, State
+              </dt>
+              <dd className="text-md font-semibold">
+                {locationDetails.city}, {locationDetails.State},{" "}
+                {locationDetails.zipCode}
+              </dd>
+            </div>
+          </dl>
         </div>
 
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-6 p-8 mb-4 rounded-lg">
-          <p className="text-lg font-semibold mb-0 mr-auto">Images</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
+            Assets{" "}
+            {selectedStructure && (
+              <SelectedStructureBadge structure={selectedStructure} />
+            )}
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {structureImages.length === 0 ? (
               <div className="animate-pulse">
                 <svg
@@ -633,9 +726,7 @@ export default function Page({ params }) {
             )}
           </div>
 
-          <p className="text-lg font-semibold mb-0 mr-auto">Files</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {structureDocuments.length === 0 ? (
               <div className="animate-pulse">
                 <svg

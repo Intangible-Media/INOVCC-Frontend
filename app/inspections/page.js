@@ -21,22 +21,17 @@ export default function Dashboard() {
     chart: {
       id: "apexchart-example",
       width: "100%",
+      type: "area",
+      stroke: {
+        curve: "smooth",
+      },
     },
     xaxis: {
-      categories: [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ],
+      type: "datetime",
+    },
+
+    yaxis: {
+      min: 0,
     },
   };
 
@@ -102,24 +97,55 @@ export default function Dashboard() {
   }, [session, inspectionQuery]);
 
   const processStructureData = (structureData) => {
-    const structureCountsByMonth = structureData.reduce((acc, structure) => {
-      const month = new Date(structure.attributes.inspectionDate).getMonth();
+    console.log(structureData.length);
+
+    // Use objects to track counts and to find the date range
+    const countsByTypeAndDate = {};
+    let minDate = new Date(structureData[0].attributes.inspectionDate);
+    let maxDate = new Date(structureData[0].attributes.inspectionDate);
+
+    structureData.forEach((structure) => {
+      const date = new Date(structure.attributes.inspectionDate);
+      minDate = date < minDate ? date : minDate;
+      maxDate = date > maxDate ? date : maxDate;
+
+      const dateString = date.toISOString().split("T")[0];
       const type = structure.attributes.type;
 
-      if (!acc[type]) {
-        acc[type] = Array(12).fill(0);
+      if (!countsByTypeAndDate[type]) {
+        countsByTypeAndDate[type] = {};
       }
 
-      acc[type][month]++;
-      return acc;
-    }, {});
+      if (!countsByTypeAndDate[type][dateString]) {
+        countsByTypeAndDate[type][dateString] = 0;
+      }
 
-    const series = Object.entries(structureCountsByMonth).map(
-      ([name, data]) => ({
-        name,
-        data,
-      })
-    );
+      countsByTypeAndDate[type][dateString]++;
+    });
+
+    // Fill in missing dates with zero counts
+    for (const type in countsByTypeAndDate) {
+      for (
+        let d = new Date(minDate);
+        d <= maxDate;
+        d.setDate(d.getDate() + 1)
+      ) {
+        const dateString = d.toISOString().split("T")[0];
+        if (!countsByTypeAndDate[type][dateString]) {
+          countsByTypeAndDate[type][dateString] = 0;
+        }
+      }
+    }
+
+    // Convert the object into a series format expected by ApexCharts
+    const series = Object.entries(countsByTypeAndDate).map(([type, dates]) => {
+      const seriesData = Object.entries(dates).map(([dateString, count]) => {
+        return [new Date(dateString).getTime(), count];
+      });
+
+      seriesData.sort((a, b) => a[0] - b[0]);
+      return { name: type, data: seriesData };
+    });
 
     setChartSeries(series);
   };
