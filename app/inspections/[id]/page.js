@@ -7,7 +7,8 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput, Badge } from "flowbite-react";
+import { TextInput, Badge, Button } from "flowbite-react";
+import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -26,7 +27,11 @@ export default function Page({ params }) {
   const [structures, setStructures] = useState([]);
   const [structureImages, setStructureImages] = useState([]);
   const [structureDocuments, setStructureDocuments] = useState([]);
+  const [structureInspectors, setStructureInspectors] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
+  const [showSateliteLayer, setShowSateliteLayer] = useState(false);
+  const [activeMapStyle, setActiveMapStyle] = useState("satelite");
+  const [directions, setDirections] = useState(null);
   const [locationDetails, setLocationDetails] = useState({
     State: "",
     city: "",
@@ -35,6 +40,10 @@ export default function Page({ params }) {
   });
 
   const [chartSeries, setChartSeries] = useState([]);
+  const activeMapStyleTab =
+    "text-white bg-cyan-400 dark:bg-gray-300 dark:text-gray-900";
+  const inactiveMapStyleTab =
+    "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
@@ -79,8 +88,6 @@ export default function Page({ params }) {
     try {
       const response = await fetch(url);
       const data = await response.json();
-
-      console.log(data);
 
       // Extracting city, state, address, and zip code from the response
       const place = data.features.find((feature) =>
@@ -132,12 +139,17 @@ export default function Page({ params }) {
     setLat(latitude);
   };
 
-  const getStructureAssets = (structure) => {
+  const getStructureData = (structure) => {
     const images = structure.attributes.images.data || [];
     const files = structure.attributes.documents.data || [];
+    const inspectors = structure.attributes.inspectors.data || [];
+
+    console.log("inspectors");
+    console.log(inspectors);
 
     setStructureImages(images);
     setStructureDocuments(files);
+    setStructureInspectors(inspectors);
   };
 
   const getInspectionColor = (status) => {
@@ -309,7 +321,36 @@ export default function Page({ params }) {
     return progressBars;
   };
 
-  // Initialize map only once
+  const toggleSatelliteLayer = () => {
+    if (map.current.getLayer("satellite")) {
+      const visibility = map.current.getLayoutProperty(
+        "satellite",
+        "visibility"
+      );
+
+      // Toggle the layer visibility by changing the layout property
+      if (visibility === "visible") {
+        // map.current.setPitch(50, { duration: 500 });
+        map.current.setLayoutProperty("satellite", "visibility", "none");
+        setActiveMapStyle("3d");
+      } else {
+        map.current.setPitch(0, { duration: 500 });
+        map.current.setLayoutProperty("satellite", "visibility", "visible");
+        setActiveMapStyle("satelite");
+      }
+    }
+  };
+
+  const removeSateliteLayer = () => {
+    if (map.current.getLayer("satellite")) {
+      map.current.removeLayer("satellite");
+      // Also remove the source if it's not used by any other layers
+      if (map.current.getSource("satellite-source")) {
+        map.current.removeSource("satellite-source");
+      }
+    }
+  };
+
   useEffect(() => {
     if (map.current) return; // initialize map only once
 
@@ -323,12 +364,63 @@ export default function Page({ params }) {
 
     map.current.on("style.load", () => {
       map.current.setFog({}); // Optional: set the fog to enhance the 3D effect
+
+      map.current.easeTo({
+        padding: {
+          right: 450,
+        },
+      });
+
+      // Add the satellite layer with initial visibility set to 'none'
+      addSateliteLayer();
+
+      // Add a street layer or other layers here if needed
+
+      // Event listener for clicks on the map
+      map.current.on("click", (e) => {
+        createMarker(e.lngLat.lng, e.lngLat.lat);
+      });
+
+      if (!map.current.getLayer("traffic")) {
+        if (!map.current.getSource("mapbox-traffic")) {
+          map.current.addSource("mapbox-traffic", {
+            type: "vector",
+            url: "mapbox://mapbox.mapbox-traffic-v1",
+          });
+        }
+
+        map.current.addLayer({
+          id: "traffic",
+          type: "line",
+          source: "mapbox-traffic",
+          "source-layer": "traffic",
+          minzoom: 0,
+          maxzoom: 22,
+          paint: {
+            "line-width": 5,
+            "line-color": [
+              "match",
+              ["get", "congestion"],
+              ["low"],
+              "hsl(138, 100%, 40%)",
+              ["moderate"],
+              "hsl(71, 100%, 64%)",
+              ["heavy"],
+              "hsl(28, 100%, 56%)",
+              ["severe"],
+              "hsl(0, 100%, 50%)",
+              "#000000", // Default color
+            ],
+          },
+          layout: {
+            // If you want to initialize the layer as invisible, set 'visibility': 'none'
+            visibility: "visible",
+          },
+        });
+      }
     });
 
-    map.current.on("click", (e) => {
-      createMarker(e.lngLat.lng, e.lngLat.lat);
-    });
-
+    // Define the createMarker function inside useEffect
     const createMarker = (markerLng, markerLat) => {
       const el = document.createElement("div");
       el.className = "im-marker";
@@ -344,6 +436,28 @@ export default function Page({ params }) {
         duration: 1000,
       });
     };
+
+    // Define addSateliteLayer inside useEffect
+    function addSateliteLayer() {
+      if (!map.current.getLayer("satellite")) {
+        if (!map.current.getSource("satellite-source")) {
+          map.current.addSource("satellite-source", {
+            type: "raster",
+            url: "mapbox://mapbox.satellite",
+            tileSize: 256,
+          });
+        }
+
+        map.current.addLayer({
+          id: "satellite",
+          source: "satellite-source",
+          type: "raster",
+          layout: {
+            visibility: "none",
+          },
+        });
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -371,7 +485,6 @@ export default function Page({ params }) {
     // Function to animate the map and get location details
     const updateMapAndLocation = async () => {
       map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
-
       try {
         const locationDetails = await getLocationDetails(lng, lat);
       } catch (error) {
@@ -434,160 +547,47 @@ export default function Page({ params }) {
   }, [session, params.id, query]); // Make sure to add `params.id` and `query` as dependencies if they can change
 
   useEffect(() => {
-    console.log(selectedStructure);
-  }, [selectedStructure]);
+    console.log(directions);
+  }, [directions]);
+
+  useEffect(() => {
+    if (showSateliteLayer) return addSateliteLayer();
+    return removeSateliteLayer();
+  }, [showSateliteLayer]);
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg overflow-hidden">
+      <div
+        ref={mapContainer}
+        className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg"
+      >
         <div
-          ref={mapContainer}
-          className="map-container flex col-span-2 overflow-hidden	"
+          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-50"
+          role="group"
         >
-          <div
-            data-dial-init=""
-            className="map-speed-dial end-6 bottom-6 group"
-            onMouseOver={() => setIsOpen(true)}
-            onMouseOut={() => setIsOpen(false)}
+          <button
+            onClick={toggleSatelliteLayer}
+            type="button"
+            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
+              activeMapStyle == "satelite"
+                ? activeMapStyleTab
+                : inactiveMapStyleTab
+            }`}
           >
-            <div
-              id="speed-dial-menu-vertical"
-              className={`flex flex-col items-center ${
-                !isOpen && "hidden"
-              } mb-4 space-y-2`}
-            >
-              <button
-                type="button"
-                data-tooltip-target="tooltip-share"
-                data-tooltip-placement="left"
-                className="flex justify-center items-center w-[52px] h-[52px] text-gray-500 hover:text-gray-900 bg-white rounded-full border border-gray-200 dark:border-gray-600 shadow-sm dark:hover:text-white dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-400"
-              >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 18 18"
-                >
-                  <path d="M14.419 10.581a3.564 3.564 0 0 0-2.574 1.1l-4.756-2.49a3.54 3.54 0 0 0 .072-.71 3.55 3.55 0 0 0-.043-.428L11.67 6.1a3.56 3.56 0 1 0-.831-2.265c.006.143.02.286.043.428L6.33 6.218a3.573 3.573 0 1 0-.175 4.743l4.756 2.491a3.58 3.58 0 1 0 3.508-2.871Z" />
-                </svg>
-                <span className="sr-only">Share</span>
-              </button>
-              <div
-                id="tooltip-share"
-                role="tooltip"
-                className="absolute z-10 invisible inline-block w-auto px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
-              >
-                Share
-                <div className="tooltip-arrow" data-popper-arrow="" />
-              </div>
-              <button
-                type="button"
-                data-tooltip-target="tooltip-print"
-                data-tooltip-placement="left"
-                className="flex justify-center items-center w-[52px] h-[52px] text-gray-500 hover:text-gray-900 bg-white rounded-full border border-gray-200 dark:border-gray-600 shadow-sm dark:hover:text-white dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-400"
-              >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M5 20h10a1 1 0 0 0 1-1v-5H4v5a1 1 0 0 0 1 1Z" />
-                  <path d="M18 7H2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v-3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm-1-2V2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3h14Z" />
-                </svg>
-                <span className="sr-only">Print</span>
-              </button>
-              <div
-                id="tooltip-print"
-                role="tooltip"
-                className="absolute z-10 invisible inline-block w-auto px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
-              >
-                Print
-                <div className="tooltip-arrow" data-popper-arrow="" />
-              </div>
-              <button
-                type="button"
-                data-tooltip-target="tooltip-download"
-                data-tooltip-placement="left"
-                className="flex justify-center items-center w-[52px] h-[52px] text-gray-500 hover:text-gray-900 bg-white rounded-full border border-gray-200 dark:border-gray-600 shadow-sm dark:hover:text-white dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-400"
-              >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M14.707 7.793a1 1 0 0 0-1.414 0L11 10.086V1.5a1 1 0 0 0-2 0v8.586L6.707 7.793a1 1 0 1 0-1.414 1.414l4 4a1 1 0 0 0 1.416 0l4-4a1 1 0 0 0-.002-1.414Z" />
-                  <path d="M18 12h-2.55l-2.975 2.975a3.5 3.5 0 0 1-4.95 0L4.55 12H2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Zm-3 5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
-                </svg>
-                <span className="sr-only">Download</span>
-              </button>
-              <div
-                id="tooltip-download"
-                role="tooltip"
-                className="absolute z-10 invisible inline-block w-auto px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
-              >
-                Download
-                <div className="tooltip-arrow" data-popper-arrow="" />
-              </div>
-              <button
-                type="button"
-                data-tooltip-target="tooltip-copy"
-                data-tooltip-placement="left"
-                className="flex justify-center items-center w-[52px] h-[52px] text-gray-500 hover:text-gray-900 bg-white rounded-full border border-gray-200 dark:border-gray-600 dark:hover:text-white shadow-sm dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-400"
-              >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 18 20"
-                >
-                  <path d="M5 9V4.13a2.96 2.96 0 0 0-1.293.749L.879 7.707A2.96 2.96 0 0 0 .13 9H5Zm11.066-9H9.829a2.98 2.98 0 0 0-2.122.879L7 1.584A.987.987 0 0 0 6.766 2h4.3A3.972 3.972 0 0 1 15 6v10h1.066A1.97 1.97 0 0 0 18 14V2a1.97 1.97 0 0 0-1.934-2Z" />
-                  <path d="M11.066 4H7v5a2 2 0 0 1-2 2H0v7a1.969 1.969 0 0 0 1.933 2h9.133A1.97 1.97 0 0 0 13 18V6a1.97 1.97 0 0 0-1.934-2Z" />
-                </svg>
-                <span className="sr-only">Copy</span>
-              </button>
-              <div
-                id="tooltip-copy"
-                role="tooltip"
-                className="absolute z-10 invisible inline-block w-auto px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
-              >
-                Copy
-                <div className="tooltip-arrow" data-popper-arrow="" />
-              </div>
-            </div>
-            <button
-              type="button"
-              data-dial-toggle="speed-dial-menu-vertical"
-              aria-controls="speed-dial-menu-vertical"
-              aria-expanded="false"
-              className="flex items-center justify-center text-black bg-white rounded-full w-14 h-14 dark:bg-blue-600 dark:hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:focus:ring-blue-800"
-            >
-              <svg
-                className="w-5 h-5 transition-transform group-hover:rotate-45"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 18 18"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 1v16M1 9h16"
-                />
-              </svg>
-              <span className="sr-only">Open actions menu</span>
-            </button>
-          </div>
+            Satellite
+          </button>
+          <button
+            onClick={toggleSatelliteLayer}
+            type="button"
+            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
+              activeMapStyle == "3d" ? activeMapStyleTab : inactiveMapStyleTab
+            }`}
+          >
+            3D
+          </button>
         </div>
 
-        <div className="flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white map-stuctures-container p-8">
+        <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-50 h-32 rounded-lg absolute right-8 top-8 bottom-8">
           <TextInput
             id="small"
             type="text"
@@ -609,7 +609,7 @@ export default function Page({ params }) {
                     structure.attributes.longitude,
                     structure.attributes.latitude
                   );
-                  getStructureAssets(structure);
+                  getStructureData(structure);
                   setSelectedStructure(structure);
                 }}
               >
@@ -656,16 +656,7 @@ export default function Page({ params }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
-            Inspectors{" "}
-            {selectedStructure && (
-              <SelectedStructureBadge structure={selectedStructure} />
-            )}
-          </p>
-        </div>
-
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
-          <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
+          <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
             Details{" "}
             {selectedStructure && (
               <SelectedStructureBadge structure={selectedStructure} />
@@ -673,7 +664,7 @@ export default function Page({ params }) {
           </p>
 
           <dl className="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-            <div className="flex flex-col py-3">
+            <div className="flex flex-col pb-3">
               <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
                 Address
               </dt>
@@ -690,7 +681,49 @@ export default function Page({ params }) {
                 {locationDetails.zipCode}
               </dd>
             </div>
+            {selectedStructure && (
+              <DirectionsComponent
+                destinationLongitude={selectedStructure.attributes.longitude}
+                destinationLatitude={selectedStructure.attributes.latitude}
+              />
+            )}
           </dl>
+        </div>
+
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+          <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
+            Inspectors{" "}
+            {selectedStructure && (
+              <SelectedStructureBadge structure={selectedStructure} />
+            )}
+          </p>
+
+          <ul className="max-w-md flex flex-col gap-4 divide-gray-200 dark:divide-gray-700">
+            {structureInspectors.map((inspector) => (
+              <li
+                className="p-4 border border-1 rounded-lg hover:bg-gray-200"
+                key={inspector}
+              >
+                <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                  <div className="flex-shrink-0">
+                    <img
+                      className="w-12 h-12 rounded-full"
+                      src="/profile.png"
+                      alt="Neil image"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                      {inspector.attributes.username}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+                      {inspector.attributes.email}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-6 p-8 mb-4 rounded-lg">

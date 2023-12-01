@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
                     data-drawer-toggle="logo-sidebar"
                     aria-controls="logo-sidebar"
                     type="button"
-                    className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+                    className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-cyan-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
                   >
                     <span className="sr-only">Open sidebar</span>
                     <svg
@@ -96,7 +96,7 @@ export default function RootLayout({ children }) {
                         <li>
                           <Link
                             href="/"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-400 hover:text-white dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                           >
                             Overview
                           </Link>
@@ -104,7 +104,7 @@ export default function RootLayout({ children }) {
                         <li>
                           <Link
                             href="/inspections"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-400 hover:text-white dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                           >
                             Inspections
                           </Link>
@@ -112,7 +112,7 @@ export default function RootLayout({ children }) {
                         <li>
                           <a
                             href="#"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-400 hover:text-white dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                             role="menuitem"
                           >
                             Earnings
@@ -121,7 +121,7 @@ export default function RootLayout({ children }) {
                         <li>
                           <a
                             href="#"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-400 hover:text-white dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                             role="menuitem"
                           >
                             Sign out
@@ -144,10 +144,10 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-cyan-400 hover:text-white dark:hover:bg-gray-700 group"
                   >
                     <svg
-                      className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                      className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-white dark:group-hover:text-white"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="currentColor"
@@ -162,10 +162,10 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/inspections"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-cyan-400 hover:text-white dark:hover:bg-gray-700 group"
                   >
                     <svg
-                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-white dark:group-hover:text-white"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="currentColor"
@@ -185,10 +185,10 @@ export default function RootLayout({ children }) {
                 <li>
                   <a
                     href="#"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-cyan-400 hover:text-white dark:hover:bg-gray-700 group"
                   >
                     <svg
-                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-white dark:group-hover:text-white"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="currentColor"
@@ -205,10 +205,10 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/api/auth/signout"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-cyan-400 hover:text-white dark:hover:bg-gray-700 group"
                   >
                     <svg
-                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                      className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-white dark:group-hover:text-white"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="currentColor"
