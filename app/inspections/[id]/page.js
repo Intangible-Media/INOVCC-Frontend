@@ -49,29 +49,6 @@ export default function Page({ params }) {
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
-  const option = {
-    chart: {
-      id: "apexchart-example",
-      width: "100%",
-    },
-    xaxis: {
-      categories: [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ],
-    },
-  };
-
   const query = qs.stringify({
     populate: {
       structures: {
@@ -361,156 +338,171 @@ export default function Page({ params }) {
   };
 
   useEffect(() => {
-    if (map.current) return; // initialize map only once
+    if (map.current) return; // Initialize map only once
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/standard-beta", // Use your custom style URL
+      style: "mapbox://styles/mapbox/standard-beta",
       center: [lng, lat],
       zoom: zoom,
-      pitch: 50, // Set the initial pitch
+      pitch: 50,
     });
 
     map.current.on("style.load", () => {
-      map.current.setFog({}); // Optional: set the fog to enhance the 3D effect
+      map.current.setFog({});
+      map.current.easeTo({ padding: { right: 450 } });
 
-      map.current.easeTo({
-        padding: {
-          right: 450,
-        },
-      });
+      // Function to add a satellite layer
+      function addSatelliteLayer() {
+        if (!map.current.getLayer("satellite")) {
+          if (!map.current.getSource("satellite-source")) {
+            map.current.addSource("satellite-source", {
+              type: "raster",
+              url: "mapbox://mapbox.satellite",
+              tileSize: 256,
+            });
+          }
 
-      // Add the satellite layer with initial visibility set to 'none'
-      addSateliteLayer();
-
-      // Add a street layer or other layers here if needed
-
-      // Event listener for clicks on the map
-      map.current.on("click", (e) => {
-        createMarker(e.lngLat.lng, e.lngLat.lat);
-      });
-
-      if (!map.current.getLayer("traffic")) {
-        if (!map.current.getSource("mapbox-traffic")) {
-          map.current.addSource("mapbox-traffic", {
-            type: "vector",
-            url: "mapbox://mapbox.mapbox-traffic-v1",
-          });
-        }
-
-        map.current.addLayer({
-          id: "traffic",
-          type: "line",
-          source: "mapbox-traffic",
-          "source-layer": "traffic",
-          minzoom: 0,
-          maxzoom: 22,
-          paint: {
-            "line-width": 5,
-            "line-color": [
-              "match",
-              ["get", "congestion"],
-              ["low"],
-              "hsl(138, 100%, 40%)",
-              ["moderate"],
-              "hsl(71, 100%, 64%)",
-              ["heavy"],
-              "hsl(28, 100%, 56%)",
-              ["severe"],
-              "hsl(0, 100%, 50%)",
-              "#000000", // Default color
-            ],
-          },
-          layout: {
-            // If you want to initialize the layer as invisible, set 'visibility': 'none'
-            visibility: "visible",
-          },
-        });
-      }
-
-      const MIN_TRAFFIC_ZOOM_LEVEL = 17; // Set your desired minimum zoom level
-
-      map.current.on("zoom", () => {
-        const currentZoom = map.current.getZoom();
-        console.log(currentZoom);
-        if (currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL) {
-          // Show the traffic layer when zoomed in
-          console.log("this is true");
-          map.current.setLayoutProperty("traffic", "visibility", "visible");
-        } else {
-          console.log("this is NOT true");
-          // Hide the traffic layer when zoomed out
-          map.current.setLayoutProperty("traffic", "visibility", "none");
-        }
-      });
-    });
-
-    // Define the createMarker function inside useEffect
-    const createMarker = (markerLng, markerLat) => {
-      const el = document.createElement("div");
-      el.className = "im-marker";
-      el.style.color = "rgb(250 204 21)";
-
-      new mapboxgl.Marker(el)
-        .setLngLat([markerLng, markerLat])
-        .addTo(map.current);
-
-      map.current.easeTo({
-        center: [markerLng, markerLat],
-        zoom: 18,
-        duration: 1000,
-      });
-    };
-
-    // Define addSateliteLayer inside useEffect
-    function addSateliteLayer() {
-      if (!map.current.getLayer("satellite")) {
-        if (!map.current.getSource("satellite-source")) {
-          map.current.addSource("satellite-source", {
+          map.current.addLayer({
+            id: "satellite",
+            source: "satellite-source",
             type: "raster",
-            url: "mapbox://mapbox.satellite",
-            tileSize: 256,
+            layout: {
+              visibility: "none",
+            },
           });
         }
+      }
 
-        map.current.addLayer({
-          id: "satellite",
-          source: "satellite-source",
-          type: "raster",
-          layout: {
-            visibility: "none",
-          },
+      // Function to add a traffic layer
+      function addTrafficLayer() {
+        if (!map.current.getLayer("traffic")) {
+          if (!map.current.getSource("mapbox-traffic")) {
+            map.current.addSource("mapbox-traffic", {
+              type: "vector",
+              url: "mapbox://mapbox.mapbox-traffic-v1",
+            });
+          }
+
+          map.current.addLayer({
+            id: "traffic",
+            type: "line",
+            source: "mapbox-traffic",
+            "source-layer": "traffic",
+            minzoom: 0,
+            maxzoom: 22,
+            paint: {
+              "line-width": 5,
+              "line-color": [
+                "match",
+                ["get", "congestion"],
+                ["low"],
+                "hsl(138, 100%, 40%)",
+                ["moderate"],
+                "hsl(71, 100%, 64%)",
+                ["heavy"],
+                "hsl(28, 100%, 56%)",
+                ["severe"],
+                "hsl(0, 100%, 50%)",
+                "#000000", // Default color
+              ],
+            },
+            layout: {
+              visibility: "visible",
+            },
+          });
+        }
+      }
+
+      // Function to add zoom level event handling
+      function addZoomEvent() {
+        const MIN_TRAFFIC_ZOOM_LEVEL = 17; // Adjust as needed
+        map.current.on("zoom", () => {
+          const currentZoom = map.current.getZoom();
+          map.current.setLayoutProperty(
+            "traffic",
+            "visibility",
+            currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL ? "visible" : "none"
+          );
         });
       }
-    }
-  }, []);
 
-  const markerRefs = useRef({});
+      // Function to add the marker layer using GeoJSON
+      function addMarkerLayer() {
+        const geojsonData = {
+          type: "FeatureCollection",
+          features: structures.map((structure) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [
+                structure.attributes.longitude,
+                structure.attributes.latitude,
+              ],
+            },
+            properties: {
+              id: structure.id,
+              // Include other properties as needed
+            },
+          })),
+        };
+
+        if (!map.current.getSource("markers")) {
+          map.current.addSource("markers", {
+            type: "geojson",
+            data: geojsonData,
+          });
+
+          map.current.addLayer({
+            id: "marker-layer",
+            type: "symbol",
+            source: "markers",
+            layout: {
+              "icon-image": "/profile.png", // Use your custom marker icon
+              "icon-size": 0.5,
+              // Other layout properties...
+            },
+          });
+        } else {
+          map.current.getSource("markers").setData(geojsonData);
+        }
+      }
+
+      // Add the satellite layer
+      addSatelliteLayer();
+
+      // Add the traffic layer
+      addTrafficLayer();
+
+      // Add zoom level event handling for traffic layer
+      addZoomEvent();
+
+      // Add the marker layer
+      addMarkerLayer();
+    });
+  }, [lng, lat, zoom, structures]);
 
   useEffect(() => {
-    structures.forEach((structure) => {
-      const el = document.createElement("div");
-      el.className = "im-marker";
-      el.style.color = getMarkerColor(structure);
+    if (!map.current) return;
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([
-          structure.attributes.longitude,
-          structure.attributes.latitude,
-        ])
-        .addTo(map.current);
+    const onMarkerClick = (e) => {
+      const markerId = e.features[0].properties.id;
+      // Handle marker click event
+    };
 
-      markerRefs.current[structure.id] = marker;
+    map.current.on("click", "marker-layer", onMarkerClick);
 
-      // Log each marker stored
-    });
+    return () => {
+      map.current.off("click", "marker-layer", onMarkerClick);
+    };
+  }, [map.current]);
 
-    map.current.easeTo({
-      center: [lng, lat],
-      zoom: 18,
-      duration: 0,
-    });
-  }, [map.current, structures]); // Add 'structures' as a dependency if it's dynamic
+  // Handle marker click event
+  // map.current.on("click", "marker-layer", (e) => {
+  //   // Access marker properties using e.features[0].properties
+  //   const markerId = e.features[0].properties.id;
+  //   // Handle the click event for the marker
+  // });
 
   useEffect(() => {
     // Function to animate the map and get location details
@@ -638,7 +630,6 @@ export default function Page({ params }) {
                   );
                   getStructureData(structure);
                   setSelectedStructure(structure);
-                  changeMarkerStyle(structure.id, "green");
                 }}
               >
                 <MdLocationPin
