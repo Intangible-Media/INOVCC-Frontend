@@ -29,7 +29,6 @@ export default function Page({ params }) {
   const [structureDocuments, setStructureDocuments] = useState([]);
   const [structureInspectors, setStructureInspectors] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
-  const [showSateliteLayer, setShowSateliteLayer] = useState(false);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [directions, setDirections] = useState(null);
   const [locationDetails, setLocationDetails] = useState({
@@ -297,43 +296,41 @@ export default function Page({ params }) {
     return progressBars;
   };
 
+  function createColoredMarkerSVG(svg, color) {
+    // Replace the fill color in the SVG
+    return svg.replace(/fill="currentColor"/g, `fill="${color}"`);
+  }
+
+  function getColorBasedOnStatus(status) {
+    switch (status) {
+      case "Not Inspected":
+        return "#FF0000"; // Red
+      case "Inspected":
+        return "#00FF00"; // Green
+      case "Cannot Locate":
+        return "#0000FF"; // Blue
+      default:
+        return "#000000"; // Black or any default color
+    }
+  }
+
   const toggleSatelliteLayer = () => {
-    if (map.current.getLayer("satellite")) {
+    if (map.current && map.current.getLayer("satellite")) {
       const visibility = map.current.getLayoutProperty(
         "satellite",
         "visibility"
       );
+      console.log("Current visibility:", visibility);
 
-      // Toggle the layer visibility by changing the layout property
       if (visibility === "visible") {
-        // map.current.setPitch(50, { duration: 500 });
         map.current.setLayoutProperty("satellite", "visibility", "none");
         setActiveMapStyle("3d");
       } else {
         map.current.setLayoutProperty("satellite", "visibility", "visible");
-        map.current.setPitch(0, { duration: 500 });
-        setActiveMapStyle("satelite");
+        setActiveMapStyle("satellite");
       }
-    }
-  };
-
-  const removeSateliteLayer = () => {
-    if (map.current.getLayer("satellite")) {
-      map.current.removeLayer("satellite");
-      // Also remove the source if it's not used by any other layers
-      if (map.current.getSource("satellite-source")) {
-        map.current.removeSource("satellite-source");
-      }
-    }
-  };
-
-  const changeMarkerStyle = (structureId, newColor) => {
-    const marker = markerRefs.current[structureId];
-
-    if (marker) {
-      const markerElement = marker.getElement();
-      markerElement.style.width = "50px";
-      markerElement.style.height = "50px";
+    } else {
+      console.warn("Satellite layer not found on the map.");
     }
   };
 
@@ -414,21 +411,53 @@ export default function Page({ params }) {
         }
       }
 
-      // Function to add zoom level event handling
       function addZoomEvent() {
-        const MIN_TRAFFIC_ZOOM_LEVEL = 17; // Adjust as needed
+        const MIN_TRAFFIC_ZOOM_LEVEL = 17;
         map.current.on("zoom", () => {
           const currentZoom = map.current.getZoom();
-          map.current.setLayoutProperty(
-            "traffic",
-            "visibility",
-            currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL ? "visible" : "none"
-          );
+          if (map.current.getLayer("traffic")) {
+            map.current.setLayoutProperty(
+              "traffic",
+              "visibility",
+              currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL ? "visible" : "none"
+            );
+          }
         });
       }
 
-      // Function to add the marker layer using GeoJSON
-      function addMarkerLayer() {
+      // Add the satellite layer
+      addSatelliteLayer();
+
+      // Add the traffic layer
+      addTrafficLayer();
+
+      // Add zoom level event handling for traffic layer
+      addZoomEvent();
+    });
+  }, [lng, lat, zoom]);
+
+  // Separate useEffect for the marker layer
+  useEffect(() => {
+    if (!map.current || structures.length === 0) return;
+
+    fetch("/location-pin.svg")
+      .then((response) => response.text())
+      .then((svg) => {
+        structures.forEach((structure) => {
+          const color = getColorBasedOnStatus(structure.attributes.status);
+          const coloredSVG = createColoredMarkerSVG(svg, color);
+
+          const blob = new Blob([coloredSVG], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const image = new Image();
+          image.src = url;
+
+          image.onload = () => {
+            map.current.addImage(`profile-icon-${structure.id}`, image);
+            URL.revokeObjectURL(url);
+          };
+        });
+
         const geojsonData = {
           type: "FeatureCollection",
           features: structures.map((structure) => ({
@@ -442,7 +471,7 @@ export default function Page({ params }) {
             },
             properties: {
               id: structure.id,
-              // Include other properties as needed
+              icon: `profile-icon-${structure.id}`,
             },
           })),
         };
@@ -452,35 +481,24 @@ export default function Page({ params }) {
             type: "geojson",
             data: geojsonData,
           });
+        } else {
+          map.current.getSource("markers").setData(geojsonData);
+        }
 
+        if (!map.current.getLayer("marker-layer")) {
           map.current.addLayer({
             id: "marker-layer",
             type: "symbol",
             source: "markers",
             layout: {
-              "icon-image": "/profile.png", // Use your custom marker icon
-              "icon-size": 0.5,
-              // Other layout properties...
+              "icon-image": ["get", "icon"],
+              "icon-size": 1.5, // Adjust icon size as needed
             },
           });
-        } else {
-          map.current.getSource("markers").setData(geojsonData);
         }
-      }
-
-      // Add the satellite layer
-      addSatelliteLayer();
-
-      // Add the traffic layer
-      addTrafficLayer();
-
-      // Add zoom level event handling for traffic layer
-      addZoomEvent();
-
-      // Add the marker layer
-      addMarkerLayer();
-    });
-  }, [lng, lat, zoom, structures]);
+      })
+      .catch((error) => console.error("Error loading SVG:", error));
+  }, [structures]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -496,13 +514,6 @@ export default function Page({ params }) {
       map.current.off("click", "marker-layer", onMarkerClick);
     };
   }, [map.current]);
-
-  // Handle marker click event
-  // map.current.on("click", "marker-layer", (e) => {
-  //   // Access marker properties using e.features[0].properties
-  //   const markerId = e.features[0].properties.id;
-  //   // Handle the click event for the marker
-  // });
 
   useEffect(() => {
     // Function to animate the map and get location details
@@ -529,7 +540,6 @@ export default function Page({ params }) {
     processStructureData(structures);
   }, [structures]);
 
-  // Fetch structures and add markers
   useEffect(() => {
     const fetchData = async () => {
       if (session?.accessToken) {
@@ -544,22 +554,10 @@ export default function Page({ params }) {
           );
           const structuresData = response.data.data.attributes.structures.data;
           setStructures(structuresData);
-          setLng(structuresData[0].attributes.longitude);
-          setLat(structuresData[0].attributes.latitude);
-
-          // Add a marker for each structure
-          structuresData.map((structure) => {
-            const el = document.createElement("div");
-            el.className = "im-marker";
-            el.style.color = getMarkerColor(structure);
-
-            new mapboxgl.Marker(el)
-              .setLngLat([
-                structure.attributes.longitude,
-                structure.attributes.latitude,
-              ])
-              .addTo(map.current);
-          });
+          if (structuresData.length > 0) {
+            setLng(structuresData[0].attributes.longitude);
+            setLat(structuresData[0].attributes.latitude);
+          }
         } catch (error) {
           console.error("Error fetching data", error.response || error);
         }
@@ -567,12 +565,7 @@ export default function Page({ params }) {
     };
 
     fetchData();
-  }, [session, params.id, query]); // Make sure to add `params.id` and `query` as dependencies if they can change
-
-  useEffect(() => {
-    if (showSateliteLayer) return addSateliteLayer();
-    return removeSateliteLayer();
-  }, [showSateliteLayer]);
+  }, [session, params.id, query]);
 
   return (
     <>
@@ -606,7 +599,7 @@ export default function Page({ params }) {
           </button>
         </div>
 
-        <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-50 h-32 rounded-lg absolute right-8 top-8 bottom-8">
+        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-50 h-32 rounded-lg absolute right-8 top-8 bottom-8">
           <TextInput
             id="small"
             type="text"
@@ -667,10 +660,55 @@ export default function Page({ params }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4 mb-4">
-        <div className="col-span-2 flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg"></div>
+      <div className="grid grid-cols-4 gap-4 mb-4">
+        <div className="flex col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+          <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
+            Client
+          </p>
+        </div>
 
-        <div className="overflow-x-auto whitespace-nowrap col-span-3">
+        <div className="flex col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+          <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
+            Documents
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="animate-pulse">
+              <svg
+                className="h-full w-full text-gray-200 dark:text-gray-600"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 18"
+              >
+                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+              </svg>
+            </div>
+            <div className="animate-pulse">
+              <svg
+                className="h-full w-full text-gray-200 dark:text-gray-600"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 18"
+              >
+                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+              </svg>
+            </div>
+            <div className="animate-pulse">
+              <svg
+                className="h-full w-full text-gray-200 dark:text-gray-600"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 18"
+              >
+                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto whitespace-nowrap col-span-2">
           <div className="structures-container inline-flex gap-4">
             {renderProgressBars(structures)}
           </div>
@@ -678,7 +716,7 @@ export default function Page({ params }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
           <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
             Details{" "}
             {selectedStructure && (
@@ -722,10 +760,10 @@ export default function Page({ params }) {
           </p>
 
           <ul className="max-w-md flex flex-col gap-4 divide-gray-200 dark:divide-gray-700">
-            {structureInspectors.map((inspector) => (
+            {structureInspectors.map((inspector, index) => (
               <li
                 className="p-4 border border-1 rounded-lg hover:bg-gray-200"
-                key={inspector}
+                key={`${inspector.attributes.username}-${index}`}
               >
                 <div className="flex items-center space-x-4 rtl:space-x-reverse">
                   <div className="flex-shrink-0">
