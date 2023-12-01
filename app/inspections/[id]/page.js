@@ -30,7 +30,7 @@ export default function Page({ params }) {
   const [structureInspectors, setStructureInspectors] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [showSateliteLayer, setShowSateliteLayer] = useState(false);
-  const [activeMapStyle, setActiveMapStyle] = useState("satelite");
+  const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [directions, setDirections] = useState(null);
   const [locationDetails, setLocationDetails] = useState({
     State: "",
@@ -40,6 +40,7 @@ export default function Page({ params }) {
   });
 
   const [chartSeries, setChartSeries] = useState([]);
+
   const activeMapStyleTab =
     "text-white bg-cyan-400 dark:bg-gray-300 dark:text-gray-900";
   const inactiveMapStyleTab =
@@ -144,9 +145,6 @@ export default function Page({ params }) {
     const files = structure.attributes.documents.data || [];
     const inspectors = structure.attributes.inspectors.data || [];
 
-    console.log("inspectors");
-    console.log(inspectors);
-
     setStructureImages(images);
     setStructureDocuments(files);
     setStructureInspectors(inspectors);
@@ -222,7 +220,7 @@ export default function Page({ params }) {
       chart: {
         type: "radialBar",
       },
-      colors: ["#27A9EF"],
+      colors: ["#ffffff"],
       plotOptions: {
         radialBar: {
           startAngle: -135,
@@ -233,7 +231,7 @@ export default function Page({ params }) {
             background: "transparent",
           },
           track: {
-            background: "#f2f2f2",
+            background: "rgba(255,255,255, .3)",
             startAngle: -135,
             endAngle: 135,
           },
@@ -245,6 +243,7 @@ export default function Page({ params }) {
             value: {
               fontSize: "15px",
               show: true,
+              color: "#ffffff",
             },
           },
         },
@@ -254,7 +253,7 @@ export default function Page({ params }) {
         gradient: {
           shade: "dark",
           type: "horizontal",
-          gradientToColors: ["#40E0D0"],
+          gradientToColors: ["#ffffff"],
           stops: [0, 100],
         },
       },
@@ -334,8 +333,8 @@ export default function Page({ params }) {
         map.current.setLayoutProperty("satellite", "visibility", "none");
         setActiveMapStyle("3d");
       } else {
-        map.current.setPitch(0, { duration: 500 });
         map.current.setLayoutProperty("satellite", "visibility", "visible");
+        map.current.setPitch(0, { duration: 500 });
         setActiveMapStyle("satelite");
       }
     }
@@ -348,6 +347,16 @@ export default function Page({ params }) {
       if (map.current.getSource("satellite-source")) {
         map.current.removeSource("satellite-source");
       }
+    }
+  };
+
+  const changeMarkerStyle = (structureId, newColor) => {
+    const marker = markerRefs.current[structureId];
+
+    if (marker) {
+      const markerElement = marker.getElement();
+      markerElement.style.width = "50px";
+      markerElement.style.height = "50px";
     }
   };
 
@@ -418,6 +427,22 @@ export default function Page({ params }) {
           },
         });
       }
+
+      const MIN_TRAFFIC_ZOOM_LEVEL = 17; // Set your desired minimum zoom level
+
+      map.current.on("zoom", () => {
+        const currentZoom = map.current.getZoom();
+        console.log(currentZoom);
+        if (currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL) {
+          // Show the traffic layer when zoomed in
+          console.log("this is true");
+          map.current.setLayoutProperty("traffic", "visibility", "visible");
+        } else {
+          console.log("this is NOT true");
+          // Hide the traffic layer when zoomed out
+          map.current.setLayoutProperty("traffic", "visibility", "none");
+        }
+      });
     });
 
     // Define the createMarker function inside useEffect
@@ -460,18 +485,24 @@ export default function Page({ params }) {
     }
   }, []);
 
+  const markerRefs = useRef({});
+
   useEffect(() => {
-    structures.map((structure) => {
+    structures.forEach((structure) => {
       const el = document.createElement("div");
       el.className = "im-marker";
       el.style.color = getMarkerColor(structure);
 
-      new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker(el)
         .setLngLat([
           structure.attributes.longitude,
           structure.attributes.latitude,
         ])
         .addTo(map.current);
+
+      markerRefs.current[structure.id] = marker;
+
+      // Log each marker stored
     });
 
     map.current.easeTo({
@@ -479,7 +510,7 @@ export default function Page({ params }) {
       zoom: 18,
       duration: 0,
     });
-  }, [map.current]);
+  }, [map.current, structures]); // Add 'structures' as a dependency if it's dynamic
 
   useEffect(() => {
     // Function to animate the map and get location details
@@ -547,10 +578,6 @@ export default function Page({ params }) {
   }, [session, params.id, query]); // Make sure to add `params.id` and `query` as dependencies if they can change
 
   useEffect(() => {
-    console.log(directions);
-  }, [directions]);
-
-  useEffect(() => {
     if (showSateliteLayer) return addSateliteLayer();
     return removeSateliteLayer();
   }, [showSateliteLayer]);
@@ -611,6 +638,7 @@ export default function Page({ params }) {
                   );
                   getStructureData(structure);
                   setSelectedStructure(structure);
+                  changeMarkerStyle(structure.id, "green");
                 }}
               >
                 <MdLocationPin
@@ -648,14 +676,18 @@ export default function Page({ params }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto whitespace-nowrap mb-4">
-        <div className="structures-container inline-flex gap-4">
-          {renderProgressBars(structures)}
+      <div className="grid grid-cols-5 gap-4 mb-4">
+        <div className="col-span-2 flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg"></div>
+
+        <div className="overflow-x-auto whitespace-nowrap col-span-3">
+          <div className="structures-container inline-flex gap-4">
+            {renderProgressBars(structures)}
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 mb-4 rounded-lg">
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
           <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
             Details{" "}
             {selectedStructure && (

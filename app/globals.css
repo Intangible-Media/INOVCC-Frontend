@@ -206,6 +206,8 @@
 
 .structures-container > .structure-graph {
   scroll-snap-align: start;
+  background: rgb(34,168,243);
+  background: linear-gradient(142deg, rgba(34,168,243,1) 10%, rgb(0, 213, 255) 100%);
 }
 
 .structures-container {
