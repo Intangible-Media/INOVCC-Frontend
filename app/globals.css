@@ -58,10 +58,32 @@
   height: 35rem;
 }
 
+@media (max-width: 550px) {
+  .map-container,
+  .map-stuctures-container {
+    height: 45rem;
+  }
+}
+
 .map-structure-panel {
   height: auto;
   width: 450px;
 }
+
+@media (max-width: 550px) {
+  
+  .map-structure-panel {
+    height: 350px;
+    width: 100%;
+    left: 0;
+    position: absolute;
+    top: auto;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+
 
 .im-snapping {
 
@@ -218,4 +240,19 @@
 
 .structures-container::-webkit-scrollbar {
   height: 0px; /* For Chrome, Safari, and Opera */
+}
+
+.im-drawer {
+  width: 80%;
+}
+
+@media (min-width: 500px) {
+
+  .im-drawer {
+    width: 30rem;
+  }  
+}
+
+.drawer-background-overlay {
+  z-index: 40;
 }

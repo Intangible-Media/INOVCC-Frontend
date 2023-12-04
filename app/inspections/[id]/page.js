@@ -7,22 +7,23 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput, Badge, Button } from "flowbite-react";
+import { TextInput, Badge, Tooltip, Button } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import StructureDrawer from "../../../components/Drawers/StructureDrawer";
+import AuthorizedWrapper from "../../../components/Auth/AuthorizationWrapper";
+import { Butcherman } from "next/font/google";
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: true });
 
 export default function Page({ params }) {
   const { data: session, loading } = useSession();
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [openImages, setOpenImages] = useState(true);
-  const [openDocuments, setOpenDocuments] = useState(false);
   const [lng, setLng] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [lat, setLat] = useState(0);
-  const [zoom, setZoom] = useState(16);
+  const [zoom, setZoom] = useState(18);
   const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
   const [structureImages, setStructureImages] = useState([]);
@@ -31,14 +32,16 @@ export default function Page({ params }) {
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [directions, setDirections] = useState(null);
+  const [client, setClient] = useState({
+    name: "",
+    contacts: [],
+  });
   const [locationDetails, setLocationDetails] = useState({
     State: "",
     city: "",
     address: "",
     zipCode: "",
   });
-
-  const [chartSeries, setChartSeries] = useState([]);
 
   const activeMapStyleTab =
     "text-white bg-cyan-400 dark:bg-gray-300 dark:text-gray-900";
@@ -52,6 +55,9 @@ export default function Page({ params }) {
     populate: {
       structures: {
         populate: "*",
+      },
+      client: {
+        populate: ["contacts"],
       },
     },
   });
@@ -138,29 +144,6 @@ export default function Page({ params }) {
     if (status.toLowerCase() == "inspected") return "#27A9EF";
     if (status.toLowerCase() == "not inspected") return "rgb(250 204 21)";
     else return "rgb(220 38 38)";
-  };
-
-  const processStructureData = (structureData) => {
-    const structureCountsByMonth = structureData.reduce((acc, structure) => {
-      const month = new Date(structure.attributes.inspectionDate).getMonth();
-      const type = structure.attributes.type;
-
-      if (!acc[type]) {
-        acc[type] = Array(12).fill(0);
-      }
-
-      acc[type][month]++;
-      return acc;
-    }, {});
-
-    const series = Object.entries(structureCountsByMonth).map(
-      ([name, data]) => ({
-        name,
-        data,
-      })
-    );
-
-    setChartSeries(series);
   };
 
   const filteredStructures = filterStructures(structureSearch);
@@ -260,11 +243,7 @@ export default function Page({ params }) {
     return (
       <Badge
         color="info"
-        className={`bg-${getInspectionColor(
-          structure.attributes.status
-        )}-100 text-${getInspectionColor(
-          structure.attributes.status
-        )}-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+        className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
       >
         {structure.attributes.mapSection}
       </Badge>
@@ -304,13 +283,11 @@ export default function Page({ params }) {
   function getColorBasedOnStatus(status) {
     switch (status) {
       case "Not Inspected":
-        return "#FF0000"; // Red
+        return "rgb(253 224 71)"; // Red
       case "Inspected":
-        return "#00FF00"; // Green
-      case "Cannot Locate":
-        return "#0000FF"; // Blue
+        return "#27A9EF"; // Green
       default:
-        return "#000000"; // Black or any default color
+        return "#ff0000"; // Black or any default color
     }
   }
 
@@ -320,14 +297,13 @@ export default function Page({ params }) {
         "satellite",
         "visibility"
       );
-      console.log("Current visibility:", visibility);
 
       if (visibility === "visible") {
         map.current.setLayoutProperty("satellite", "visibility", "none");
         setActiveMapStyle("3d");
       } else {
         map.current.setLayoutProperty("satellite", "visibility", "visible");
-        setActiveMapStyle("satellite");
+        setActiveMapStyle("satelite");
       }
     } else {
       console.warn("Satellite layer not found on the map.");
@@ -347,7 +323,16 @@ export default function Page({ params }) {
 
     map.current.on("style.load", () => {
       map.current.setFog({});
-      map.current.easeTo({ padding: { right: 450 } });
+      map.current.setConfigProperty("basemap", "lightPreset", "dawn");
+
+      const isPhone = window.matchMedia("(max-width: 550px)").matches;
+
+      console.log(isPhone);
+
+      // Set padding based on device type
+      const padding = isPhone ? { bottom: 400 } : { right: 450 };
+
+      map.current.easeTo({ padding: padding });
 
       // Function to add a satellite layer
       function addSatelliteLayer() {
@@ -453,7 +438,15 @@ export default function Page({ params }) {
           image.src = url;
 
           image.onload = () => {
-            map.current.addImage(`profile-icon-${structure.id}`, image);
+            const imageName = `profile-icon-${structure.id}`;
+
+            // Check if the image already exists on the map
+            if (map.current.hasImage(imageName)) {
+              // Optionally remove the existing image
+              map.current.removeImage(imageName);
+            }
+
+            map.current.addImage(imageName, image);
             URL.revokeObjectURL(url);
           };
         });
@@ -518,7 +511,21 @@ export default function Page({ params }) {
   useEffect(() => {
     // Function to animate the map and get location details
     const updateMapAndLocation = async () => {
-      map.current.easeTo({ center: [lng, lat], zoom: 18, duration: 1000 });
+      // Determine if the device is a phone or not
+      const isPhone = window.matchMedia("(max-width: 550px)").matches;
+
+      console.log(isPhone);
+
+      // Set padding based on device type
+      const padding = isPhone ? { bottom: 400 } : { right: 450 };
+
+      map.current.easeTo({
+        padding: padding,
+        center: [lng, lat],
+        zoom: 19,
+        duration: 1000,
+      });
+
       try {
         const locationDetails = await getLocationDetails(lng, lat);
       } catch (error) {
@@ -537,10 +544,6 @@ export default function Page({ params }) {
   }, [lng, lat]);
 
   useEffect(() => {
-    processStructureData(structures);
-  }, [structures]);
-
-  useEffect(() => {
     const fetchData = async () => {
       if (session?.accessToken) {
         try {
@@ -552,8 +555,19 @@ export default function Page({ params }) {
               },
             }
           );
+
           const structuresData = response.data.data.attributes.structures.data;
+          const clientName =
+            response.data.data.attributes.client.data.attributes.name;
+          const clientContacts =
+            response.data.data.attributes.client.data.attributes.contacts.data;
+
           setStructures(structuresData);
+          setClient({
+            name: clientName,
+            contacts: clientContacts,
+          });
+
           if (structuresData.length > 0) {
             setLng(structuresData[0].attributes.longitude);
             setLat(structuresData[0].attributes.latitude);
@@ -567,6 +581,22 @@ export default function Page({ params }) {
     fetchData();
   }, [session, params.id, query]);
 
+  useEffect(() => {
+    if (!map.current || !selectedStructure) return;
+
+    if (
+      map.current.getLayer("marker-layer") &&
+      map.current.getSource("markers")
+    ) {
+      map.current.setLayoutProperty("marker-layer", "icon-size", [
+        "case",
+        ["==", ["get", "id"], selectedStructure.id],
+        2, // Larger size for selected structure
+        1.5, // Normal size
+      ]);
+    }
+  }, [selectedStructure]);
+
   return (
     <>
       <div
@@ -574,7 +604,7 @@ export default function Page({ params }) {
         className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg"
       >
         <div
-          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-50"
+          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
           role="group"
         >
           <button
@@ -599,7 +629,7 @@ export default function Page({ params }) {
           </button>
         </div>
 
-        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-50 h-32 rounded-lg absolute right-8 top-8 bottom-8">
+        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8">
           <TextInput
             id="small"
             type="text"
@@ -635,14 +665,13 @@ export default function Page({ params }) {
                 />
 
                 <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal w-full">
-                  <h5 className="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+                  <h5 className="flex mb-2 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
                     {structure.attributes.mapSection}
-                    <span className="font-light">
-                      {" - "}
-                      {structure.attributes.type}
+                    <span className="flex items-center font-light ml-1">
+                      {` - ${structure.attributes.type}`}
                     </span>
                   </h5>
-                  <p className="font-normal text-gray-700 dark:text-gray-400">
+                  <p className="flex text-sm text-gray-700 dark:text-gray-400">
                     <span
                       className={`bg-${getInspectionColor(
                         structure.attributes.status
@@ -652,8 +681,24 @@ export default function Page({ params }) {
                     >
                       {structure.attributes.status}
                     </span>
+
+                    {selectedStructure && (
+                      <>
+                        {selectedStructure.id === structure.id && (
+                          <Badge
+                            color="info"
+                            className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300 ml-1`}
+                          >
+                            Active
+                          </Badge>
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
+                {selectedStructure?.id === structure.id && (
+                  <StructureDrawer structure={selectedStructure} />
+                )}
               </div>
             ))}
           </div>
@@ -661,54 +706,70 @@ export default function Page({ params }) {
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="flex col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
           <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
             Client
           </p>
-        </div>
 
-        <div className="flex col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
-          <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
-            Documents
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="animate-pulse">
-              <svg
-                className="h-full w-full text-gray-200 dark:text-gray-600"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 18"
-              >
-                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-              </svg>
+          <dl className="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+            <div className="flex flex-col pb-3">
+              <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+                Name
+              </dt>
+              <dd className="text-md font-semibold">{client.name}</dd>
             </div>
-            <div className="animate-pulse">
-              <svg
-                className="h-full w-full text-gray-200 dark:text-gray-600"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 18"
-              >
-                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-              </svg>
-            </div>
-            <div className="animate-pulse">
-              <svg
-                className="h-full w-full text-gray-200 dark:text-gray-600"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 18"
-              >
-                <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-              </svg>
+          </dl>
+          <div>
+            <div className="flex -space-x-2 overflow-hidden">
+              {client.contacts.map((contact) => (
+                <Tooltip
+                  key={contact.attributes.username}
+                  content={contact.attributes.username}
+                  animation="duration-300"
+                >
+                  <img
+                    className="inline-block h-10 w-10 rounded-full ring-2 ring-white"
+                    src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                    alt=""
+                  />
+                </Tooltip>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto whitespace-nowrap col-span-2">
+        <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+          <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
+            Documents
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {structureDocuments.length === 0 ? (
+              <div className="animate-pulse">
+                <svg
+                  className="h-full w-full text-gray-200 dark:text-gray-600"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 18"
+                >
+                  <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                </svg>
+              </div>
+            ) : (
+              <>
+                {structureDocuments.map((image) => (
+                  <DownloadImage
+                    key={`${image.attributes.name}`}
+                    src={`http://localhost:1337${image.attributes.url}`}
+                    filename={"somehting"}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto whitespace-nowrap col-span-4 md:col-span-2">
           <div className="structures-container inline-flex gap-4">
             {renderProgressBars(structures)}
           </div>
@@ -725,7 +786,7 @@ export default function Page({ params }) {
           </p>
 
           <dl className="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-            <div className="flex flex-col pb-3">
+            <div className="flex flex-col ">
               <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
                 Address
               </dt>

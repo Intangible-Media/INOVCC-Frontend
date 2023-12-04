@@ -144,7 +144,7 @@ export default function Dashboard() {
       });
 
       seriesData.sort((a, b) => a[0] - b[0]);
-      return { name: type, data: seriesData };
+      return { name: type, data: seriesData.slice(0, 25) };
     });
 
     setChartSeries(series);

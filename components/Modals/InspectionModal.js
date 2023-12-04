@@ -41,8 +41,6 @@ export default function InspectionModal() {
             }),
           ]);
 
-          console.log(clientResponse.data.data);
-
           setClients(clientResponse.data.data);
         } catch (error) {
           console.error("Error fetching data", error.response || error);
@@ -90,7 +88,6 @@ export default function InspectionModal() {
     };
 
     if (session?.accessToken) {
-      console.log("inside the if statement");
       try {
         const clientResponse = await axios.post(
           `http://localhost:1337/api/inspections`,
