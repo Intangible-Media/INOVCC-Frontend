@@ -32,6 +32,7 @@ export default function Page({ params }) {
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [directions, setDirections] = useState(null);
+  const [inspectionReport, setInspectionReport] = useState("");
   const [client, setClient] = useState({
     name: "",
     contacts: [],
@@ -275,6 +276,22 @@ export default function Page({ params }) {
     return progressBars;
   };
 
+  function InspectionReport({ reportText }) {
+    const formattedText = reportText.split("\n").map((line, index) => (
+      <span key={index}>
+        {line}
+        <br />
+      </span>
+    ));
+
+    return (
+      <div>
+        <h2>Inspection Report</h2>
+        <div>{formattedText}</div>
+      </div>
+    );
+  }
+
   function createColoredMarkerSVG(svg, color) {
     // Replace the fill color in the SVG
     return svg.replace(/fill="currentColor"/g, `fill="${color}"`);
@@ -326,8 +343,6 @@ export default function Page({ params }) {
       map.current.setConfigProperty("basemap", "lightPreset", "dawn");
 
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
-
-      console.log(isPhone);
 
       // Set padding based on device type
       const padding = isPhone ? { bottom: 400 } : { right: 450 };
@@ -513,9 +528,6 @@ export default function Page({ params }) {
     const updateMapAndLocation = async () => {
       // Determine if the device is a phone or not
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
-
-      console.log(isPhone);
-
       // Set padding based on device type
       const padding = isPhone ? { bottom: 400 } : { right: 450 };
 
@@ -580,6 +592,47 @@ export default function Page({ params }) {
 
     fetchData();
   }, [session, params.id, query]);
+
+  useEffect(() => {
+    // Function to fetch data
+    const fetchData = async () => {
+      if (session?.accessToken) {
+        window.alert("This is running again ");
+        try {
+          const inspectionReportResponse = await axios.get(
+            `http://localhost:1337/api/inspections/${params.id}/report`,
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`,
+              },
+            }
+          );
+
+          setInspectionReport(
+            inspectionReportResponse.data.choices[0].message.content
+          );
+          // Cache the data
+          localStorage.setItem(
+            `inspectionReport_${params.id}`,
+            JSON.stringify(
+              inspectionReportResponse.data.choices[0].message.content
+            )
+          );
+          console.log(inspectionReportResponse.data);
+        } catch (error) {
+          console.error("Error fetching data", error.response || error);
+        }
+      }
+    };
+
+    // Check if the data is already in the cache
+    const cachedData = localStorage.getItem(`inspectionReport_${params.id}`);
+    if (cachedData) {
+      setInspectionReport(JSON.parse(cachedData));
+    } else {
+      fetchData();
+    }
+  }, [session, params.id]);
 
   useEffect(() => {
     if (!map.current || !selectedStructure) return;
@@ -906,6 +959,15 @@ export default function Page({ params }) {
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 mb-4">
+        <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+          <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
+            Inspection Report
+          </p>
+          <InspectionReport reportText={inspectionReport} />
         </div>
       </div>
     </>
