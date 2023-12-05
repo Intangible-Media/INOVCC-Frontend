@@ -256,3 +256,7 @@
 .drawer-background-overlay {
   z-index: 40;
 }
+
+.invoice-viewer {
+  aspect-ratio: 1 / 1.41;
+}

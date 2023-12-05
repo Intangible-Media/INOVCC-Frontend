@@ -3,6 +3,7 @@
 import { Table } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import axios from "axios";
 
 export default function Page() {
@@ -56,12 +57,12 @@ export default function Page() {
                   <Table.Cell>Laptop</Table.Cell>
                   <Table.Cell>$2999</Table.Cell>
                   <Table.Cell>
-                    <a
-                      href="#"
+                    <Link
+                      href={`/clients/${client.id}`}
                       className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
                     >
-                      Edit
-                    </a>
+                      View
+                    </Link>
                   </Table.Cell>
                 </Table.Row>
               ))}
