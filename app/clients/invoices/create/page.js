@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Table, Button, TextInput, Select } from "flowbite-react";
+import { Table, Button, TextInput, Select, Checkbox } from "flowbite-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
@@ -520,7 +520,7 @@ export default function Page({ params }) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 col-span-2 h-fit-content">
-          <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg aspect-square overflow-auto">
+          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg overflow-auto">
             <div className="flex flex-col mb-4">
               <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
                 Client
@@ -532,6 +532,7 @@ export default function Page({ params }) {
                 onChange={(e) => setSelectedClientId(e.target.value)} // Update the state when an option is selected
                 required
               >
+                <option key={"n/a"}>Select a Client</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.attributes.name}
@@ -561,44 +562,59 @@ export default function Page({ params }) {
                 />
               </div>{" "}
             </div>
-            <Table striped className="mb-4">
-              <Table.Head>
-                <Table.HeadCell>Structure Type</Table.HeadCell>
-                <Table.HeadCell>Price</Table.HeadCell>
-              </Table.Head>
-              <Table.Body className="">
-                {Object.keys(groupedStructures).map((type, index) => (
-                  <Table.Row
-                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                    key={`${type}-${index}`}
-                  >
-                    <Table.Cell>{type}</Table.Cell>
-                    <Table.Cell>
-                      <TextInput
-                        className="w-20"
-                        id="email1"
-                        type="number"
-                        placeholder="999"
-                        required
-                      />
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table>
+            <div className="structure-table-container mb-4">
+              <Table striped>
+                <Table.Head className="sticky top-0 z-40">
+                  <Table.HeadCell className="p-4">
+                    <Checkbox defaultChecked />
+                  </Table.HeadCell>
+                  <Table.HeadCell>Structure Type</Table.HeadCell>
+                  <Table.HeadCell>Price</Table.HeadCell>
+                </Table.Head>
+                <Table.Body>
+                  {Object.keys(groupedStructures).map((type, index) => (
+                    <Table.Row
+                      className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                      key={`${type}-${index}`}
+                    >
+                      <Table.Cell className="p-4">
+                        <Checkbox defaultChecked />
+                      </Table.Cell>
+                      <Table.Cell>{type}</Table.Cell>
+                      <Table.Cell>
+                        <TextInput
+                          className="w-20"
+                          id="email1"
+                          type="number"
+                          placeholder="999"
+                          value={
+                            clientPricing[type.toLowerCase().replace(" ", "-")]
+                              ? clientPricing[
+                                  type.toLowerCase().replace(" ", "-")
+                                ].price
+                              : "0"
+                          }
+                          required
+                        />
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+            </div>
 
             <Button className="bg-cyan-400" onClick={() => getInvoicehData()}>
               Generate Invoice
             </Button>
           </div>
-          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg ">
+          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg pt-10">
             <ApexChart
               type="donut"
               options={chartOptions}
               series={Object.keys(groupedStructures).map((type) => {
                 return groupedStructures[type].length;
               })}
-              height={170}
+              height={200}
               width={"100%"}
             />
           </div>

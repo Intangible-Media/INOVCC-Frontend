@@ -28,7 +28,7 @@ export default function SidePanel() {
       className="main-sidebar fixed top-15 left-0 z-10 w-64 h-screen pt-14 transition-transform -translate-x-full border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
       aria-label="Sidebar"
     >
-      <div className="text-center text-gray-500 dark:text-gray-400 px-4 pb-10">
+      <div className="text-center text-white dark:text-gray-400 px-4 pb-10">
         <img
           className="mx-auto mb-4 w-20 h-20 rounded-full"
           src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gouch.png"
@@ -40,7 +40,7 @@ export default function SidePanel() {
         <p className="font-light text-white dark:text-gray-400">{user.email}</p>
         <Link
           href="/api/auth/signout"
-          className="inline-flex items-center justify-center w-full py-2.5 px-5 my-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+          className="inline-flex items-center justify-center w-full py-2.5 px-5 my-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-cyan-400 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
         >
           <svg
             aria-hidden="true"
@@ -63,7 +63,7 @@ export default function SidePanel() {
           <li>
             <a
               href="#"
-              className="inline-flex text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
+              className="inline-flex text-white dark:text-gray-400 hover:bg-cyan-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
             >
               <svg
                 className="w-6 h-6"
@@ -79,7 +79,7 @@ export default function SidePanel() {
           <li>
             <a
               href="#"
-              className="inline-flex text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
+              className="inline-flex text-white dark:text-gray-400 hover:bg-cyan-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
             >
               <svg
                 className="w-6 h-6"
@@ -95,7 +95,7 @@ export default function SidePanel() {
           <li>
             <a
               href="#"
-              className="inline-flex text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
+              className="inline-flex text-white dark:text-gray-400 hover:bg-cyan-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
             >
               <svg
                 className="w-6 h-6"

@@ -301,3 +301,12 @@ input[type="date"]{
   cursor: pointer;
   border-radius: 3px;
 }
+
+.structure-table-container {
+  height: 100%;
+  overflow: auto;
+}
+
+.invoice-control-panel {
+  height: 600px;
+}

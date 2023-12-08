@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
       <body className={`${inter.className} bg-gray-100`}>
         <AuthProvider>
           <SidePanel />
-          <div className="p-4 pt-10 px-14 sm:ml-64">
+          <div className="p-4 pt-10 px-20 sm:ml-64">
             <div className="rounded-lg dark:border-gray-700 ">
               <div className="flex pb-10">
                 <DynamicBreadcrumb />
