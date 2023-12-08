@@ -7,7 +7,7 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput, Badge, Tooltip, Button } from "flowbite-react";
+import { TextInput, Badge, Tooltip, Breadcrumb } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -23,7 +23,7 @@ export default function Page({ params }) {
   const [lng, setLng] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [lat, setLat] = useState(0);
-  const [zoom, setZoom] = useState(18);
+  const [zoom, setZoom] = useState(10);
   const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
   const [structureImages, setStructureImages] = useState([]);
@@ -180,7 +180,7 @@ export default function Page({ params }) {
       chart: {
         type: "radialBar",
       },
-      colors: ["#ffffff"],
+      colors: ["#33abef"],
       plotOptions: {
         radialBar: {
           startAngle: -135,
@@ -191,7 +191,7 @@ export default function Page({ params }) {
             background: "transparent",
           },
           track: {
-            background: "rgba(255,255,255, .3)",
+            background: "#f5f5f5",
             startAngle: -135,
             endAngle: 135,
           },
@@ -203,7 +203,7 @@ export default function Page({ params }) {
             value: {
               fontSize: "15px",
               show: true,
-              color: "#ffffff",
+              color: "#33abef",
             },
           },
         },
@@ -213,7 +213,7 @@ export default function Page({ params }) {
         gradient: {
           shade: "dark",
           type: "horizontal",
-          gradientToColors: ["#ffffff"],
+          gradientToColors: ["#33abef"],
           stops: [0, 100],
         },
       },
@@ -340,12 +340,12 @@ export default function Page({ params }) {
 
     map.current.on("style.load", () => {
       map.current.setFog({});
-      map.current.setConfigProperty("basemap", "lightPreset", "dawn");
+      map.current.setConfigProperty("basemap", "lightPreset", "day");
 
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
 
       // Set padding based on device type
-      const padding = isPhone ? { bottom: 400 } : { right: 450 };
+      const padding = isPhone ? { bottom: 400 } : { right: 400 };
 
       map.current.easeTo({ padding: padding });
 
@@ -534,7 +534,7 @@ export default function Page({ params }) {
       map.current.easeTo({
         padding: padding,
         center: [lng, lat],
-        zoom: 19,
+        zoom: 16,
         duration: 1000,
       });
 
@@ -697,7 +697,11 @@ export default function Page({ params }) {
             {filteredStructures.map((structure, index) => (
               <div
                 key={`${structure.id}-${index}`}
-                className="flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2"
+                className={`flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2 ${
+                  selectedStructure &&
+                  selectedStructure.id === structure.id &&
+                  "active-structure"
+                }`}
                 onClick={(e) => {
                   e.preventDefault();
                   updateCenterOnClick(
@@ -758,7 +762,7 @@ export default function Page({ params }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
           <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
             Client
@@ -766,9 +770,6 @@ export default function Page({ params }) {
 
           <dl className="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
             <div className="flex flex-col pb-3">
-              <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
-                Name
-              </dt>
               <dd className="text-md font-semibold">{client.name}</dd>
             </div>
           </dl>
@@ -795,7 +796,7 @@ export default function Page({ params }) {
           <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
             Documents
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {structureDocuments.length === 0 ? (
               <div className="animate-pulse">
                 <svg
@@ -822,7 +823,7 @@ export default function Page({ params }) {
           </div>
         </div>
 
-        <div className="overflow-x-auto whitespace-nowrap col-span-4 md:col-span-2">
+        <div className="overflow-x-auto whitespace-nowrap col-span-3 md:col-span-1">
           <div className="structures-container inline-flex gap-4">
             {renderProgressBars(structures)}
           </div>

@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
+import { TbDotsVertical } from "react-icons/tb";
+
 import Link from "next/link";
 
 const StructureDrawer = ({ structure }) => {
@@ -14,9 +16,12 @@ const StructureDrawer = ({ structure }) => {
   return (
     <div>
       <div className="text-center">
-        <Button className="bg-cyan" onClick={toggleDrawer}>
-          Edit
-        </Button>
+        <button
+          className="bg-transparent hover:bg-transparent text-gray-400"
+          onClick={toggleDrawer}
+        >
+          <TbDotsVertical style={{ fontSize: "20px" }} />
+        </button>
       </div>
 
       {isDrawerOpen && (

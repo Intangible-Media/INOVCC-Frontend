@@ -67,7 +67,7 @@
 
 .map-structure-panel {
   height: auto;
-  width: 450px;
+  width: 400px;
 }
 
 @media (max-width: 550px) {
@@ -228,8 +228,7 @@
 
 .structures-container > .structure-graph {
   scroll-snap-align: start;
-  background: rgb(34,168,243);
-  background: linear-gradient(142deg, rgba(34,168,243,1) 10%, rgb(0, 213, 255) 100%);
+  background: #ffffff;
 }
 
 .structures-container {
@@ -259,4 +258,25 @@
 
 .invoice-viewer {
   aspect-ratio: 1 / 1.41;
+  padding: 10%;
+}
+
+.invoice-viewer * {
+  font-size: 95% !important;
+}
+
+.main-sidebar {
+  background-color: #002448;
+}
+
+.active-structure {
+  background-color: rgb(240, 240, 240) !important;
+}
+
+.h-fit-content {
+  height: fit-content;
+}
+
+.dark-text * {
+  color: rgb(0, 36, 72) !important;
 }
