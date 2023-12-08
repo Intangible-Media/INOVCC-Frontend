@@ -15,6 +15,7 @@ import AuthProvider from "../context/AuthProvider";
 import Link from "next/link";
 import { Breadcrumb } from "flowbite-react";
 import SidePanel from "../components/SidePanel";
+import DynamicBreadcrumb from "../components/DynamicBreadcrumb";
 import { HiHome } from "react-icons/hi";
 
 import { useEffect, useState } from "react";
@@ -31,16 +32,7 @@ export default function RootLayout({ children }) {
           <div className="p-4 pt-10 px-14 sm:ml-64">
             <div className="rounded-lg dark:border-gray-700 ">
               <div className="flex pb-10">
-                <Breadcrumb
-                  className="dark-text"
-                  aria-label="Default breadcrumb example"
-                >
-                  <Breadcrumb.Item href="#" icon={HiHome}>
-                    Home
-                  </Breadcrumb.Item>
-                  <Breadcrumb.Item href="#">Projects</Breadcrumb.Item>
-                  <Breadcrumb.Item>Flowbite React</Breadcrumb.Item>
-                </Breadcrumb>
+                <DynamicBreadcrumb />
               </div>
               {children}
             </div>

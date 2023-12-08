@@ -1,15 +1,17 @@
 "use client";
 
 import React from "react";
-import { Table, Button, TextInput, Datepicker, Select } from "flowbite-react";
+import { Table, Button, TextInput, Select } from "flowbite-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import qs from "qs";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-import { HiHome } from "react-icons/hi";
 import dynamic from "next/dynamic";
+import DynamicBreadcrumb from "../../../../components/DynamicBreadcrumb";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -117,34 +119,14 @@ export default function Page({ params }) {
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
   const [selectedClientId, setSelectedClientId] = useState(""); // State to store the selected client ID
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [clients, setClients] = useState([]);
+  const [clientPricing, setClientPricing] = useState();
   const [client, setClient] = useState({
     name: "",
     address: "",
   });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (session?.accessToken) {
-        try {
-          const response = await axios.get(
-            `http://localhost:1337/api/clients`,
-            {
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`,
-              },
-            }
-          );
-
-          console.log(response);
-          setClients(response.data.data);
-        } catch (error) {
-          console.error("Error fetching data", error.response || error);
-        }
-      }
-    };
-    fetchData();
-  }, [session]);
 
   const chartOptions = {
     chart: {
@@ -185,7 +167,7 @@ export default function Page({ params }) {
             inspection: {
               client: {
                 id: {
-                  $eq: params.id, // Assuming params.id is your client's ID
+                  $eq: selectedClientId, // Assuming params.id is your client's ID
                 },
               },
             },
@@ -195,16 +177,21 @@ export default function Page({ params }) {
               $eq: "Inspected", // Filter structures by "inspected" status
             },
           },
+          {
+            inspectionDate: {
+              $gte: startDate, // Start of the date range
+              $lte: endDate, // End of the date range
+            },
+          },
         ],
       },
-      populate: ["inspection.client"], // Populate the inspection and its client
     },
     {
       encodeValuesOnly: true,
     }
   );
 
-  const fetchData = async () => {
+  const getInvoicehData = async () => {
     if (session?.accessToken) {
       try {
         const structuresResponse = await axios.get(
@@ -217,20 +204,17 @@ export default function Page({ params }) {
         );
 
         const clientResponse = await axios.get(
-          `http://localhost:1337/api/clients/${params.id}`,
+          `http://localhost:1337/api/clients/${selectedClientId}`,
           {
             headers: {
               Authorization: `Bearer ${session.accessToken}`,
             },
           }
         );
-
-        console.log(clientResponse.data.data.data);
         setStructures(structuresResponse.data.data);
-        setClient({
-          name: clientResponse.data.data.attributes.name,
-          address: "4338 N 20th St Phoenix AZ 815016",
-        });
+        // setClient(clientResponse.data.data);
+        console.log(clientResponse.data.data);
+        setClientPricing(clientResponse.data.data.attributes.structurePricing);
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
@@ -238,142 +222,145 @@ export default function Page({ params }) {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [session]);
-
-  useEffect(() => {
-    // Function to group structures by type
-    const groupByType = (structures) => {
-      return structures.reduce((acc, structure) => {
-        const type = structure.attributes.type;
-        if (!acc[type]) {
-          acc[type] = [];
-        }
-        acc[type].push(structure);
-        return acc;
-      }, {});
-    };
-
     if (structures.length) {
-      // Sort structures if needed
-      const sortedStructures = [...structures].sort((a, b) =>
-        a.attributes.type.localeCompare(b.attributes.type)
-      );
-
-      // Group structures by type
-      const newGroupedStructures = groupByType(sortedStructures);
-
-      // Update the state with the new grouped structures
-      setGroupedStructures(newGroupedStructures);
-
-      // Function to create a table for each type
-      // Function to create a table for each type
-      const createTableForType = (structures, type) => {
-        return [
-          {
-            text: type,
-            fontSize: 14,
-            bold: true,
-            margin: [0, 0, 0, 18],
-          },
-          {
-            table: {
-              headerRows: 1,
-              paddingLeft: 8,
-              paddingRight: 8,
-              widths: [40, "auto", 100, "*", "*"],
-              body: [
-                // This is the header row
-                [
-                  {
-                    text: "ID",
-                    style: "tableHeader",
-                    fillColor: "#f9fafb",
-                    border: [false, false, false, false],
-                  },
-                  {
-                    text: "Map Section",
-                    style: "tableHeader",
-                    fillColor: "#f9fafb",
-                    border: [false, false, false, false],
-                  },
-                  {
-                    text: "Type",
-                    style: "tableHeader",
-                    fillColor: "#f9fafb",
-                    border: [false, false, false, false],
-                  },
-                  {
-                    text: "Inspected",
-                    style: "tableHeader",
-                    fillColor: "#f9fafb",
-                    border: [false, false, false, false],
-                  },
-                  {
-                    text: "Date",
-                    style: "tableHeader",
-                    fillColor: "#f9fafb",
-                    border: [false, false, false, false],
-                  },
-                ],
-                // Add rows for the structures of this type
-                ...structures.map((structure, index) => {
-                  let cellBackgroundColor =
-                    index % 2 == 0 ? "#ffffff" : "#f9fafb";
-                  return [
-                    {
-                      text: structure.id,
-                      style: "tableBody",
-                      fillColor: cellBackgroundColor,
-                      border: [false, false, false, false],
-                    },
-                    {
-                      text: structure.attributes.mapSection,
-                      style: "tableBody",
-                      fillColor: cellBackgroundColor,
-                      border: [false, false, false, false],
-                    },
-                    {
-                      text: type,
-                      style: "tableBody",
-                      fillColor: cellBackgroundColor,
-                      border: [false, false, false, false],
-                    },
-                    {
-                      text: structure.attributes.status,
-                      style: "tableBody",
-                      fillColor: cellBackgroundColor,
-                      border: [false, false, false, false],
-                    },
-                    {
-                      text: structure.attributes.inspectionDate,
-                      style: "tableBody",
-                      fillColor: cellBackgroundColor,
-                      border: [false, false, false, false],
-                    },
-                  ];
-                }),
-              ],
-            },
-          },
-          {
-            text: "",
-            fontSize: 14,
-            bold: true,
-            pageBreak: "after",
-            margin: [0, 0, 0, 8],
-          },
-        ];
+      const groupByType = (structures) => {
+        return structures.reduce((acc, structure) => {
+          const type = structure.attributes.type;
+          if (!acc[type]) {
+            acc[type] = [];
+          }
+          acc[type].push(structure);
+          return acc;
+        }, {});
       };
 
-      // Create a table for each type in the PDF document definition
-      docDefinition.content.push(
-        Object.keys(newGroupedStructures).map((type) =>
-          createTableForType(newGroupedStructures[type], type)
-        )
-      );
+      if (structures.length) {
+        // Sort structures if needed
+        const sortedStructures = [...structures].sort((a, b) =>
+          a.attributes.type.localeCompare(b.attributes.type)
+        );
+
+        // Group structures by type
+        const newGroupedStructures = groupByType(sortedStructures);
+
+        // Update the state with the new grouped structures
+        setGroupedStructures(newGroupedStructures);
+
+        // Function to create a table for each type
+        // Function to create a table for each type
+        const createTableForType = (structures, type) => {
+          return [
+            {
+              text: type,
+              fontSize: 14,
+              bold: true,
+              margin: [0, 0, 0, 18],
+            },
+            {
+              table: {
+                headerRows: 1,
+                paddingLeft: 8,
+                paddingRight: 8,
+                widths: [40, "auto", 100, "*", "*"],
+                body: [
+                  // This is the header row
+                  [
+                    {
+                      text: "ID",
+                      style: "tableHeader",
+                      fillColor: "#f9fafb",
+                      border: [false, false, false, false],
+                    },
+                    {
+                      text: "Map Section",
+                      style: "tableHeader",
+                      fillColor: "#f9fafb",
+                      border: [false, false, false, false],
+                    },
+                    {
+                      text: "Type",
+                      style: "tableHeader",
+                      fillColor: "#f9fafb",
+                      border: [false, false, false, false],
+                    },
+                    {
+                      text: "Inspected",
+                      style: "tableHeader",
+                      fillColor: "#f9fafb",
+                      border: [false, false, false, false],
+                    },
+                    {
+                      text: "Date",
+                      style: "tableHeader",
+                      fillColor: "#f9fafb",
+                      border: [false, false, false, false],
+                    },
+                  ],
+                  // Add rows for the structures of this type
+                  ...structures.map((structure, index) => {
+                    let cellBackgroundColor =
+                      index % 2 == 0 ? "#ffffff" : "#f9fafb";
+                    return [
+                      {
+                        text: structure.id,
+                        style: "tableBody",
+                        fillColor: cellBackgroundColor,
+                        border: [false, false, false, false],
+                      },
+                      {
+                        text: structure.attributes.mapSection,
+                        style: "tableBody",
+                        fillColor: cellBackgroundColor,
+                        border: [false, false, false, false],
+                      },
+                      {
+                        text: type,
+                        style: "tableBody",
+                        fillColor: cellBackgroundColor,
+                        border: [false, false, false, false],
+                      },
+                      {
+                        text: structure.attributes.status,
+                        style: "tableBody",
+                        fillColor: cellBackgroundColor,
+                        border: [false, false, false, false],
+                      },
+                      {
+                        text: structure.attributes.inspectionDate,
+                        style: "tableBody",
+                        fillColor: cellBackgroundColor,
+                        border: [false, false, false, false],
+                      },
+                    ];
+                  }),
+                ],
+              },
+            },
+            {
+              text: "",
+              fontSize: 14,
+              bold: true,
+              pageBreak: "after",
+              margin: [0, 0, 0, 8],
+            },
+          ];
+        };
+
+        // Create a table for each type in the PDF document definition
+        docDefinition.content.push(
+          Object.keys(newGroupedStructures).map((type) =>
+            createTableForType(newGroupedStructures[type], type)
+          )
+        );
+      }
+    } else {
+      setGroupedStructures({});
     }
   }, [structures]);
+
+  useEffect(() => {
+    console.log(selectedClientId);
+  }, [selectedClientId]);
 
   const generatePdf = () => {
     pdfMake.createPdf(docDefinition).open();
@@ -382,6 +369,29 @@ export default function Page({ params }) {
   const sortedStructures = [...structures].sort((a, b) =>
     a.attributes.type.localeCompare(b.attributes.type)
   );
+
+  useEffect(() => {
+    if (session?.accessToken) {
+      try {
+        const getAllClients = async () => {
+          const clientsResponse = await axios.get(
+            `http://localhost:1337/api/clients`,
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`,
+              },
+            }
+          );
+
+          setClients(clientsResponse.data.data);
+        };
+
+        getAllClients();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [session]);
 
   return (
     <>
@@ -443,13 +453,20 @@ export default function Page({ params }) {
                 </thead>
                 <tbody>
                   {/* Repeat for each item */}
-                  {Object.keys(groupedStructures).map((type) => (
-                    <tr>
+                  {Object.keys(groupedStructures).map((type, index) => (
+                    <tr key={`${type}-${index}-${index}`}>
                       <td className="py-3">{type}</td>
                       <td className="text-right py-3">
                         {groupedStructures[type].length}
                       </td>
-                      <td className="text-right py-3">$100.00</td>
+                      <td className="text-right py-3">
+                        {
+                          /* {clientPricing ? clientPricing[type].price : ""} */
+                          clientPricing[type.toLowerCase().replace(" ", "-")] &&
+                            clientPricing[type.toLowerCase().replace(" ", "-")]
+                              .price
+                        }
+                      </td>
                       <td className="text-right py-3">$100.00</td>
                     </tr>
                   ))}
@@ -464,10 +481,9 @@ export default function Page({ params }) {
               <p className="text-sm">Total: $110.00</p>
             </section>
 
-            {Object.keys(groupedStructures).map((type) => {
-              console.log(groupedStructures);
+            {Object.keys(groupedStructures).map((type, index) => {
               return (
-                <>
+                <div key={`invoice-${type}-${index}`}>
                   <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
                     {type}
                   </p>
@@ -498,7 +514,7 @@ export default function Page({ params }) {
                       ))}
                     </Table.Body>
                   </Table>
-                </>
+                </div>
               );
             })}
           </div>
@@ -507,7 +523,7 @@ export default function Page({ params }) {
           <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg aspect-square overflow-auto">
             <div className="flex flex-col mb-4">
               <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
-                Start Date
+                Client
               </p>
               <Select
                 id="clients"
@@ -528,13 +544,21 @@ export default function Page({ params }) {
                 <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
                   Start Date
                 </p>
-                <Datepicker />
+                <DatePicker
+                  className="w-full rounded-lg border border-1"
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                />
               </div>
               <div>
                 <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
                   End Date
                 </p>
-                <Datepicker />
+                <DatePicker
+                  className="w-full rounded-lg border border-1"
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                />
               </div>{" "}
             </div>
             <Table striped className="mb-4">
@@ -543,8 +567,11 @@ export default function Page({ params }) {
                 <Table.HeadCell>Price</Table.HeadCell>
               </Table.Head>
               <Table.Body className="">
-                {Object.keys(groupedStructures).map((type) => (
-                  <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                {Object.keys(groupedStructures).map((type, index) => (
+                  <Table.Row
+                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                    key={`${type}-${index}`}
+                  >
                     <Table.Cell>{type}</Table.Cell>
                     <Table.Cell>
                       <TextInput
@@ -560,7 +587,9 @@ export default function Page({ params }) {
               </Table.Body>
             </Table>
 
-            <Button className="bg-cyan-400">Generate Invoice</Button>
+            <Button className="bg-cyan-400" onClick={() => getInvoicehData()}>
+              Generate Invoice
+            </Button>
           </div>
           <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg ">
             <ApexChart
