@@ -11,7 +11,7 @@ import qs from "qs";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import dynamic from "next/dynamic";
-import DynamicBreadcrumb from "../../../../components/DynamicBreadcrumb";
+import { MdFileDownload } from "react-icons/md";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -118,7 +118,7 @@ export default function Page({ params }) {
   const { data: session, loading } = useSession();
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
-  const [selectedClientId, setSelectedClientId] = useState(""); // State to store the selected client ID
+  const [selectedClientId, setSelectedClientId] = useState(); // State to store the selected client ID
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [clients, setClients] = useState([]);
@@ -132,6 +132,11 @@ export default function Page({ params }) {
     chart: {
       width: 380,
       type: "donut",
+      offsetX: -40, // Adjust this value as needed to align left
+      parentHeightOffset: 0,
+      toolbar: {
+        show: false,
+      },
     },
     dataLabels: {
       enabled: false,
@@ -145,6 +150,7 @@ export default function Page({ params }) {
         options: {
           chart: {
             width: 200,
+            offsetX: -50, // Adjust for responsiveness
           },
           legend: {
             show: false,
@@ -153,8 +159,8 @@ export default function Page({ params }) {
       },
     ],
     legend: {
-      show: false,
-      position: "bottom",
+      show: true,
+      position: "right",
       offsetY: 0,
     },
   };
@@ -460,6 +466,7 @@ export default function Page({ params }) {
                         {groupedStructures[type].length}
                       </td>
                       <td className="text-right py-3">
+                        $
                         {
                           /* {clientPricing ? clientPricing[type].price : ""} */
                           clientPricing[type.toLowerCase().replace(" ", "-")] &&
@@ -467,7 +474,12 @@ export default function Page({ params }) {
                               .price
                         }
                       </td>
-                      <td className="text-right py-3">$100.00</td>
+                      <td className="text-right py-3">
+                        $
+                        {clientPricing[type.toLowerCase().replace(" ", "-")] &&
+                          clientPricing[type.toLowerCase().replace(" ", "-")]
+                            .price * groupedStructures[type].length}
+                      </td>
                     </tr>
                   ))}
 
@@ -540,13 +552,13 @@ export default function Page({ params }) {
                 ))}
               </Select>
             </div>
-            <div className="flex flex-row gap-4 mb-6">
+            <div className="flex flex-row gap-4 mb-4">
               <div>
                 <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
                   Start Date
                 </p>
                 <DatePicker
-                  className="w-full rounded-lg border border-1"
+                  className="w-full rounded-lg border border-1 border-gray-400"
                   selected={startDate}
                   onChange={(date) => setStartDate(date)}
                 />
@@ -556,7 +568,7 @@ export default function Page({ params }) {
                   End Date
                 </p>
                 <DatePicker
-                  className="w-full rounded-lg border border-1"
+                  className="w-full rounded-lg border border-1 border-gray-400"
                   selected={endDate}
                   onChange={(date) => setEndDate(date)}
                 />
@@ -565,9 +577,6 @@ export default function Page({ params }) {
             <div className="structure-table-container mb-4">
               <Table striped>
                 <Table.Head className="sticky top-0 z-40">
-                  <Table.HeadCell className="p-4">
-                    <Checkbox defaultChecked />
-                  </Table.HeadCell>
                   <Table.HeadCell>Structure Type</Table.HeadCell>
                   <Table.HeadCell>Price</Table.HeadCell>
                 </Table.Head>
@@ -577,9 +586,6 @@ export default function Page({ params }) {
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"
                       key={`${type}-${index}`}
                     >
-                      <Table.Cell className="p-4">
-                        <Checkbox defaultChecked />
-                      </Table.Cell>
                       <Table.Cell>{type}</Table.Cell>
                       <Table.Cell>
                         <TextInput
@@ -592,7 +598,18 @@ export default function Page({ params }) {
                               ? clientPricing[
                                   type.toLowerCase().replace(" ", "-")
                                 ].price
-                              : "0"
+                              : 0
+                          }
+                          onChange={(e) =>
+                            setClientPricing({
+                              ...clientPricing,
+                              [type.toLowerCase().replace(" ", "-")]: {
+                                ...clientPricing[
+                                  type.toLowerCase().replace(" ", "-")
+                                ],
+                                price: e.target.value,
+                              },
+                            })
                           }
                           required
                         />
@@ -603,28 +620,42 @@ export default function Page({ params }) {
               </Table>
             </div>
 
-            <Button className="bg-cyan-400" onClick={() => getInvoicehData()}>
-              Generate Invoice
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                className="bg-transparent border-cyan-400 border-2 text-black hover:bg-cyan-400"
+                onClick={() => getInvoicehData()}
+              >
+                Load Data
+              </Button>
+              <Button
+                className="bg-cyan-400"
+                disabled={
+                  selectedClientId && startDate && endDate ? false : true
+                }
+              >
+                Publish
+              </Button>
+              <Button
+                onClick={generatePdf}
+                className="bg-cyan-400 text-white rounded-lg"
+                disabled={
+                  selectedClientId && startDate && endDate ? false : true
+                }
+              >
+                <MdFileDownload className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
-          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg pt-10">
+          <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg pt-10">
             <ApexChart
               type="donut"
               options={chartOptions}
               series={Object.keys(groupedStructures).map((type) => {
                 return groupedStructures[type].length;
               })}
-              height={200}
+              height={225}
               width={"100%"}
             />
-          </div>
-          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg aspect-square">
-            <button
-              onClick={generatePdf}
-              className="bg-cyan-400 text-white font-bold py-2 px-4 rounded"
-            >
-              Download
-            </button>
           </div>
         </div>
       </div>
