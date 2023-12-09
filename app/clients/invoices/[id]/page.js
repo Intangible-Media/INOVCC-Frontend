@@ -214,10 +214,7 @@ export default function Page({ params }) {
             .name,
           address: "4338 N 20th St Phoenix AZ 815016",
         });
-        setClientPricing(
-          invoiceResponse.data.data.attributes.client.data.attributes
-            .structurePricing
-        );
+        setClientPricing(invoiceResponse.data.data.attributes.structurePricing);
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
@@ -370,6 +367,14 @@ export default function Page({ params }) {
     a.attributes.type.localeCompare(b.attributes.type)
   );
 
+  let totalPrice = Object.keys(groupedStructures)
+    .map(
+      (type) =>
+        clientPricing[type.toLowerCase().replace(" ", "-")].price *
+        groupedStructures[type].length
+    )
+    .reduce((total, price) => total + price, 0);
+
   return (
     <>
       <div className="grid grid-cols-5 gap-4 mb-4">
@@ -437,12 +442,20 @@ export default function Page({ params }) {
                         {groupedStructures[type].length}
                       </td>
                       <td className="text-right py-3">
+                        $
                         {
                           /* {clientPricing ? clientPricing[type].price : ""} */
-                          clientPricing[type] && clientPricing[type].price
+                          clientPricing[type.toLowerCase().replace(" ", "-")] &&
+                            clientPricing[type.toLowerCase().replace(" ", "-")]
+                              .price
                         }
                       </td>
-                      <td className="text-right py-3">$100.00</td>
+                      <td className="text-right py-3">
+                        $
+                        {clientPricing[type.toLowerCase().replace(" ", "-")] &&
+                          clientPricing[type.toLowerCase().replace(" ", "-")]
+                            .price * groupedStructures[type].length}
+                      </td>
                     </tr>
                   ))}
 
@@ -453,7 +466,7 @@ export default function Page({ params }) {
 
             <section className="p-0 text-right mb-20">
               <p className="text-sm">Subtotal: $100.00</p>
-              <p className="text-sm">Total: $110.00</p>
+              <p className="text-sm">Total: ${totalPrice}</p>
             </section>
 
             {Object.keys(groupedStructures).map((type) => {

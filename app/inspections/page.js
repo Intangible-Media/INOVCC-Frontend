@@ -75,12 +75,12 @@ export default function Dashboard() {
         try {
           const [inspectionResponse, structureResponse] = await Promise.all([
             axios.get(
-              `http://localhost:1337/api/inspections?${inspectionQuery}`,
+              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${inspectionQuery}`,
               {
                 headers: { Authorization: `Bearer ${session.accessToken}` },
               }
             ),
-            axios.get(`http://localhost:1337/api/structures`, {
+            axios.get(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`, {
               headers: { Authorization: `Bearer ${session.accessToken}` },
             }),
           ]);

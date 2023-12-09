@@ -15,7 +15,7 @@ export default function Page() {
       if (session?.accessToken) {
         try {
           const response = await axios.get(
-            `http://localhost:1337/api/clients`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients`,
             {
               headers: {
                 Authorization: `Bearer ${session.accessToken}`,

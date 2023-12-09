@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Table, Button, TextInput, Select, Checkbox } from "flowbite-react";
+import { Table, Button, TextInput, Select, Alert } from "flowbite-react";
+import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
@@ -115,6 +116,8 @@ const docDefinition = {
 };
 
 export default function Page({ params }) {
+  const router = useRouter();
+
   const { data: session, loading } = useSession();
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
@@ -122,6 +125,8 @@ export default function Page({ params }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [clients, setClients] = useState([]);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showPublishButton, setShowPublishButton] = useState(false);
   const [clientPricing, setClientPricing] = useState();
   const [client, setClient] = useState({
     name: "",
@@ -201,7 +206,7 @@ export default function Page({ params }) {
     if (session?.accessToken) {
       try {
         const structuresResponse = await axios.get(
-          `http://localhost:1337/api/structures?${query}`,
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${query}`,
           {
             headers: {
               Authorization: `Bearer ${session.accessToken}`,
@@ -210,7 +215,7 @@ export default function Page({ params }) {
         );
 
         const clientResponse = await axios.get(
-          `http://localhost:1337/api/clients/${selectedClientId}`,
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients/${selectedClientId}`,
           {
             headers: {
               Authorization: `Bearer ${session.accessToken}`,
@@ -218,14 +223,57 @@ export default function Page({ params }) {
           }
         );
         setStructures(structuresResponse.data.data);
-        // setClient(clientResponse.data.data);
-        console.log(clientResponse.data.data);
         setClientPricing(clientResponse.data.data.attributes.structurePricing);
+        setClient(clientResponse.data.data.attributes);
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
     }
   };
+
+  const createInvoice = async () => {
+    if (session?.accessToken) {
+      try {
+        const invoiceData = {
+          data: {
+            name: `testing-${Date.now()}`,
+            client: selectedClientId,
+            structures: structures.map((structure) => structure.id),
+            paid: false,
+            structurePricing: clientPricing,
+          },
+        };
+
+        const invoiceResponse = await axios.post(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/invoices`,
+          invoiceData,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+
+        setShowSuccessAlert(true);
+
+        setTimeout(() => {
+          router.push(`/clients/invoices/${invoiceResponse.data.data.id}`, {
+            scroll: false,
+          });
+        }, 1000);
+      } catch (error) {
+        console.error("Error fetching data", error.response || error);
+      }
+    }
+  };
+
+  const generatePdf = () => {
+    pdfMake.createPdf(docDefinition).open();
+  };
+
+  const sortedStructures = [...structures].sort((a, b) =>
+    a.attributes.type.localeCompare(b.attributes.type)
+  );
 
   useEffect(() => {
     if (structures.length) {
@@ -365,23 +413,11 @@ export default function Page({ params }) {
   }, [structures]);
 
   useEffect(() => {
-    console.log(selectedClientId);
-  }, [selectedClientId]);
-
-  const generatePdf = () => {
-    pdfMake.createPdf(docDefinition).open();
-  };
-
-  const sortedStructures = [...structures].sort((a, b) =>
-    a.attributes.type.localeCompare(b.attributes.type)
-  );
-
-  useEffect(() => {
     if (session?.accessToken) {
       try {
         const getAllClients = async () => {
           const clientsResponse = await axios.get(
-            `http://localhost:1337/api/clients`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients`,
             {
               headers: {
                 Authorization: `Bearer ${session.accessToken}`,
@@ -399,8 +435,86 @@ export default function Page({ params }) {
     }
   }, [session]);
 
+  useEffect(() => {
+    console.log(clientPricing);
+
+    function areAllPricesGreaterThanZero(clientPricing) {
+      if (!clientPricing || typeof clientPricing !== "object") {
+        return false; // Return false if clientPricing is null, undefined, or not an object
+      }
+      return Object.values(clientPricing).every(
+        (value) => value && value.price > 0
+      );
+    }
+
+    console.log(areAllPricesGreaterThanZero(clientPricing));
+
+    setShowPublishButton(areAllPricesGreaterThanZero(clientPricing));
+  }, [clientPricing]);
+
+  const StructuresPricingTable = () => {
+    const redBackground = "bg-red-400 text-white";
+
+    const checkIfValueExistOrIsZero = (type) => {
+      const pricing =
+        clientPricing[type.toLowerCase().replace(" ", "-")]?.price;
+
+      if (pricing && pricing > 0) return "";
+
+      return redBackground;
+    };
+
+    return (
+      <>
+        {Object.keys(groupedStructures).map((type, index) => (
+          <Table.Row
+            className={`bg-white dark:border-gray-700 dark:bg-gray-800 ${checkIfValueExistOrIsZero(
+              type
+            )}`}
+            key={`${type}-${index}`}
+          >
+            <Table.Cell>{type}</Table.Cell>
+            <Table.Cell>
+              <TextInput
+                className="w-20"
+                id="email1"
+                type="number"
+                placeholder="999"
+                value={
+                  clientPricing[type.toLowerCase().replace(" ", "-")]
+                    ? clientPricing[type.toLowerCase().replace(" ", "-")].price
+                    : 0
+                }
+                onChange={(e) =>
+                  setClientPricing({
+                    ...clientPricing,
+                    [type.toLowerCase().replace(" ", "-")]: {
+                      ...clientPricing[type.toLowerCase().replace(" ", "-")],
+                      price: e.target.value,
+                    },
+                  })
+                }
+                required
+              />
+            </Table.Cell>
+          </Table.Row>
+        ))}
+      </>
+    );
+  };
+
   return (
     <>
+      {showSuccessAlert && (
+        <Alert
+          color="success"
+          className="alert-bar"
+          onDismiss={() => setShowSuccessAlert(false)}
+        >
+          <span className="font-medium">Successfully Created</span> Change a few
+          things up and try submitting again.
+        </Alert>
+      )}
       <div className="grid grid-cols-5 gap-4 mb-4">
         <div className="flex flex-col col-span-3 border-gray-300 dark:border-gray-600 bg-white gap-4">
           <div className="invoice-viewer overflow-x-auto shadow-md">
@@ -575,47 +689,13 @@ export default function Page({ params }) {
               </div>{" "}
             </div>
             <div className="structure-table-container mb-4">
-              <Table striped>
+              <Table>
                 <Table.Head className="sticky top-0 z-40">
                   <Table.HeadCell>Structure Type</Table.HeadCell>
                   <Table.HeadCell>Price</Table.HeadCell>
                 </Table.Head>
                 <Table.Body>
-                  {Object.keys(groupedStructures).map((type, index) => (
-                    <Table.Row
-                      className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                      key={`${type}-${index}`}
-                    >
-                      <Table.Cell>{type}</Table.Cell>
-                      <Table.Cell>
-                        <TextInput
-                          className="w-20"
-                          id="email1"
-                          type="number"
-                          placeholder="999"
-                          value={
-                            clientPricing[type.toLowerCase().replace(" ", "-")]
-                              ? clientPricing[
-                                  type.toLowerCase().replace(" ", "-")
-                                ].price
-                              : 0
-                          }
-                          onChange={(e) =>
-                            setClientPricing({
-                              ...clientPricing,
-                              [type.toLowerCase().replace(" ", "-")]: {
-                                ...clientPricing[
-                                  type.toLowerCase().replace(" ", "-")
-                                ],
-                                price: e.target.value,
-                              },
-                            })
-                          }
-                          required
-                        />
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
+                  <StructuresPricingTable />
                 </Table.Body>
               </Table>
             </div>
@@ -627,23 +707,14 @@ export default function Page({ params }) {
               >
                 Load Data
               </Button>
-              <Button
-                className="bg-cyan-400"
-                disabled={
-                  selectedClientId && startDate && endDate ? false : true
-                }
-              >
-                Publish
-              </Button>
-              <Button
-                onClick={generatePdf}
-                className="bg-cyan-400 text-white rounded-lg"
-                disabled={
-                  selectedClientId && startDate && endDate ? false : true
-                }
-              >
-                <MdFileDownload className="w-5 h-5" />
-              </Button>
+              {showPublishButton && (
+                <Button
+                  className="bg-cyan-400"
+                  onClick={(e) => createInvoice()}
+                >
+                  Publish
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg pt-10">

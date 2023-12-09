@@ -560,7 +560,7 @@ export default function Page({ params }) {
       if (session?.accessToken) {
         try {
           const response = await axios.get(
-            `http://localhost:1337/api/inspections/${params.id}?${query}`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${params.id}?${query}`,
             {
               headers: {
                 Authorization: `Bearer ${session.accessToken}`,
@@ -600,7 +600,7 @@ export default function Page({ params }) {
         window.alert("This is running again ");
         try {
           const inspectionReportResponse = await axios.get(
-            `http://localhost:1337/api/inspections/${params.id}/report`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${params.id}/report`,
             {
               headers: {
                 Authorization: `Bearer ${session.accessToken}`,
@@ -814,7 +814,7 @@ export default function Page({ params }) {
                 {structureDocuments.map((image) => (
                   <DownloadImage
                     key={`${image.attributes.name}`}
-                    src={`http://localhost:1337${image.attributes.url}`}
+                    src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                     filename={"somehting"}
                   />
                 ))}
@@ -927,7 +927,7 @@ export default function Page({ params }) {
                 {structureImages.map((image) => (
                   <DownloadImage
                     key={`${image.attributes.name}`}
-                    src={`http://localhost:1337${image.attributes.formats.thumbnail.url}`}
+                    src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.formats.thumbnail.url}`}
                     filename={"somehting"}
                   />
                 ))}
@@ -953,7 +953,7 @@ export default function Page({ params }) {
                 {structureDocuments.map((image) => (
                   <DownloadImage
                     key={`${image.attributes.name}`}
-                    src={`http://localhost:1337${image.attributes.url}`}
+                    src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                     filename={"somehting"}
                   />
                 ))}
