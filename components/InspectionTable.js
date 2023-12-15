@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox, Table, Progress } from "flowbite-react";
+import { Checkbox, Table, Progress, Button } from "flowbite-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -130,10 +130,10 @@ export default function InspectionTable({ inspectionData }) {
               </form>
               <div className="flex items-center space-x-4">
                 <div>
-                  <button
+                  <Button
                     id="filterDropdownButton"
                     data-dropdown-toggle="filterDropdown"
-                    type="button"
+                    type="Button"
                     className="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                   >
                     <svg
@@ -163,7 +163,7 @@ export default function InspectionTable({ inspectionData }) {
                         d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                       />
                     </svg>
-                  </button>
+                  </Button>
                   <div
                     id="filterDropdown"
                     className="z-10 hidden p-3 bg-white rounded-lg shadow w-56 dark:bg-gray-700"
@@ -265,10 +265,10 @@ export default function InspectionTable({ inspectionData }) {
                   </div>
                 </div>
                 <div>
-                  <button
+                  <Button
                     id="configurationDropdownButton"
                     data-dropdown-toggle="configurationDropdown"
-                    type="button"
+                    type="Button"
                     className="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                   >
                     <svg
@@ -285,7 +285,7 @@ export default function InspectionTable({ inspectionData }) {
                       />
                     </svg>
                     Configurations
-                  </button>
+                  </Button>
                   <div
                     id="configurationDropdown"
                     className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
@@ -324,8 +324,8 @@ export default function InspectionTable({ inspectionData }) {
               </div>
             </div>
             <div className="w-full md:w-auto flex flex-col md:flex-row mb-3 md:mb-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-              <button
-                type="button"
+              <Button
+                type="Button"
                 className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 <svg
@@ -342,7 +342,7 @@ export default function InspectionTable({ inspectionData }) {
                   />
                 </svg>
                 Add new task
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -455,30 +455,6 @@ export default function InspectionTable({ inspectionData }) {
                   <Table.Cell>
                     <Progress progress={50} />
                   </Table.Cell>
-                  {/* <Table.Cell>
-                      <div className="flex -space-x-4 rtl:space-x-reverse">
-                        <img
-                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                          src="/profile.png"
-                          alt=""
-                        />
-                        <img
-                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                          src="/profile.png"
-                          alt=""
-                        />
-                        <img
-                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                          src="/profile.png"
-                          alt=""
-                        />
-                        <img
-                          className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                          src="/profile.png"
-                          alt=""
-                        />
-                      </div>
-                    </Table.Cell> */}
                   <Table.Cell>
                     <Link
                       href={`/inspections/${inspection.id}`}
@@ -492,35 +468,48 @@ export default function InspectionTable({ inspectionData }) {
             </Table.Body>
           </Table>
         </div>
-        <div className="flex justify-between items-center pt-4">
-          <div>
-            <button
+        <div className="flex justify-between items-center p-8">
+          <div className="flex space-x-2">
+            <Button
               onClick={() => handlePageChange(currentPage - 1)}
+              size={"small"}
               disabled={currentPage === 1}
-              // ... styling for the button ...
+              className={`text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-300 ${
+                currentPage === 1 ? "cursor-not-allowed" : ""
+              }`}
             >
               Previous
-            </button>
+            </Button>
+
             {/* Render page numbers */}
             {Array.from({ length: totalPages }, (_, i) => (
-              <button
+              <Button
                 key={i}
+                size={"small"}
                 onClick={() => handlePageChange(i + 1)}
-                // ... styling for the button, highlight if it's the current page ...
+                className={`rounded-md ${
+                  currentPage === i + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                } hover:bg-blue-400 hover:text-white`}
               >
                 {i + 1}
-              </button>
+              </Button>
             ))}
-            <button
+
+            <Button
               onClick={() => handlePageChange(currentPage + 1)}
+              size={"small"}
               disabled={currentPage === totalPages}
-              // ... styling for the button ...
+              className={`text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-300 ${
+                currentPage === totalPages ? "cursor-not-allowed" : ""
+              }`}
             >
               Next
-            </button>
+            </Button>
           </div>
 
-          <span>
+          <span className="text-lg">
             Page {currentPage} of {totalPages}
           </span>
         </div>
@@ -593,7 +582,7 @@ const TableRow = ({
       <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
         {date}
       </td>
-      <td className="px-4 py-2">{/* Action buttons or links */}</td>
+      <td className="px-4 py-2">{/* Action Buttons or links */}</td>
     </tr>
   );
 };

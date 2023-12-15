@@ -468,17 +468,15 @@ export default function Page({ params }) {
       <>
         {Object.keys(groupedStructures).map((type, index) => (
           <Table.Row
-            className={`bg-white dark:border-gray-700 dark:bg-gray-800 ${checkIfValueExistOrIsZero(
+            className={`bg-white dark:border-gray-700 dark:bg-gray-800 structure-table-row ${checkIfValueExistOrIsZero(
               type
             )}`}
             key={`${type}-${index}`}
           >
-            <Table.Cell>{type}</Table.Cell>
+            <Table.Cell className="text-black">{type}</Table.Cell>
             <Table.Cell>
               <TextInput
-                className="w-20"
-                id="email1"
-                type="number"
+                className="w-20 border-none border-0"
                 placeholder="999"
                 value={
                   clientPricing[type.toLowerCase().replace(" ", "-")]
@@ -691,8 +689,10 @@ export default function Page({ params }) {
             <div className="structure-table-container mb-4">
               <Table>
                 <Table.Head className="sticky top-0 z-40">
-                  <Table.HeadCell>Structure Type</Table.HeadCell>
-                  <Table.HeadCell>Price</Table.HeadCell>
+                  <Table.HeadCell className="text-black">
+                    Structure Type
+                  </Table.HeadCell>
+                  <Table.HeadCell className="text-black">Price</Table.HeadCell>
                 </Table.Head>
                 <Table.Body>
                   <StructuresPricingTable />

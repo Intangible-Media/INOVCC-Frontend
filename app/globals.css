@@ -252,6 +252,11 @@
   }  
 }
 
+.structure-table-row {
+  border: none;
+  border-bottom: 1px solid grey;
+}
+
 .drawer-background-overlay {
   z-index: 40;
 }
