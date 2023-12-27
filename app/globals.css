@@ -55,7 +55,7 @@
 }
 .map-container,
 .map-stuctures-container {
-  height: 35rem;
+  height: 37rem;
 }
 
 @media (max-width: 550px) {
@@ -67,7 +67,7 @@
 
 .map-structure-panel {
   height: auto;
-  width: 400px;
+  width: 450px;
 }
 
 @media (max-width: 550px) {

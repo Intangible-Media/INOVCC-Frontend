@@ -7,7 +7,7 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput, Badge, Tooltip, Breadcrumb } from "flowbite-react";
+import { TextInput, Badge, Tooltip, Button } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -32,6 +32,7 @@ export default function Page({ params }) {
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [directions, setDirections] = useState(null);
+  const [displayMapSubPanel, setDisplayMapSubPanel] = useState(false);
   const [inspectionReport, setInspectionReport] = useState("");
   const [client, setClient] = useState({
     name: "",
@@ -693,72 +694,221 @@ export default function Page({ params }) {
             onChange={(e) => setStructureSearch(e.target.value)}
           />
 
-          <div className="im-snapping overflow-x-auto w-full">
-            {filteredStructures.map((structure, index) => (
-              <div
-                key={`${structure.id}-${index}`}
-                className={`flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2 ${
-                  selectedStructure &&
-                  selectedStructure.id === structure.id &&
-                  "active-structure"
-                }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  updateCenterOnClick(
-                    structure.attributes.longitude,
-                    structure.attributes.latitude
-                  );
-                  getStructureData(structure);
-                  setSelectedStructure(structure);
-                }}
-              >
-                <MdLocationPin
-                  className={`bg-${getInspectionColor(
-                    structure.attributes.status
-                  )}-100 text-${getInspectionColor(
-                    structure.attributes.status
-                  )}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                  style={{ width: 40, height: 40 }}
-                />
+          {displayMapSubPanel ? (
+            <div className="flex flex-col gap-4 overflow-x-auto w-full">
+              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white rounded-lg mb-4">
+                <Button onClick={(e) => setDisplayMapSubPanel(false)}>
+                  Back
+                </Button>
+                <p className="flex items-center gap-2 text-lg font-semibold mr-auto mb-4">
+                  Details{" "}
+                  {selectedStructure && (
+                    <SelectedStructureBadge structure={selectedStructure} />
+                  )}
+                </p>
 
-                <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal w-full">
-                  <h5 className="flex mb-2 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                    {structure.attributes.mapSection}
-                    <span className="flex items-center font-light ml-1">
-                      {` - ${structure.attributes.type}`}
-                    </span>
-                  </h5>
-                  <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                    <span
-                      className={`bg-${getInspectionColor(
-                        structure.attributes.status
-                      )}-100 text-${getInspectionColor(
-                        structure.attributes.status
-                      )}-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                    >
-                      {structure.attributes.status}
-                    </span>
-
-                    {selectedStructure && (
-                      <>
-                        {selectedStructure.id === structure.id && (
-                          <Badge
-                            color="info"
-                            className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300 ml-1`}
-                          >
-                            Active
-                          </Badge>
-                        )}
-                      </>
-                    )}
-                  </p>
-                </div>
-                {selectedStructure?.id === structure.id && (
-                  <StructureDrawer structure={selectedStructure} />
-                )}
+                <dl className="max-w-md text-gray-900 divide-y dark:text-white dark:divide-gray-700">
+                  <div className="flex flex-col ">
+                    <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+                      Address
+                    </dt>
+                    <dd className="text-md font-semibold">
+                      {locationDetails.address}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col pt-3">
+                    <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+                      City, State
+                    </dt>
+                    <dd className="text-md font-semibold">
+                      {locationDetails.city}, {locationDetails.State},{" "}
+                      {locationDetails.zipCode}
+                    </dd>
+                  </div>
+                  {selectedStructure && (
+                    <DirectionsComponent
+                      destinationLongitude={
+                        selectedStructure.attributes.longitude
+                      }
+                      destinationLatitude={
+                        selectedStructure.attributes.latitude
+                      }
+                    />
+                  )}
+                </dl>
               </div>
-            ))}
-          </div>
+
+              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-6 rounded-lg">
+                <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
+                  Assets{" "}
+                  {selectedStructure && (
+                    <SelectedStructureBadge structure={selectedStructure} />
+                  )}
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {structureImages.length === 0 ? (
+                    <div className="animate-pulse">
+                      <svg
+                        className="h-full w-full text-gray-200 dark:text-gray-600"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        viewBox="0 0 20 18"
+                      >
+                        <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <>
+                      {structureImages.map((image) => (
+                        <DownloadImage
+                          key={`${image.attributes.name}`}
+                          src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.formats.thumbnail.url}`}
+                          filename={"somehting"}
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {structureDocuments.length === 0 ? (
+                    <div className="animate-pulse">
+                      <svg
+                        className="h-full w-full text-gray-200 dark:text-gray-600"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        viewBox="0 0 20 18"
+                      >
+                        <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <>
+                      {structureDocuments.map((image) => (
+                        <DownloadImage
+                          key={`${image.attributes.name}`}
+                          src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
+                          filename={"somehting"}
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-2 rounded-lg">
+                <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
+                  Inspectors{" "}
+                  {selectedStructure && (
+                    <SelectedStructureBadge structure={selectedStructure} />
+                  )}
+                </p>
+
+                <ul className="max-w-md flex flex-col gap-2 divide-gray-200 dark:divide-gray-700">
+                  {structureInspectors.map((inspector, index) => (
+                    <li
+                      className="p-4 border border-1 rounded-lg hover:bg-gray-200"
+                      key={`${inspector.attributes.username}-${index}`}
+                    >
+                      <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                        <div className="flex-shrink-0">
+                          <img
+                            className="w-12 h-12 rounded-full"
+                            src="/profile.png"
+                            alt="Neil image"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                            {inspector.attributes.username}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+                            {inspector.attributes.email}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="im-snapping overflow-x-auto w-full">
+              {filteredStructures.map((structure, index) => (
+                <div
+                  key={`${structure.id}-${index}`}
+                  className={`flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2 ${
+                    selectedStructure &&
+                    selectedStructure.id === structure.id &&
+                    "active-structure"
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    updateCenterOnClick(
+                      structure.attributes.longitude,
+                      structure.attributes.latitude
+                    );
+                    getStructureData(structure);
+                    setSelectedStructure(structure);
+                  }}
+                >
+                  <MdLocationPin
+                    className={`bg-${getInspectionColor(
+                      structure.attributes.status
+                    )}-100 text-${getInspectionColor(
+                      structure.attributes.status
+                    )}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+                    style={{ width: 40, height: 40 }}
+                  />
+
+                  <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal w-full">
+                    <h5 className="flex mb-2 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                      {structure.attributes.mapSection}
+                      <span className="flex items-center font-light ml-1">
+                        {` - ${structure.attributes.type}`}
+                      </span>
+                    </h5>
+                    <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                      <span
+                        className={`bg-${getInspectionColor(
+                          structure.attributes.status
+                        )}-100 text-${getInspectionColor(
+                          structure.attributes.status
+                        )}-700 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+                      >
+                        {structure.attributes.status}
+                      </span>
+
+                      {selectedStructure && (
+                        <>
+                          {selectedStructure.id === structure.id && (
+                            <Badge
+                              color="info"
+                              className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300 ml-1`}
+                            >
+                              Active
+                            </Badge>
+                          )}
+                        </>
+                      )}
+                    </p>
+
+                    <Button
+                      onClick={(e) =>
+                        setDisplayMapSubPanel(!displayMapSubPanel)
+                      }
+                    >
+                      View
+                    </Button>
+                  </div>
+                  {selectedStructure?.id === structure.id && (
+                    <StructureDrawer structure={selectedStructure} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
