@@ -26,7 +26,10 @@ function DynamicBreadcrumb() {
   });
 
   return (
-    <Breadcrumb className="dark-text" aria-label="Breadcrumb">
+    <Breadcrumb
+      className="dark-text p-5 border-b border-gray-300"
+      aria-label="Breadcrumb"
+    >
       <Breadcrumb.Item href="/" icon={HiHome}>
         Home
       </Breadcrumb.Item>

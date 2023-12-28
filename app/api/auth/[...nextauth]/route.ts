@@ -17,7 +17,7 @@ const handler = NextAuth({
         try {
           // Add logic here to look up the user from the credentials supplied
           const res = await axios.post(
-            `${process.env.STRAPI_URL}/api/auth/local`,
+            `http://localhost:1337/api/auth/local`,
             {
               identifier: credentials.username,
               password: credentials.password,

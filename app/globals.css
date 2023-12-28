@@ -344,3 +344,18 @@ input[type="date"]{
     transform: translateY(0); /* End position */
   }
 }
+
+
+#search-bar {
+  width: 500px;
+  background-color: #374151;
+  border: none;
+}
+
+#search-bar::placeholder {
+  color: white
+}
+
+.collapse-sidebar-btn {
+  margin-top: 60.57px;
+}
