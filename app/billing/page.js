@@ -42,7 +42,7 @@ export default function Page() {
   return (
     <>
       <div className="flex mb-4">
-        <Link href="/clients/invoices/create">
+        <Link href="/billing/create">
           <Button className="bg-cyan-400">New Invoice</Button>
         </Link>
       </div>
@@ -83,7 +83,7 @@ export default function Page() {
                     <Table.Cell>$2999</Table.Cell>
                     <Table.Cell>
                       <Link
-                        href={`/clients/invoices/${invoice.id}`}
+                        href={`/billing/${invoice.id}`}
                         className="font-medium text-cyan-600 hover:underline dark:text-cyan-500"
                       >
                         View
