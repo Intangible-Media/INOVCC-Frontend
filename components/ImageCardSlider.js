@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 
-const ImageSlider = ({ slides }) => {
+const ImageSlider = ({ images }) => {
   const [current, setCurrent] = useState(0);
-  const length = slides.length;
+
+  if (
+    !Array.isArray(images.data) ||
+    images.data.length <= 0 ||
+    images === null
+  ) {
+    return null;
+  }
+
+  const length = images.data.length;
 
   const nextSlide = () => {
     setCurrent((current) => (current === length - 1 ? 0 : current + 1));
@@ -11,10 +20,6 @@ const ImageSlider = ({ slides }) => {
   const prevSlide = () => {
     setCurrent((current) => (current === 0 ? length - 1 : current - 1));
   };
-
-  if (!Array.isArray(slides) || slides.length <= 0) {
-    return null;
-  }
 
   // Calculate the offset for sliding effect
   const slideOffset = current * -(100 / 3); // Each slide is 100/3% of the width
@@ -37,7 +42,7 @@ const ImageSlider = ({ slides }) => {
         className="flex transition-transform duration-300 ease-in-out gap-2"
         style={{ transform: `translateX(${slideOffset}%)` }}
       >
-        {slides.map((slide, index) => {
+        {images.data.map((image, index) => {
           return (
             <div
               className="flex-shrink-0 w-full" // Use 100% of the container for each slide
@@ -45,7 +50,7 @@ const ImageSlider = ({ slides }) => {
               style={{ width: "calc(100% / 3)" }} // Each slide takes 1/3 of the width
             >
               <img
-                src={slide.image}
+                src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                 alt="travel image"
                 className="w-full h-full object-cover object-center"
               />

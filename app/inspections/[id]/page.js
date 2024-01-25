@@ -595,6 +595,8 @@ export default function Page({ params }) {
           const clientContacts =
             response.data.data.attributes.client.data.attributes.contacts.data;
 
+          console.log(response.data);
+
           setStructures(structuresData);
           setClient({
             name: clientName,
@@ -761,10 +763,10 @@ export default function Page({ params }) {
             </div>
           </div>
 
-          <MapPanel />
+          <MapPanel structure={selectedStructure} />
 
           {/* This is the box of all the strucutre */}
-          {false && (
+          {true && (
             <div className="im-snapping overflow-x-auto w-full">
               {filteredStructures.map((structure, index) => (
                 <div
