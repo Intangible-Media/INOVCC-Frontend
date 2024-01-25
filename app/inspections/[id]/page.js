@@ -7,13 +7,27 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import { TextInput, Badge, Tooltip, Button } from "flowbite-react";
+import {
+  TextInput,
+  Badge,
+  Tooltip,
+  Button,
+  Dropdown,
+  Checkbox,
+  Label,
+  Progress,
+  Tabs,
+} from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
+import Link from "next/link";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import StructureDrawer from "../../../components/Drawers/StructureDrawer";
 import AuthorizedWrapper from "../../../components/Auth/AuthorizationWrapper";
+import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
+import { MdDashboard } from "react-icons/md";
 import { Butcherman } from "next/font/google";
+import MapPanel from "../../../components/Panel/MapPanel";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: true });
 
 export default function Page({ params }) {
@@ -138,6 +152,12 @@ export default function Page({ params }) {
     if (status.toLowerCase() == "inspected") return "cyan";
     if (status.toLowerCase() == "not inspected") return "yellow";
     else return "red";
+  };
+
+  const getInspectionIconColor = (status) => {
+    if (status.toLowerCase() == "inspected") return "text-green-600";
+    if (status.toLowerCase() == "not inspected") return "text-yellow-400";
+    else return "text-red-600";
   };
 
   const getMarkerColor = (structure) => {
@@ -651,6 +671,29 @@ export default function Page({ params }) {
     }
   }, [selectedStructure]);
 
+  const ElipseIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+    >
+      <path
+        d="M9.99992 5.5C10.9204 5.5 11.6666 4.82843 11.6666 4C11.6666 3.17157 10.9204 2.5 9.99992 2.5C9.07944 2.5 8.33325 3.17157 8.33325 4C8.33325 4.82843 9.07944 5.5 9.99992 5.5Z"
+        fill="#1F2A37"
+      />
+      <path
+        d="M9.99992 11.5C10.9204 11.5 11.6666 10.8284 11.6666 10C11.6666 9.17157 10.9204 8.5 9.99992 8.5C9.07944 8.5 8.33325 9.17157 8.33325 10C8.33325 10.8284 9.07944 11.5 9.99992 11.5Z"
+        fill="#1F2A37"
+      />
+      <path
+        d="M9.99992 17.5C10.9204 17.5 11.6666 16.8284 11.6666 16C11.6666 15.1716 10.9204 14.5 9.99992 14.5C9.07944 14.5 8.33325 15.1716 8.33325 16C8.33325 16.8284 9.07944 17.5 9.99992 17.5Z"
+        fill="#1F2A37"
+      />
+    </svg>
+  );
+
   return (
     <>
       <div
@@ -683,162 +726,50 @@ export default function Page({ params }) {
           </button>
         </div>
 
-        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white p-8 w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8">
-          <TextInput
-            id="small"
-            type="text"
-            placeholder="Search Structures"
-            sizing="md"
-            className="w-full mb-6"
-            value={structureSearch}
-            onChange={(e) => setStructureSearch(e.target.value)}
-          />
+        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8">
+          <div className="p-4 w-full bg-gray-100">
+            <TextInput
+              id="small"
+              type="text"
+              placeholder="Search Structures"
+              sizing="md"
+              className="w-full mb-3"
+              value={structureSearch}
+              onChange={(e) => setStructureSearch(e.target.value)}
+            />
 
-          {displayMapSubPanel ? (
-            <div className="flex flex-col gap-4 overflow-x-auto w-full">
-              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white rounded-lg mb-4">
-                <Button onClick={(e) => setDisplayMapSubPanel(false)}>
-                  Back
-                </Button>
-                <p className="flex items-center gap-2 text-lg font-semibold mr-auto mb-4">
-                  Details{" "}
-                  {selectedStructure && (
-                    <SelectedStructureBadge structure={selectedStructure} />
-                  )}
-                </p>
-
-                <dl className="max-w-md text-gray-900 divide-y dark:text-white dark:divide-gray-700">
-                  <div className="flex flex-col ">
-                    <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
-                      Address
-                    </dt>
-                    <dd className="text-md font-semibold">
-                      {locationDetails.address}
-                    </dd>
-                  </div>
-                  <div className="flex flex-col pt-3">
-                    <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
-                      City, State
-                    </dt>
-                    <dd className="text-md font-semibold">
-                      {locationDetails.city}, {locationDetails.State},{" "}
-                      {locationDetails.zipCode}
-                    </dd>
-                  </div>
-                  {selectedStructure && (
-                    <DirectionsComponent
-                      destinationLongitude={
-                        selectedStructure.attributes.longitude
-                      }
-                      destinationLatitude={
-                        selectedStructure.attributes.latitude
-                      }
-                    />
-                  )}
-                </dl>
+            <div className="flex justify-center gap-4">
+              <p className="text-sm font-medium">Show Only:</p>
+              <div className="flex items-center gap-2">
+                <Checkbox id="cant-inspect" />
+                <Label className="text-sm font-medium" htmlFor="cant-inspect">
+                  Can't Inspect
+                </Label>
               </div>
-
-              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-6 rounded-lg">
-                <p className="flex items-center gap-2 text-lg font-semibold mb-0 mr-auto">
-                  Assets{" "}
-                  {selectedStructure && (
-                    <SelectedStructureBadge structure={selectedStructure} />
-                  )}
-                </p>
-                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {structureImages.length === 0 ? (
-                    <div className="animate-pulse">
-                      <svg
-                        className="h-full w-full text-gray-200 dark:text-gray-600"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                        viewBox="0 0 20 18"
-                      >
-                        <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-                      </svg>
-                    </div>
-                  ) : (
-                    <>
-                      {structureImages.map((image) => (
-                        <DownloadImage
-                          key={`${image.attributes.name}`}
-                          src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.formats.thumbnail.url}`}
-                          filename={"somehting"}
-                        />
-                      ))}
-                    </>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {structureDocuments.length === 0 ? (
-                    <div className="animate-pulse">
-                      <svg
-                        className="h-full w-full text-gray-200 dark:text-gray-600"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                        viewBox="0 0 20 18"
-                      >
-                        <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
-                      </svg>
-                    </div>
-                  ) : (
-                    <>
-                      {structureDocuments.map((image) => (
-                        <DownloadImage
-                          key={`${image.attributes.name}`}
-                          src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
-                          filename={"somehting"}
-                        />
-                      ))}
-                    </>
-                  )}
-                </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="inspected" />
+                <Label className="text-sm font-medium" htmlFor="inspected">
+                  Inspected
+                </Label>
               </div>
-              <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-2 rounded-lg">
-                <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
-                  Inspectors{" "}
-                  {selectedStructure && (
-                    <SelectedStructureBadge structure={selectedStructure} />
-                  )}
-                </p>
-
-                <ul className="max-w-md flex flex-col gap-2 divide-gray-200 dark:divide-gray-700">
-                  {structureInspectors.map((inspector, index) => (
-                    <li
-                      className="p-4 border border-1 rounded-lg hover:bg-gray-200"
-                      key={`${inspector.attributes.username}-${index}`}
-                    >
-                      <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                        <div className="flex-shrink-0">
-                          <img
-                            className="w-12 h-12 rounded-full"
-                            src="/profile.png"
-                            alt="Neil image"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                            {inspector.attributes.username}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                            {inspector.attributes.email}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex items-center gap-2">
+                <Checkbox id="uploaded" />
+                <Label className="text-sm font-medium" htmlFor="uploaded">
+                  Uploaded
+                </Label>
               </div>
             </div>
-          ) : (
+          </div>
+
+          <MapPanel />
+
+          {/* This is the box of all the strucutre */}
+          {false && (
             <div className="im-snapping overflow-x-auto w-full">
               {filteredStructures.map((structure, index) => (
                 <div
                   key={`${structure.id}-${index}`}
-                  className={`flex flex-row items-center bg-white border-2 border-gray-100 rounded-lg md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-2 ${
+                  className={`flex flex-row justify-between items-center bg-white border-0 border-b-2 border-gray-100 md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 ${
                     selectedStructure &&
                     selectedStructure.id === structure.id &&
                     "active-structure"
@@ -853,22 +784,27 @@ export default function Page({ params }) {
                     setSelectedStructure(structure);
                   }}
                 >
-                  <MdLocationPin
-                    className={`bg-${getInspectionColor(
-                      structure.attributes.status
-                    )}-100 text-${getInspectionColor(
-                      structure.attributes.status
-                    )}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                    style={{ width: 40, height: 40 }}
-                  />
+                  <div className="flex">
+                    <MdLocationPin
+                      className={`${getInspectionIconColor(
+                        structure.attributes.status
+                      )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+                      style={{ width: 40, height: 40 }}
+                    />
 
-                  <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal w-full">
-                    <h5 className="flex mb-2 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                      {structure.attributes.mapSection}
-                      <span className="flex items-center font-light ml-1">
-                        {` - ${structure.attributes.type}`}
-                      </span>
-                    </h5>
+                    <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                      <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                        {structure.attributes.mapSection}
+                        <span className="flex items-center font-light ml-1">
+                          {` / ${structure.attributes.type}`}
+                        </span>
+                      </h5>
+
+                      <DirectionsComponent />
+                    </div>
+                  </div>
+
+                  <div className="flex">
                     <p className="flex text-sm text-gray-700 dark:text-gray-400">
                       <span
                         className={`bg-${getInspectionColor(
@@ -879,32 +815,29 @@ export default function Page({ params }) {
                       >
                         {structure.attributes.status}
                       </span>
-
-                      {selectedStructure && (
-                        <>
-                          {selectedStructure.id === structure.id && (
-                            <Badge
-                              color="info"
-                              className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300 ml-1`}
-                            >
-                              Active
-                            </Badge>
-                          )}
-                        </>
-                      )}
                     </p>
 
-                    <Button
-                      onClick={(e) =>
-                        setDisplayMapSubPanel(!displayMapSubPanel)
-                      }
+                    {/* <StructureDrawer structure={selectedStructure} /> */}
+                    <Dropdown
+                      inline
+                      label=""
+                      placement="top"
+                      dismissOnClick={false}
+                      renderTrigger={() => (
+                        <span>
+                          <ElipseIcon />
+                        </span>
+                      )}
                     >
-                      View
-                    </Button>
+                      <Dropdown.Item>
+                        <div className="flex items-center">
+                          <span className="ml-2">
+                            <Link href={`/inspections`}>View</Link>
+                          </span>{" "}
+                        </div>
+                      </Dropdown.Item>
+                    </Dropdown>
                   </div>
-                  {selectedStructure?.id === structure.id && (
-                    <StructureDrawer structure={selectedStructure} />
-                  )}
                 </div>
               ))}
             </div>

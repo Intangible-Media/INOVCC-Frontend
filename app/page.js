@@ -131,7 +131,7 @@ export default function Home() {
   const series = [
     {
       name: "series-1",
-      data: [30, 40, 35, 50, 49, 60, 70, 91, 125],
+      data: [30, 40, 135, 50, 49, 60, 70, 91, 155],
     },
   ];
 
@@ -184,7 +184,7 @@ export default function Home() {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <div className="bg-white p-7">
+        <div className="flex flex-col bg-white p-7 rounded-lg">
           <div className="h-11">
             <h5 className="text-xl font-bold dark:text-white">
               Current Projects
@@ -218,7 +218,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex gap-2 w-full justify-center mt-10">
+          <div className="flex gap-2 w-full justify-center mt-10 rounded-lg">
             <span class="flex items-center text-sm font-medium text-gray-900 dark:text-white me-3">
               <span class="flex w-2.5 h-2.5 bg-red-600 rounded-full me-1.5 flex-shrink-0"></span>
               To Do
@@ -232,11 +232,12 @@ export default function Home() {
               Completed
             </span>
           </div>
-
-          <FooterDateExport />
+          <div className="mt-auto">
+            <FooterDateExport />
+          </div>
         </div>
 
-        <div className="flex flex-col bg-white p-7">
+        <div className="flex flex-col bg-white p-7 rounded-lg">
           <div className="flex justify-between h-11">
             <h3 class="text-3xl font-bold dark:text-white">23</h3>
             <div>
@@ -244,7 +245,7 @@ export default function Home() {
             </div>
           </div>
           <p className="text-gray-500">Products Inspected</p>
-          <div class="w-full">
+          <div class="w-full mt-auto">
             <ApexChart
               type="bar"
               options={option}
@@ -255,7 +256,7 @@ export default function Home() {
           </div>
           <FooterDateExport />
         </div>
-        <div className="flex flex-col bg-white p-7">
+        <div className="flex flex-col bg-white p-7 rounded-lg">
           <div className="flex justify-between h-11">
             <h3 class="text-3xl font-bold dark:text-white">$495,999</h3>
             <div>

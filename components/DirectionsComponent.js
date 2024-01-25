@@ -60,11 +60,9 @@ const DirectionsComponent = ({ destinationLongitude, destinationLatitude }) => {
   const googleMapsLink = `https://www.google.com/maps/?q=${destinationLatitude},${destinationLongitude}`;
 
   return (
-    <Button className="bg-cyan mt-8">
-      <a href={googleMapsLink} target="_blank">
-        Get Directions
-      </a>
-    </Button>
+    <a href={googleMapsLink} target="_blank" className="text-indigo-700">
+      Get Directions
+    </a>
   );
 };
 
