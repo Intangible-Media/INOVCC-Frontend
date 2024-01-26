@@ -385,3 +385,11 @@ input[type="date"]{
 .scrollbar-hide::-webkit-scrollbar { 
   display: none;  /* Safari and Chrome */
 }
+
+.exit-icon {
+  top: 7%;
+}
+
+.image-modal {
+  background-color: rgba(31,42,55, 0.8);
+}

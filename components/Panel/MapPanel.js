@@ -46,9 +46,9 @@ export default function MapPanel({ structure }) {
         </div>
       </div>
       {structure && (
-        <div className="overflow-auto">
+        <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
-            <div id="overview-content" className="w-full">
+            <div id="overview-content">
               <div className="flex justify-between gap-4 border-b px-8">
                 <div className="im-icon-container flex flex-col gap-2 py-4">
                   <svg

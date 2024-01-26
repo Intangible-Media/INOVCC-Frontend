@@ -22,11 +22,6 @@ import DirectionsComponent from "../../../components/DirectionsComponent";
 import Link from "next/link";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
-import StructureDrawer from "../../../components/Drawers/StructureDrawer";
-import AuthorizedWrapper from "../../../components/Auth/AuthorizationWrapper";
-import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
-import { MdDashboard } from "react-icons/md";
-import { Butcherman } from "next/font/google";
 import MapPanel from "../../../components/Panel/MapPanel";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: true });
 
@@ -48,6 +43,7 @@ export default function Page({ params }) {
   const [directions, setDirections] = useState(null);
   const [displayMapSubPanel, setDisplayMapSubPanel] = useState(false);
   const [inspectionReport, setInspectionReport] = useState("");
+  const [activeView, setActiveView] = useState("overview");
   const [client, setClient] = useState({
     name: "",
     contacts: [],
@@ -60,7 +56,7 @@ export default function Page({ params }) {
   });
 
   const activeMapStyleTab =
-    "text-white bg-cyan-400 dark:bg-gray-300 dark:text-gray-900";
+    "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
   const inactiveMapStyleTab =
     "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
 
@@ -321,11 +317,11 @@ export default function Page({ params }) {
   function getColorBasedOnStatus(status) {
     switch (status) {
       case "Not Inspected":
-        return "rgb(253 224 71)"; // Red
+        return "#E3A008"; // Red
       case "Inspected":
-        return "#27A9EF"; // Green
+        return "#057A55"; // Green
       default:
-        return "#ff0000"; // Black or any default color
+        return "#E02424"; // Black or any default color
     }
   }
 
@@ -339,9 +335,11 @@ export default function Page({ params }) {
       if (visibility === "visible") {
         map.current.setLayoutProperty("satellite", "visibility", "none");
         setActiveMapStyle("3d");
+        map.current.easeTo({ pitch: 50 });
       } else {
         map.current.setLayoutProperty("satellite", "visibility", "visible");
         setActiveMapStyle("satelite");
+        map.current.easeTo({ pitch: 0 });
       }
     } else {
       console.warn("Satellite layer not found on the map.");
@@ -521,7 +519,7 @@ export default function Page({ params }) {
             source: "markers",
             layout: {
               "icon-image": ["get", "icon"],
-              "icon-size": 1.5, // Adjust icon size as needed
+              "icon-size": 0.18, // Adjust icon size as needed
             },
           });
         }
@@ -555,7 +553,7 @@ export default function Page({ params }) {
       map.current.easeTo({
         padding: padding,
         center: [lng, lat],
-        zoom: 16,
+        zoom: 18,
         duration: 1000,
       });
 
@@ -667,8 +665,8 @@ export default function Page({ params }) {
       map.current.setLayoutProperty("marker-layer", "icon-size", [
         "case",
         ["==", ["get", "id"], selectedStructure.id],
-        2, // Larger size for selected structure
-        1.5, // Normal size
+        0.4, // Larger size for selected structure
+        0.18, // Normal size
       ]);
     }
   }, [selectedStructure]);
@@ -700,10 +698,10 @@ export default function Page({ params }) {
     <>
       <div
         ref={mapContainer}
-        className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-gray-300 dark:border-gray-600 bg-white rounded-lg"
+        className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-white border-2 dark:border-gray-600 bg-white rounded-lg"
       >
         <div
-          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
+          className="grid max-w-xs grid-cols-3 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
           role="group"
         >
           <button
@@ -726,52 +724,86 @@ export default function Page({ params }) {
           >
             3D
           </button>
+          <button
+            onClick={toggleSatelliteLayer}
+            type="button"
+            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
+              activeMapStyle == "light"
+                ? activeMapStyleTab
+                : inactiveMapStyleTab
+            }`}
+          >
+            Light
+          </button>
         </div>
 
-        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8">
+        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8 overflow-hidden">
           <div className="p-4 w-full bg-gray-100">
-            <TextInput
-              id="small"
-              type="text"
-              placeholder="Search Structures"
-              sizing="md"
-              className="w-full mb-3"
-              value={structureSearch}
-              onChange={(e) => setStructureSearch(e.target.value)}
-            />
+            <div className="relative">
+              <TextInput
+                id="small"
+                type="text"
+                placeholder="Search Structures"
+                sizing="md"
+                className="w-full relative"
+                value={structureSearch}
+                onChange={(e) => setStructureSearch(e.target.value)}
+              />
 
-            <div className="flex justify-center gap-4">
-              <p className="text-sm font-medium">Show Only:</p>
-              <div className="flex items-center gap-2">
-                <Checkbox id="cant-inspect" />
-                <Label className="text-sm font-medium" htmlFor="cant-inspect">
-                  Can't Inspect
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="inspected" />
-                <Label className="text-sm font-medium" htmlFor="inspected">
-                  Inspected
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="uploaded" />
-                <Label className="text-sm font-medium" htmlFor="uploaded">
-                  Uploaded
-                </Label>
+              <div
+                className="exit-icon absolute right-5 cursor-pointer mt-3"
+                onClick={(e) => setActiveView("overview")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                >
+                  <path
+                    d="M7.05864 6L11.0214 2.03721C11.0929 1.96814 11.15 1.88553 11.1892 1.79419C11.2285 1.70284 11.2491 1.6046 11.25 1.50519C11.2508 1.40578 11.2319 1.30719 11.1942 1.21518C11.1566 1.12317 11.101 1.03958 11.0307 0.969285C10.9604 0.898989 10.8768 0.843396 10.7848 0.805752C10.6928 0.768107 10.5942 0.749164 10.4948 0.750028C10.3954 0.750892 10.2972 0.771546 10.2058 0.810783C10.1145 0.850021 10.0319 0.907058 9.96279 0.978565L6 4.94136L2.03721 0.978565C1.896 0.842186 1.70688 0.766722 1.51058 0.768428C1.31428 0.770134 1.1265 0.848873 0.987685 0.987685C0.848873 1.1265 0.770134 1.31428 0.768428 1.51058C0.766722 1.70688 0.842186 1.896 0.978565 2.03721L4.94136 6L0.978565 9.96279C0.907058 10.0319 0.850021 10.1145 0.810783 10.2058C0.771546 10.2972 0.750892 10.3954 0.750028 10.4948C0.749164 10.5942 0.768107 10.6928 0.805752 10.7848C0.843396 10.8768 0.898989 10.9604 0.969285 11.0307C1.03958 11.101 1.12317 11.1566 1.21518 11.1942C1.30719 11.2319 1.40578 11.2508 1.50519 11.25C1.6046 11.2491 1.70284 11.2285 1.79419 11.1892C1.88553 11.15 1.96814 11.0929 2.03721 11.0214L6 7.05864L9.96279 11.0214C10.104 11.1578 10.2931 11.2333 10.4894 11.2316C10.6857 11.2299 10.8735 11.1511 11.0123 11.0123C11.1511 10.8735 11.2299 10.6857 11.2316 10.4894C11.2333 10.2931 11.1578 10.104 11.0214 9.96279L7.05864 6Z"
+                    fill="#6B7280"
+                  />
+                </svg>
               </div>
             </div>
+
+            {activeView === "overview" && (
+              <div className="flex justify-center gap-4 mt-3">
+                <p className="text-sm font-medium">Show Only:</p>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="cant-inspect" />
+                  <Label className="text-sm font-medium" htmlFor="cant-inspect">
+                    Can't Inspect
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="inspected" />
+                  <Label className="text-sm font-medium" htmlFor="inspected">
+                    Inspected
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="uploaded" />
+                  <Label className="text-sm font-medium" htmlFor="uploaded">
+                    Uploaded
+                  </Label>
+                </div>
+              </div>
+            )}
           </div>
 
-          <MapPanel structure={selectedStructure} />
+          {activeView === "singleView" && (
+            <MapPanel structure={selectedStructure} />
+          )}
 
-          {/* This is the box of all the strucutre */}
-          {true && (
+          {activeView === "overview" && (
             <div className="im-snapping overflow-x-auto w-full">
               {filteredStructures.map((structure, index) => (
                 <div
                   key={`${structure.id}-${index}`}
-                  className={`flex flex-row justify-between items-center bg-white border-0 border-b-2 border-gray-100 md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 ${
+                  className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 ${
                     selectedStructure &&
                     selectedStructure.id === structure.id &&
                     "active-structure"
@@ -784,6 +816,7 @@ export default function Page({ params }) {
                     );
                     getStructureData(structure);
                     setSelectedStructure(structure);
+                    setActiveView("singleView");
                   }}
                 >
                   <div className="flex">
