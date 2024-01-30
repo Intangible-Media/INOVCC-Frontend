@@ -46,6 +46,9 @@ module.exports = {
           900: "#1c1a51",
         },
       },
+      fontSize: {
+        xxs: ["10px", "10px"],
+      },
     },
   },
   plugins: [require("flowbite/plugin")],

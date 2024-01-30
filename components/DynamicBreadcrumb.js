@@ -12,8 +12,6 @@ function DynamicBreadcrumb() {
 
   useEffect(() => {
     const url = `${pathname}?${searchParams}`;
-    console.log(url);
-    console.log(pathname.split("/"));
     setBreadcrumbPath(pathname.split("/").slice(1));
   }, [pathname, searchParams]);
 

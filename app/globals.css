@@ -16,12 +16,12 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f1f100;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #88888800;
 }
 
 /* Handle on hover */
@@ -392,4 +392,20 @@ input[type="date"]{
 
 .image-modal {
   background-color: rgba(31,42,55, 0.8);
+}
+
+.inspection-map-box {
+  max-height: 575px;
+}
+
+.inspection-map-box-sm {
+  max-height: 350px;
+}
+
+.file-name-footer {
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.10), 0px 1px 3px 0px rgba(0, 0, 0, 0.10);
+}
+
+.alternate-bg:nth-of-type(even) {
+  background-color:#F9FAFB;
 }

@@ -18,6 +18,7 @@ import {
   HiTable,
   HiUser,
 } from "react-icons/hi";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -89,7 +90,9 @@ export default function RootLayout({ children }) {
                   <Dropdown.Item>Settings</Dropdown.Item>
                   <Dropdown.Item>Earnings</Dropdown.Item>
                   <Dropdown.Divider />
-                  <Dropdown.Item>Sign out</Dropdown.Item>
+                  <Dropdown.Item onClick={() => signOut()}>
+                    Sign out
+                  </Dropdown.Item>
                 </Dropdown>
                 <Navbar.Toggle />
               </div>
@@ -259,7 +262,7 @@ export default function RootLayout({ children }) {
               } mt-16 transition-all	`}
             >
               <DynamicBreadcrumb />
-              <div className="p-4">{children}</div>
+              <div className="px-6 pb-8">{children}</div>
             </div>
           </>
         </AuthProvider>

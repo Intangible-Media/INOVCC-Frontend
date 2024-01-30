@@ -6,43 +6,85 @@ export default function MapPanel({ structure }) {
   const [currentPanel, setCurrentPanel] = useState("overview");
 
   const activePanelClasses = (panelTab) => {
-    if (panelTab === currentPanel) return "border-b-2 border-dark-blue-700";
+    if (panelTab === currentPanel)
+      return "border-b-2 border-dark-blue-700 text-dark-blue-700";
+  };
+
+  const getInspectionColor = (status) => {
+    if (status.toLowerCase() == "uploaded") return "text-white bg-green-800";
+    if (status.toLowerCase() == "inspected")
+      return "text-green-800 bg-green-100";
+    if (status.toLowerCase() == "not inspected")
+      return "text-yellow-800 bg-yellow-100";
+    else return "text-red-800 bg-red-100";
   };
 
   return (
     <>
+      <div className="flex justify-between px-8 pt-5 pb-2 w-full">
+        <div className="flex flex-col gap-2">
+          <h4 className="leading-none text-xs font-medium text-gray-500">
+            Map Name 12344.89
+          </h4>
+          <h3 className="text-base leading-none font-medium">
+            Structure Name 1 <span className="text-gray-500"> / Man Hole</span>
+          </h3>
+        </div>
+        <span
+          className={`${getInspectionColor(
+            structure.attributes.status
+          )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full`}
+        >
+          {structure.attributes.status}
+          {structure.attributes.status === "Uploaded" && (
+            <svg
+              className="m-auto"
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="7"
+              viewBox="0 0 10 7"
+              fill="none"
+            >
+              <path
+                d="M3.6722 6.99999C3.51987 7.00065 3.37336 6.93626 3.26399 6.82059L0.509147 3.90423C0.454238 3.84574 0.410425 3.77604 0.38021 3.69908C0.349996 3.62212 0.33397 3.53943 0.33305 3.45572C0.331191 3.28665 0.390968 3.12371 0.499233 3.00273C0.607497 2.88175 0.755379 2.81264 0.910347 2.81061C1.06532 2.80858 1.21467 2.8738 1.32557 2.99191L3.67453 5.47756L8.67336 0.181164C8.78441 0.0630521 8.93392 -0.00209614 9.089 5.14605e-05C9.24407 0.00219906 9.39202 0.0714667 9.50028 0.192616C9.60855 0.313765 9.66826 0.476873 9.6663 0.646056C9.66433 0.815239 9.60083 0.976641 9.48979 1.09475L4.08041 6.82059C3.97104 6.93626 3.82452 7.00065 3.6722 6.99999Z"
+                fill="white"
+              />
+            </svg>
+          )}
+        </span>
+      </div>
       <div className="im-tabs-header flex gap-3 border-b w-full px-8 justify-between">
         <div
-          className={`im-tab px-4 py-4 cursor-pointer ${activePanelClasses(
+          className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "overview"
           )}`}
           onClick={(e) => setCurrentPanel("overview")}
         >
-          <h3 className="text-xs font-medium text-dark-blue-700">Overview</h3>
+          <h3 className="text-xs font-medium">Overview</h3>
         </div>
         <div
-          className={`im-tab px-4 py-4 cursor-pointer ${activePanelClasses(
+          className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "assets"
           )}`}
           onClick={(e) => setCurrentPanel("assets")}
         >
-          <h3 className="text-xs font-medium text-dark-blue-700">Assets</h3>
+          <h3 className="text-xs font-medium">Assets</h3>
         </div>
         <div
-          className={`im-tab px-4 py-4 cursor-pointer ${activePanelClasses(
-            "inspectors"
-          )}`}
-          onClick={(e) => setCurrentPanel("inspectors")}
-        >
-          <h3 className="text-xs font-medium text-dark-blue-700">Inspectors</h3>
-        </div>
-        <div
-          className={`im-tab px-4 py-4 cursor-pointer ${activePanelClasses(
+          className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "notes"
           )}`}
           onClick={(e) => setCurrentPanel("notes")}
         >
-          <h3 className="text-xs font-medium text-dark-blue-700">Notes</h3>
+          <h3 className="text-xs font-medium">Notes</h3>
+        </div>
+        <div
+          className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
+            "edit"
+          )}`}
+          onClick={(e) => setCurrentPanel("edit")}
+        >
+          <h3 className="text-xs font-medium">Edit</h3>
         </div>
       </div>
       {structure && (
@@ -51,103 +93,86 @@ export default function MapPanel({ structure }) {
             <div id="overview-content">
               <div className="flex justify-between gap-4 border-b px-8">
                 <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <svg
-                    className="m-auto"
-                    width="33"
-                    height="32"
-                    viewBox="0 0 33 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <rect
-                      x="0.5"
-                      width="32"
-                      height="32"
-                      rx="16"
-                      fill="#312E8E"
-                    />
-                    <path
-                      d="M10.686 21.3334C9.91553 18.8719 11.4565 13.1283 16.85 13.1283V11.4873C16.85 11.3349 16.8898 11.1855 16.965 11.0559C17.0403 10.9263 17.1479 10.8215 17.2759 10.7534C17.4039 10.6852 17.5471 10.6564 17.6897 10.6701C17.8322 10.6837 17.9683 10.7394 18.0828 10.8309L22.1918 14.1129C22.2875 14.1893 22.3652 14.2884 22.4187 14.4024C22.4722 14.5163 22.5 14.6419 22.5 14.7693C22.5 14.8967 22.4722 15.0223 22.4187 15.1363C22.3652 15.2502 22.2875 15.3493 22.1918 15.4257L18.0828 18.7078C17.9683 18.7992 17.8322 18.8549 17.6897 18.8686C17.5471 18.8822 17.4039 18.8534 17.2759 18.7853C17.1479 18.7171 17.0403 18.6124 16.965 18.4827C16.8898 18.3531 16.85 18.2037 16.85 18.0514V16.4103C11.4565 17.2309 10.686 21.3334 10.686 21.3334Z"
-                      fill="white"
-                    />
-                  </svg>
-                  <p className="leading-none font-medium text-xxs text-dark-blue-700">
-                    Something
+                  <div className="flex align-middle w-10 h-10 m-auto bg-dark-blue-700 rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
+                    <svg
+                      className="m-auto"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="16"
+                      viewBox="0 0 17 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M2.68602 13.3334C1.91553 10.8719 3.45652 5.12829 8.84997 5.12829V3.48726C8.84997 3.33488 8.88982 3.18551 8.96504 3.05589C9.04027 2.92627 9.14791 2.82152 9.27589 2.75337C9.40387 2.68523 9.54715 2.65638 9.68966 2.67006C9.83217 2.68375 9.96829 2.73942 10.0828 2.83085L14.1918 6.1129C14.2875 6.18933 14.3652 6.28844 14.4187 6.40237C14.4722 6.5163 14.5 6.64193 14.5 6.76931C14.5 6.89669 14.4722 7.02232 14.4187 7.13626C14.3652 7.25019 14.2875 7.34929 14.1918 7.42572L10.0828 10.7078C9.96829 10.7992 9.83217 10.8549 9.68966 10.8686C9.54715 10.8822 9.40387 10.8534 9.27589 10.7853C9.14791 10.7171 9.04027 10.6124 8.96504 10.4827C8.88982 10.3531 8.84997 10.2037 8.84997 10.0514V8.41034C3.45652 9.23085 2.68602 13.3334 2.68602 13.3334Z"
+                        fill="white"
+                      />
+                    </svg>
+                  </div>
+                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
+                    Favorite Map
                   </p>
                 </div>
                 <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <svg
-                    className="m-auto"
-                    width="33"
-                    height="32"
-                    viewBox="0 0 33 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <rect
-                      x="0.5"
-                      width="32"
-                      height="32"
-                      rx="16"
-                      fill="#312E8E"
-                    />
-                    <path
-                      d="M10.686 21.3334C9.91553 18.8719 11.4565 13.1283 16.85 13.1283V11.4873C16.85 11.3349 16.8898 11.1855 16.965 11.0559C17.0403 10.9263 17.1479 10.8215 17.2759 10.7534C17.4039 10.6852 17.5471 10.6564 17.6897 10.6701C17.8322 10.6837 17.9683 10.7394 18.0828 10.8309L22.1918 14.1129C22.2875 14.1893 22.3652 14.2884 22.4187 14.4024C22.4722 14.5163 22.5 14.6419 22.5 14.7693C22.5 14.8967 22.4722 15.0223 22.4187 15.1363C22.3652 15.2502 22.2875 15.3493 22.1918 15.4257L18.0828 18.7078C17.9683 18.7992 17.8322 18.8549 17.6897 18.8686C17.5471 18.8822 17.4039 18.8534 17.2759 18.7853C17.1479 18.7171 17.0403 18.6124 16.965 18.4827C16.8898 18.3531 16.85 18.2037 16.85 18.0514V16.4103C11.4565 17.2309 10.686 21.3334 10.686 21.3334Z"
-                      fill="white"
-                    />
-                  </svg>
-                  <p className="leading-none font-medium text-xxs text-dark-blue-700">
-                    Something
+                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
+                    <svg
+                      className="m-auto"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="13"
+                      height="12"
+                      viewBox="0 0 13 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M3.02697 12C2.89303 11.9996 2.76078 11.9688 2.63942 11.9097C2.51805 11.8506 2.41049 11.7646 2.3242 11.6577C2.23792 11.5508 2.17498 11.4257 2.13978 11.2909C2.10457 11.156 2.09793 11.0149 2.12033 10.8771L2.63815 7.72813L0.444451 5.49925C0.321599 5.37407 0.234743 5.21555 0.193692 5.0416C0.152642 4.86765 0.159031 4.68519 0.212139 4.51483C0.265246 4.34446 0.362957 4.19298 0.494238 4.07749C0.625518 3.96199 0.785138 3.88709 0.955075 3.86123L3.98581 3.4018L5.34128 0.535739C5.41724 0.374946 5.53483 0.239544 5.68075 0.144863C5.82666 0.050181 5.99507 0 6.16692 0C6.33876 0 6.50717 0.050181 6.65309 0.144863C6.799 0.239544 6.91659 0.374946 6.99255 0.535739L8.34802 3.40055L11.3788 3.85997C11.5487 3.8857 11.7083 3.96051 11.8397 4.07594C11.971 4.19136 12.0687 4.34281 12.1218 4.51315C12.175 4.68349 12.1813 4.86594 12.1403 5.03987C12.0992 5.21379 12.0123 5.37226 11.8894 5.49737L9.69568 7.72813L10.2135 10.8765C10.2425 11.0531 10.2236 11.2346 10.1589 11.4006C10.0942 11.5666 9.98624 11.7103 9.84727 11.8156C9.7083 11.9209 9.54386 11.9836 9.37254 11.9965C9.20122 12.0094 9.02986 11.972 8.87784 11.8886L6.16692 10.402L3.45599 11.8886C3.32379 11.9616 3.17653 11.9998 3.02697 12V12ZM1.68831 5.01353L3.5808 6.93885C3.68779 7.04744 3.7678 7.18159 3.81391 7.3297C3.86001 7.4778 3.87083 7.6354 3.84541 7.78884L3.39899 10.5066L5.7391 9.22281C5.87118 9.15096 6.01795 9.11344 6.16692 9.11344C6.31588 9.11344 6.46265 9.15096 6.59474 9.22281L8.93484 10.5059L8.48782 7.78884C8.46261 7.6353 8.47363 7.47765 8.51995 7.32955C8.56626 7.18145 8.64647 7.04735 8.75364 6.93885L10.6455 5.01416L8.03 4.61796C7.88242 4.59554 7.74226 4.5361 7.62155 4.44475C7.50084 4.35339 7.40318 4.23284 7.33697 4.09344L6.16692 1.61857L4.99746 4.09094C4.93135 4.23053 4.83375 4.35131 4.71304 4.44289C4.59233 4.53446 4.45211 4.59411 4.30443 4.6167L1.68831 5.01353Z"
+                        fill="#312E8E"
+                      />
+                    </svg>
+                  </div>
+                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
+                    Favorite Map
                   </p>
                 </div>
                 <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <svg
-                    className="m-auto"
-                    width="33"
-                    height="32"
-                    viewBox="0 0 33 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <rect
-                      x="0.5"
-                      width="32"
-                      height="32"
-                      rx="16"
-                      fill="#312E8E"
-                    />
-                    <path
-                      d="M10.686 21.3334C9.91553 18.8719 11.4565 13.1283 16.85 13.1283V11.4873C16.85 11.3349 16.8898 11.1855 16.965 11.0559C17.0403 10.9263 17.1479 10.8215 17.2759 10.7534C17.4039 10.6852 17.5471 10.6564 17.6897 10.6701C17.8322 10.6837 17.9683 10.7394 18.0828 10.8309L22.1918 14.1129C22.2875 14.1893 22.3652 14.2884 22.4187 14.4024C22.4722 14.5163 22.5 14.6419 22.5 14.7693C22.5 14.8967 22.4722 15.0223 22.4187 15.1363C22.3652 15.2502 22.2875 15.3493 22.1918 15.4257L18.0828 18.7078C17.9683 18.7992 17.8322 18.8549 17.6897 18.8686C17.5471 18.8822 17.4039 18.8534 17.2759 18.7853C17.1479 18.7171 17.0403 18.6124 16.965 18.4827C16.8898 18.3531 16.85 18.2037 16.85 18.0514V16.4103C11.4565 17.2309 10.686 21.3334 10.686 21.3334Z"
-                      fill="white"
-                    />
-                  </svg>
-                  <p className="leading-none font-medium text-xxs text-dark-blue-700">
-                    Something
+                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
+                    <svg
+                      className="m-auto"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="16"
+                      viewBox="0 0 17 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M8.83268 3.33325V7.99992M8.83268 7.99992V12.6666M8.83268 7.99992H13.4993M8.83268 7.99992H4.16602"
+                        stroke="#312E8E"
+                        stroke-width="1.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
+                    Add Assets
                   </p>
                 </div>
                 <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <svg
-                    className="m-auto"
-                    width="33"
-                    height="32"
-                    viewBox="0 0 33 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <rect
-                      x="0.5"
-                      width="32"
-                      height="32"
-                      rx="16"
-                      fill="#312E8E"
-                    />
-                    <path
-                      d="M10.686 21.3334C9.91553 18.8719 11.4565 13.1283 16.85 13.1283V11.4873C16.85 11.3349 16.8898 11.1855 16.965 11.0559C17.0403 10.9263 17.1479 10.8215 17.2759 10.7534C17.4039 10.6852 17.5471 10.6564 17.6897 10.6701C17.8322 10.6837 17.9683 10.7394 18.0828 10.8309L22.1918 14.1129C22.2875 14.1893 22.3652 14.2884 22.4187 14.4024C22.4722 14.5163 22.5 14.6419 22.5 14.7693C22.5 14.8967 22.4722 15.0223 22.4187 15.1363C22.3652 15.2502 22.2875 15.3493 22.1918 15.4257L18.0828 18.7078C17.9683 18.7992 17.8322 18.8549 17.6897 18.8686C17.5471 18.8822 17.4039 18.8534 17.2759 18.7853C17.1479 18.7171 17.0403 18.6124 16.965 18.4827C16.8898 18.3531 16.85 18.2037 16.85 18.0514V16.4103C11.4565 17.2309 10.686 21.3334 10.686 21.3334Z"
-                      fill="white"
-                    />
-                  </svg>
-                  <p className="leading-none font-medium text-xxs text-dark-blue-700">
-                    Something
+                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
+                    <svg
+                      className="m-auto"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M9.59971 7.05893C9.27977 7.05922 8.96314 7.12566 8.66862 7.25431C8.3741 7.38296 8.1077 7.5712 7.88522 7.80785L4.7525 6.11942C4.78301 5.96396 4.79863 5.80579 4.79913 5.64719C4.79522 5.55379 4.78606 5.46069 4.7717 5.36838L7.76726 4.04699C8.13055 4.48706 8.63286 4.78132 9.18598 4.8781C9.7391 4.97488 10.3077 4.86799 10.7918 4.57621C11.276 4.28442 11.6448 3.8264 11.8335 3.28256C12.0222 2.73872 12.0187 2.14385 11.8236 1.6024C11.6286 1.06095 11.2544 0.607543 10.7669 0.3218C10.2793 0.0360567 9.70953 -0.0637533 9.15759 0.0398971C8.60564 0.143547 8.10683 0.444031 7.74872 0.888582C7.39062 1.33313 7.19614 1.89333 7.19942 2.47079C7.20326 2.56537 7.21242 2.65965 7.22685 2.75314L4.23198 4.07099C3.92134 3.68863 3.50539 3.41217 3.03898 3.2781C2.57257 3.14403 2.07764 3.15864 1.61947 3.32001C1.16129 3.48138 0.761418 3.78192 0.472591 4.18199C0.183765 4.58205 0.0195599 5.06285 0.0016407 5.56093C-0.0162785 6.05901 0.11293 6.55099 0.372219 6.97194C0.631509 7.3929 1.0087 7.72306 1.45402 7.91886C1.89934 8.11467 2.39187 8.16691 2.86663 8.06871C3.34139 7.97051 3.77608 7.72648 4.11333 7.3688L7.24468 9.05724C7.21463 9.21274 7.19947 9.37091 7.19942 9.52946C7.19942 10.0181 7.34019 10.4957 7.60394 10.902C7.86769 11.3083 8.24256 11.625 8.68116 11.8119C9.11975 11.9989 9.60237 12.0479 10.068 11.9525C10.5336 11.8572 10.9613 11.6219 11.297 11.2764C11.6327 10.9309 11.8613 10.4907 11.9539 10.0114C12.0465 9.5322 11.999 9.03546 11.8173 8.58403C11.6356 8.1326 11.328 7.74675 10.9332 7.47529C10.5385 7.20382 10.0744 7.05893 9.59971 7.05893V7.05893ZM9.59971 1.41199C9.80317 1.41199 10.0021 1.47409 10.1712 1.59043C10.3404 1.70677 10.4722 1.87214 10.5501 2.06561C10.628 2.25908 10.6483 2.47197 10.6086 2.67735C10.5689 2.88274 10.471 3.0714 10.3271 3.21948C10.1832 3.36755 9.99994 3.46839 9.8004 3.50925C9.60085 3.5501 9.39401 3.52913 9.20604 3.449C9.01807 3.36886 8.85741 3.23315 8.74438 3.05903C8.63135 2.88491 8.57101 2.6802 8.57101 2.47079C8.57101 2.18998 8.67939 1.92067 8.87231 1.72211C9.06523 1.52354 9.32688 1.41199 9.59971 1.41199V1.41199ZM2.39884 6.70599C2.19538 6.70599 1.9965 6.6439 1.82733 6.52755C1.65816 6.41121 1.52631 6.24585 1.44845 6.05238C1.37059 5.85891 1.35022 5.64602 1.38991 5.44063C1.4296 5.23524 1.52758 5.04658 1.67144 4.89851C1.81531 4.75043 1.99861 4.64959 2.19815 4.60874C2.3977 4.56788 2.60454 4.58885 2.79251 4.66899C2.98048 4.74913 3.14114 4.88484 3.25417 5.05896C3.3672 5.23307 3.42754 5.43778 3.42754 5.64719C3.42633 5.8137 3.3866 5.97751 3.31164 6.12507C3.31164 6.1293 3.30546 6.13142 3.30341 6.13495V6.14624C3.21582 6.31494 3.08546 6.45607 2.92619 6.55463C2.76692 6.65318 2.58468 6.70549 2.39884 6.70599V6.70599ZM9.59971 10.5883C9.32688 10.5883 9.06523 10.4767 8.87231 10.2781C8.67939 10.0796 8.57101 9.81027 8.57101 9.52946C8.57203 9.36507 8.61081 9.20326 8.68417 9.05724C8.68417 9.05159 8.69171 9.04736 8.69514 9.04171V9.03041C8.78098 8.86509 8.90792 8.72619 9.063 8.6279C9.21807 8.52961 9.39571 8.47546 9.57778 8.47097C9.75985 8.46648 9.93981 8.51183 10.0993 8.60236C10.2587 8.6929 10.392 8.82539 10.4854 8.98629C10.5788 9.1472 10.6291 9.33074 10.631 9.51818C10.633 9.70562 10.5865 9.89023 10.4965 10.0531C10.4064 10.2161 10.2759 10.3514 10.1184 10.4455C9.96081 10.5395 9.78183 10.5888 9.59971 10.5883Z"
+                        fill="#312E8E"
+                      />
+                    </svg>
+                  </div>
+                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
+                    Share
                   </p>
                 </div>
               </div>
@@ -155,6 +180,7 @@ export default function MapPanel({ structure }) {
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg
+                      className="m-auto"
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
                       height="16"
@@ -239,38 +265,13 @@ export default function MapPanel({ structure }) {
               </div>
 
               <div className="flex flex-col border-b px-8 py-6">
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="leading-none font-medium text-sm mb-2">
-                      Structure Status
-                    </h4>
-                    <select
-                      className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                      defaultValue={"All"}
-                    >
-                      <option value="All">All</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="FR">France</option>
-                      <option value="DE">Germany</option>
-                    </select>
-                  </div>
-                  <div>
-                    <span className="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-green-900 dark:text-green-300">
-                      Completed
-                    </span>
-                  </div>
-                </div>
-                <Progress className="my-2" />
-              </div>
-              <div className="flex flex-col border-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Assets
                 </h4>
                 <ImageCardSlider images={structure.attributes.images} />
               </div>
               <div className="flex flex-col border-b px-8 py-6">
-                <h4 className="leading-none font-medium text-sm mb-2">
+                <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
                 </h4>
                 <div className="flex -space-x-4 rtl:space-x-reverse">
@@ -307,115 +308,7 @@ export default function MapPanel({ structure }) {
               </div>
               <div className="flex flex-col blorder-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
-                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                  <li className="pb-3 sm:pb-4">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                          alt="Neil image"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                          Neil Sims
-                        </p>
-                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                          email@flowbite.com
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="py-3 sm:py-4">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                          alt="Neil image"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                          Bonnie Green
-                        </p>
-                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                          email@flowbite.com
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="py-3 sm:py-4">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                          alt="Neil image"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                          Michael Gough
-                        </p>
-                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                          email@flowbite.com
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="py-3 sm:py-4">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                          alt="Neil image"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                          Thomas Lean
-                        </p>
-                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                          email@flowbite.com
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="pt-3 pb-0 sm:pt-4">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                          alt="Neil image"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                          Lana Byrd
-                        </p>
-                        <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-                          email@flowbite.com
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-
-                <div className="flex justify-between mt-4">
-                  <a className="text-sm leading-none font-medium" href="#">
-                    Download All
-                  </a>
-                  <a
-                    href="#"
-                    className="text-dark-blue-700 text-xs leading-none font-medium"
-                  >
-                    Add Asset
-                  </a>
-                </div>
+                <StructureNotes />
               </div>
             </div>
           )}
@@ -427,16 +320,16 @@ export default function MapPanel({ structure }) {
                   Assets
                 </h4>
                 <div className="grid grid-cols-2 gap-2 ">
-                  {structure.attributes.images.data?.map((image) => {
-                    console.log(image.attributes.formats);
-                    return (
+                  {structure.attributes.images.data?.map((image) => (
+                    <div className="aspect-square rounded-md overflow-hidden">
                       <img
                         key={`structure-${structure.id}-image-${image.id}`}
+                        className="w-full h-full object-cover"
                         src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                         alt=""
                       />
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
                 <div className="flex justify-between mt-4">
                   <a className="text-sm leading-none font-medium" href="#">
@@ -453,15 +346,121 @@ export default function MapPanel({ structure }) {
             </div>
           )}
 
-          {currentPanel === "inspectors" && (
-            <div id="inspectors-content" className="w-full"></div>
+          {currentPanel === "notes" && (
+            <div id="inspectors-content" className="w-full">
+              <div className="flex flex-col px-8 py-6">
+                <StructureNotes />
+              </div>
+            </div>
           )}
 
-          {currentPanel === "notes" && (
+          {currentPanel === "edit" && (
             <div id="notes-content" className="w-full"></div>
           )}
         </div>
       )}
     </>
+  );
+}
+
+function StructureNotes() {
+  return (
+    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+      <li className="pb-3 sm:pb-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex-shrink-0">
+            <img
+              className="w-8 h-8 rounded-full"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt="Neil image"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+              Neil Sims
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              email@flowbite.com
+            </p>
+          </div>
+        </div>
+      </li>
+      <li className="py-3 sm:py-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex-shrink-0">
+            <img
+              className="w-8 h-8 rounded-full"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt="Neil image"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+              Bonnie Green
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              email@flowbite.com
+            </p>
+          </div>
+        </div>
+      </li>
+      <li className="py-3 sm:py-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex-shrink-0">
+            <img
+              className="w-8 h-8 rounded-full"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt="Neil image"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+              Michael Gough
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              email@flowbite.com
+            </p>
+          </div>
+        </div>
+      </li>
+      <li className="py-3 sm:py-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex-shrink-0">
+            <img
+              className="w-8 h-8 rounded-full"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt="Neil image"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+              Thomas Lean
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              email@flowbite.com
+            </p>
+          </div>
+        </div>
+      </li>
+      <li className="pt-3 pb-0 sm:pt-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex-shrink-0">
+            <img
+              className="w-8 h-8 rounded-full"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt="Neil image"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+              Lana Byrd
+            </p>
+            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+              email@flowbite.com
+            </p>
+          </div>
+        </div>
+      </li>
+    </ul>
   );
 }
