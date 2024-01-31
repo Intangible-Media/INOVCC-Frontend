@@ -325,7 +325,7 @@ export default function InspectionTable({ inspectionData }) {
 
           <div className="flex items-center justify-between space-x-4">
             <div className="flex-1 flex items-center space-x-3">
-              <h5 class="text-xl font-bold dark:text-white mb-2">
+              <h5 className="text-xl font-bold dark:text-white mb-2">
                 All Projects
               </h5>
             </div>

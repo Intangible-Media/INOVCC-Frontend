@@ -145,9 +145,9 @@ export default function MapPanel({ structure }) {
                       <path
                         d="M8.83268 3.33325V7.99992M8.83268 7.99992V12.6666M8.83268 7.99992H13.4993M8.83268 7.99992H4.16602"
                         stroke="#312E8E"
-                        stroke-width="1.4"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
@@ -320,10 +320,12 @@ export default function MapPanel({ structure }) {
                   Assets
                 </h4>
                 <div className="grid grid-cols-2 gap-2 ">
-                  {structure.attributes.images.data?.map((image) => (
-                    <div className="aspect-square rounded-md overflow-hidden">
+                  {structure.attributes.images.data?.map((image, key) => (
+                    <div
+                      className="aspect-square rounded-md overflow-hidden"
+                      key={`structure-${structure.id}-image-${image.id}`}
+                    >
                       <img
-                        key={`structure-${structure.id}-image-${image.id}`}
                         className="w-full h-full object-cover"
                         src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                         alt=""

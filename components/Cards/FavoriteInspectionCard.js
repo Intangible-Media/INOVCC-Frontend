@@ -2,7 +2,7 @@ import { Progress } from "flowbite-react";
 
 export default function FavoriteInspectionCard() {
   return (
-    <div class="inline-block">
+    <div className="inline-block">
       <div className="w-80 max-w-xs overflow-hidden rounded-lg  bg-white p-6">
         <div className="flex justify-between">
           <div className="flex flex-col">

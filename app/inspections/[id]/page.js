@@ -1,23 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
 import DownloadImage from "../../../components/DownloadImage";
-import {
-  TextInput,
-  Badge,
-  Tooltip,
-  Button,
-  Dropdown,
-  Checkbox,
-  Label,
-  Progress,
-  Tabs,
-} from "flowbite-react";
+import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import Link from "next/link";
 import qs from "qs";
@@ -30,31 +20,14 @@ export default function Page({ params }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
   const [lat, setLat] = useState(0);
-  const [zoom, setZoom] = useState(10);
   const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
-  const [structureImages, setStructureImages] = useState([]);
-  const [structureDocuments, setStructureDocuments] = useState([]);
   const [inspectionDocuments, setInspectionDocuments] = useState([]);
-  const [structureInspectors, setStructureInspectors] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
-  const [directions, setDirections] = useState(null);
-  const [displayMapSubPanel, setDisplayMapSubPanel] = useState(false);
   const [inspectionReport, setInspectionReport] = useState("");
   const [activeView, setActiveView] = useState("overview");
-  const [client, setClient] = useState({
-    name: "",
-    contacts: [],
-  });
-  const [locationDetails, setLocationDetails] = useState({
-    State: "",
-    city: "",
-    address: "",
-    zipCode: "",
-  });
 
   const activeMapStyleTab =
     "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
@@ -170,16 +143,6 @@ export default function Page({ params }) {
     setLat(latitude);
   };
 
-  const getStructureData = (structure) => {
-    const images = structure.attributes.images.data || [];
-    const files = structure.attributes.documents.data || [];
-    const inspectors = structure.attributes.inspectors.data || [];
-
-    setStructureImages(images);
-    setStructureDocuments(files);
-    setStructureInspectors(inspectors);
-  };
-
   const getInspectionColor = (status) => {
     if (status.toLowerCase() == "uploaded") return "text-white bg-green-800";
     if (status.toLowerCase() == "inspected")
@@ -230,107 +193,6 @@ export default function Page({ params }) {
     }, {});
 
     return typeCounts;
-  };
-
-  const SemiCircleGauge = ({ value, type }) => {
-    const chartOptions = {
-      chart: {
-        type: "radialBar",
-      },
-      colors: ["#33abef"],
-      plotOptions: {
-        radialBar: {
-          startAngle: -135,
-          endAngle: 135,
-          hollow: {
-            margin: 0,
-            size: "55%",
-            background: "transparent",
-          },
-          track: {
-            background: "#f5f5f5",
-            startAngle: -135,
-            endAngle: 135,
-          },
-          dataLabels: {
-            name: {
-              show: true,
-              fontSize: "15px",
-            },
-            value: {
-              fontSize: "15px",
-              show: true,
-              color: "#33abef",
-            },
-          },
-        },
-      },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shade: "dark",
-          type: "horizontal",
-          gradientToColors: ["#33abef"],
-          stops: [0, 100],
-        },
-      },
-      stroke: {
-        lineCap: "round",
-      },
-      labels: [
-        `${type
-          .replace(/-/g, " ")
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")}`,
-      ],
-    };
-    // Since the import is dynamic, we need to check if ApexChart is not undefined
-    return (
-      <ApexChart
-        type="radialBar"
-        options={chartOptions}
-        series={[value]}
-        height={240}
-        width={"100%"}
-      />
-    );
-  };
-
-  const SelectedStructureBadge = ({ structure }) => {
-    return (
-      <Badge
-        color="info"
-        className={`bg-orange-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-      >
-        {structure.attributes.mapSection}
-      </Badge>
-    );
-  };
-
-  const renderProgressBars = (structures) => {
-    const typeFrequencies = calculateTypeFrequencies(structures);
-
-    const progressBars = useMemo(() => {
-      return Object.entries(typeFrequencies).map(([type, data]) => {
-        // Calculate progress as the ratio of inspected structures to total structures of that type
-        const progress =
-          data.totalOfType > 0
-            ? Math.round((data.totalInspected / data.totalOfType) * 100)
-            : 0;
-
-        return (
-          <div
-            key={type}
-            className={`structure-graph flex flex-col justify-center border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 rounded-lg aspect-square w-56`}
-          >
-            <SemiCircleGauge type={type} value={progress} />
-          </div>
-        );
-      });
-    }, [structures]); // Depend on structures to update when data changes
-
-    return progressBars;
   };
 
   function InspectionReport({ reportText }) {
@@ -386,6 +248,93 @@ export default function Page({ params }) {
     }
   };
 
+  // Separate useEffect for the marker layer
+  useEffect(() => {
+    if (!map.current || structures.length === 0) return;
+
+    fetch("/location-pin.svg")
+      .then((response) => response.text())
+      .then((svg) => {
+        structures.forEach((structure) => {
+          const color = getColorBasedOnStatus(structure.attributes.status);
+          const coloredSVG = createColoredMarkerSVG(svg, color);
+
+          const blob = new Blob([coloredSVG], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const image = new Image();
+          image.src = url;
+
+          image.onload = () => {
+            const imageName = `profile-icon-${structure.id}`;
+
+            // Check if the image already exists on the map
+            if (map.current.hasImage(imageName)) {
+              // Optionally remove the existing image
+              map.current.removeImage(imageName);
+            }
+
+            map.current.addImage(imageName, image);
+            URL.revokeObjectURL(url);
+          };
+        });
+
+        const geojsonData = {
+          type: "FeatureCollection",
+          features: structures.map((structure) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [
+                structure.attributes.longitude,
+                structure.attributes.latitude,
+              ],
+            },
+            properties: {
+              id: structure.id,
+              icon: `profile-icon-${structure.id}`,
+            },
+          })),
+        };
+
+        if (!map.current.getSource("markers")) {
+          map.current.addSource("markers", {
+            type: "geojson",
+            data: geojsonData,
+          });
+        } else {
+          map.current.getSource("markers").setData(geojsonData);
+        }
+
+        if (!map.current.getLayer("marker-layer")) {
+          map.current.addLayer({
+            id: "marker-layer",
+            type: "symbol",
+            source: "markers",
+            layout: {
+              "icon-image": ["get", "icon"],
+              "icon-size": 0.18, // Adjust icon size as needed
+            },
+          });
+        }
+      })
+      .catch((error) => console.error("Error loading SVG:", error));
+  }, [structures]);
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    const onMarkerClick = (e) => {
+      const markerId = e.features[0].properties.id;
+      // Handle marker click event
+    };
+
+    map.current.on("click", "marker-layer", onMarkerClick);
+
+    return () => {
+      map.current.off("click", "marker-layer", onMarkerClick);
+    };
+  }, [map.current]);
+
   useEffect(() => {
     if (map.current) return; // Initialize map only once
 
@@ -393,7 +342,7 @@ export default function Page({ params }) {
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/standard-beta",
       center: [lng, lat],
-      zoom: zoom,
+      zoom: 16,
       pitch: 50,
     });
 
@@ -493,94 +442,7 @@ export default function Page({ params }) {
       // Add zoom level event handling for traffic layer
       addZoomEvent();
     });
-  }, [lng, lat, zoom]);
-
-  // Separate useEffect for the marker layer
-  useEffect(() => {
-    if (!map.current || structures.length === 0) return;
-
-    fetch("/location-pin.svg")
-      .then((response) => response.text())
-      .then((svg) => {
-        structures.forEach((structure) => {
-          const color = getColorBasedOnStatus(structure.attributes.status);
-          const coloredSVG = createColoredMarkerSVG(svg, color);
-
-          const blob = new Blob([coloredSVG], { type: "image/svg+xml" });
-          const url = URL.createObjectURL(blob);
-          const image = new Image();
-          image.src = url;
-
-          image.onload = () => {
-            const imageName = `profile-icon-${structure.id}`;
-
-            // Check if the image already exists on the map
-            if (map.current.hasImage(imageName)) {
-              // Optionally remove the existing image
-              map.current.removeImage(imageName);
-            }
-
-            map.current.addImage(imageName, image);
-            URL.revokeObjectURL(url);
-          };
-        });
-
-        const geojsonData = {
-          type: "FeatureCollection",
-          features: structures.map((structure) => ({
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [
-                structure.attributes.longitude,
-                structure.attributes.latitude,
-              ],
-            },
-            properties: {
-              id: structure.id,
-              icon: `profile-icon-${structure.id}`,
-            },
-          })),
-        };
-
-        if (!map.current.getSource("markers")) {
-          map.current.addSource("markers", {
-            type: "geojson",
-            data: geojsonData,
-          });
-        } else {
-          map.current.getSource("markers").setData(geojsonData);
-        }
-
-        if (!map.current.getLayer("marker-layer")) {
-          map.current.addLayer({
-            id: "marker-layer",
-            type: "symbol",
-            source: "markers",
-            layout: {
-              "icon-image": ["get", "icon"],
-              "icon-size": 0.18, // Adjust icon size as needed
-            },
-          });
-        }
-      })
-      .catch((error) => console.error("Error loading SVG:", error));
-  }, [structures]);
-
-  useEffect(() => {
-    if (!map.current) return;
-
-    const onMarkerClick = (e) => {
-      const markerId = e.features[0].properties.id;
-      // Handle marker click event
-    };
-
-    map.current.on("click", "marker-layer", onMarkerClick);
-
-    return () => {
-      map.current.off("click", "marker-layer", onMarkerClick);
-    };
-  }, [map.current]);
+  }, [lng, lat]);
 
   useEffect(() => {
     // Function to animate the map and get location details
@@ -591,9 +453,9 @@ export default function Page({ params }) {
       const padding = isPhone ? { bottom: 400 } : { right: 450 };
 
       map.current.easeTo({
+        zoom: 18,
         padding: padding,
         center: [lng, lat],
-        zoom: 18,
         duration: 1000,
       });
 
@@ -603,15 +465,8 @@ export default function Page({ params }) {
         console.error("Error getting location details:", error);
       }
     };
-
-    const fetchLocationDetails = async () => {
-      const details = await getLocationDetails(lng, lat);
-      setLocationDetails(details);
-    };
-
     // Call the async function
     updateMapAndLocation();
-    fetchLocationDetails();
   }, [lng, lat]);
 
   useEffect(() => {
@@ -633,14 +488,8 @@ export default function Page({ params }) {
           const clientContacts =
             response.data.data.attributes.client.data.attributes.contacts.data;
 
-          console.log(response.data);
-
           setInspectionDocuments(response.data.data.attributes.documents.data);
           setStructures(structuresData);
-          setClient({
-            name: clientName,
-            contacts: clientContacts,
-          });
 
           if (structuresData.length > 0) {
             setLng(structuresData[0].attributes.longitude);
@@ -760,6 +609,7 @@ export default function Page({ params }) {
           </h1>
           <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3>
         </div>
+
         <div className="">
           <Button className="bg-dark-blue-700 text-white">
             Add to Favorites{" "}
@@ -797,12 +647,13 @@ export default function Page({ params }) {
           </Button>
         </div>
       </div>
+
       <div
         ref={mapContainer}
         className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-white border-2 dark:border-gray-600 bg-white rounded-lg"
       >
         <div
-          className="grid max-w-xs grid-cols-3 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
+          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
           role="group"
         >
           <button
@@ -825,17 +676,6 @@ export default function Page({ params }) {
           >
             3D
           </button>
-          <button
-            onClick={toggleSatelliteLayer}
-            type="button"
-            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
-              activeMapStyle == "light"
-                ? activeMapStyleTab
-                : inactiveMapStyleTab
-            }`}
-          >
-            Light
-          </button>
         </div>
 
         <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8 overflow-hidden">
@@ -853,7 +693,9 @@ export default function Page({ params }) {
 
               <div
                 className="exit-icon absolute right-5 cursor-pointer mt-3"
-                onClick={(e) => setActiveView("overview")}
+                onClick={(e) => {
+                  setActiveView("overview");
+                }}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -909,13 +751,11 @@ export default function Page({ params }) {
                     selectedStructure.id === structure.id &&
                     "active-structure"
                   }`}
-                  onClick={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     updateCenterOnClick(
                       structure.attributes.longitude,
                       structure.attributes.latitude
                     );
-                    getStructureData(structure);
                     setSelectedStructure(structure);
                     setActiveView("singleView");
                   }}
@@ -1109,7 +949,7 @@ export default function Page({ params }) {
               ))}
             </div>
           </div>
-          <div className="flex justify-between pt-5 border-t">
+          <div className="flex justify-between pt-5 border-t mt-auto">
             <button className="text-sm text-gray-500 font-medium">
               Download All
             </button>
@@ -1292,6 +1132,7 @@ export default function Page({ params }) {
             </button>
           </div>
         </div>
+
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">Inspectors</h6>
 
@@ -1345,20 +1186,22 @@ export default function Page({ params }) {
         </div>
 
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
-          <h6 className="text-lg font-semibold">Structure Status</h6>
+          <h6 className="text-lg font-semibold">Client</h6>
 
-          <div className="direction-details">
-            <p className="leading-none text-sm mb-2">Address </p>
-            <p className="text-sm font-medium mb-5">
-              2504 East Roma Ave. Phoenix, AZ 85016
-            </p>
-
-            <button
-              type="button"
-              className="text-white bg-dark-blue-700 hover:bg-dark-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-            >
-              Get Directions
-            </button>
+          <div className="alternate-bg flex gap-4 align-middle py-1">
+            <img
+              className="border-2 w-12 h-12 border-white rounded-full dark:border-gray-800"
+              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              alt=""
+            />
+            <div className="flex flex-col gap-1 align-middle justify-center">
+              <p className="leading-none text-sm font-medium">
+                Matthew John Keefer
+              </p>
+              <p className="leading-none text-xs mb-3">Lead UX / UI Designer</p>
+              <p className="leading-none text-xs">E: matt@madebykeefer.com</p>
+              <p className="leading-none text-xs">P: +1 (443) 542 3325</p>
+            </div>
           </div>
 
           <div className="flex justify-between pt-5 border-t mt-auto">

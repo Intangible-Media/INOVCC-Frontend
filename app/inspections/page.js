@@ -158,8 +158,8 @@ export default function Dashboard() {
         <Button className="bg-dark-blue-700 text-white">New Inspection</Button>
       </div>
 
-      <div class="flex overflow-x-scroll mb-4 hide-scroll-bar">
-        <div class="flex flex-nowrap gap-3">
+      <div className="flex overflow-x-scroll mb-4 hide-scroll-bar">
+        <div className="flex flex-nowrap gap-3">
           <FavoriteInspectionCard />
           <FavoriteInspectionCard />
           <FavoriteInspectionCard />
