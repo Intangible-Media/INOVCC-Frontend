@@ -58,6 +58,10 @@
   height: 37rem;
 }
 
+.map-container-sm {
+  /* height: 15rem; */
+}
+
 @media (max-width: 550px) {
   .map-container,
   .map-stuctures-container {
@@ -245,10 +249,15 @@
   width: 80%;
 }
 
+.im-inspection-drawer {
+  width: 80%;
+  top: 3.83rem;
+}
+
 @media (min-width: 500px) {
 
   .im-drawer {
-    width: 30rem;
+    width: 720px;
   }  
 }
 

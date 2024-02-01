@@ -8,6 +8,7 @@ import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import axios from "axios";
 import InspectionTable from "../../components/InspectionTable";
 import InspectionModal from "../../components/Modals/InspectionModal";
+import InspectionDrawer from "../../components/Drawers/InspectionDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import ActivityLog from "../../components/ActivityLog";
 import qs from "qs";
@@ -154,8 +155,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="grid grid-cols-1 mb-4">
-        <Button className="bg-dark-blue-700 text-white">New Inspection</Button>
+      <div className="grid grid-cols-1 my-4">
+        <InspectionDrawer />
       </div>
 
       <div className="flex overflow-x-scroll mb-4 hide-scroll-bar">

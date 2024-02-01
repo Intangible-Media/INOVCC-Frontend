@@ -13,6 +13,7 @@ import Link from "next/link";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
+import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page({ params }) {
@@ -610,8 +611,9 @@ export default function Page({ params }) {
           <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3>
         </div>
 
-        <div className="">
-          <Button className="bg-dark-blue-700 text-white">
+        <div className="grid grid-cols-2 gap-3 align-middle">
+          <InspectionDrawer btnText={"Edit Inspection"} />
+          <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
             Add to Favorites{" "}
             <svg
               className="ml-3"
@@ -1163,8 +1165,12 @@ export default function Page({ params }) {
             <button className="text-sm text-gray-500 font-medium">
               Download All
             </button>
-            <button className="flex align-middle text-sm font-semibold">
-              Email{" "}
+            <a
+              target="_blank"
+              href="mailto:person1@example.com,person2@example.com?cc=person3@example.com,person4@example.com&bcc=person5@example.com&subject=Mail from Our Site&body=<h1>Hello</h1>, this is a message from the site!"
+              className="flex align-middle text-sm font-semibold"
+            >
+              Email Team{" "}
               <svg
                 className="m-auto ml-2"
                 xmlns="http://www.w3.org/2000/svg"
@@ -1181,7 +1187,7 @@ export default function Page({ params }) {
                   strokeLinejoin="round"
                 />
               </svg>
-            </button>
+            </a>
           </div>
         </div>
 
