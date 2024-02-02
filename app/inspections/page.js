@@ -18,6 +18,7 @@ const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 export default function Dashboard() {
   const { data: session } = useSession();
   const [inspections, setInspections] = useState([]);
+  const [favoriteInspections, setFavoriteInspections] = useState([]);
   const [chartSeries, setChartSeries] = useState([]);
 
   const option = {
@@ -52,6 +53,9 @@ export default function Dashboard() {
           fields: ["name"],
         },
       },
+      favorited_by: {
+        fields: ["username"],
+      },
     },
   });
 
@@ -72,6 +76,24 @@ export default function Dashboard() {
     },
   });
 
+  const getFavoriteInspections = () => {
+    if (session && session.user && session.user.id) {
+      console.log(session.user.id);
+      const userId = session.user.id;
+
+      const usersFavoriteInspections = inspections.filter((inspection) => {
+        // Check if the user's ID is in the favorited_by array
+        return inspection.attributes.favorited_by.data.some(
+          (favoritedBy) => favoritedBy.id === userId
+        );
+      });
+
+      console.log(usersFavoriteInspections); // Log the filtered inspections or do something with them
+
+      setFavoriteInspections(usersFavoriteInspections);
+    }
+  };
+
   useEffect(() => {
     const fetchInspectionData = async () => {
       if (session?.accessToken) {
@@ -89,6 +111,8 @@ export default function Dashboard() {
           ]);
 
           setInspections(inspectionResponse.data.data);
+          console.log(inspectionResponse.data);
+          getFavoriteInspections();
           processStructureData(structureResponse.data.data);
         } catch (error) {
           console.error("Error fetching data", error.response || error);
@@ -100,8 +124,6 @@ export default function Dashboard() {
   }, [session, inspectionQuery]);
 
   const processStructureData = (structureData) => {
-    console.log(structureData.length);
-
     // Use objects to track counts and to find the date range
     const countsByTypeAndDate = {};
     let minDate = new Date(structureData[0].attributes.inspectionDate);
@@ -161,17 +183,9 @@ export default function Dashboard() {
 
       <div className="flex overflow-x-scroll mb-4 hide-scroll-bar">
         <div className="flex flex-nowrap gap-3">
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
-          <FavoriteInspectionCard />
+          {favoriteInspections.map((inspection) => (
+            <FavoriteInspectionCard inspection={inspection} />
+          ))}
         </div>
       </div>
 

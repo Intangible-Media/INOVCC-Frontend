@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Select } from "flowbite-react";
 
 export default function FooterDateExport() {
+  const [dateRange, setDateRange] = useState("");
+
   return (
     <div className="flex items-center justify-between pt-6 mt-6 border-t">
-      <Select>
-        <option>Week</option>
-        <option>Month</option>
-        <option>Quarter</option>
-        <option>Year</option>
-      </Select>
+      <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+        <option value="quarter">Quarter</option>
+        <option value="year">Year</option>
+      </select>
 
       <div className="flex gap-2 items-center">
         <p className="font-semibold text-gray-600">Download Report</p>

@@ -1,15 +1,54 @@
+import { useState } from "react";
 import { Progress } from "flowbite-react";
 
-export default function FavoriteInspectionCard() {
+export default function FavoriteInspectionCard({ inspection }) {
+  const [selectedStructureType, setSelectedStructureType] = useState(""); // Default value is 'All'
+
+  const handleChange = (event) => {
+    // Update state with the selected option's value
+    setSelectedStructureType(event.target.value);
+  };
+
+  const getInspectionColor = (status) => {
+    if (status.toLowerCase() == "complete") return "text-white bg-green-800";
+    if (status.toLowerCase() == "in progress")
+      return "text-yellow-800 bg-yellow-100";
+    else return "text-red-800 bg-red-100";
+  };
+
+  const getInspectionProgress = () => {
+    // Filter structures with status "inspected"
+    const inspectedStructures = inspection.attributes.structures.filter(
+      (structure) => structure.attributes.status === "Inspected"
+    );
+
+    // Calculate the percentage and round it to the nearest whole number
+    const percentOfCompletion = Math.round(
+      (inspectedStructures.length / structures.length) * 100
+    );
+
+    return percentOfCompletion;
+  };
+
+  const getInspectionProgressLabel = (progress) => {
+    if (progress === 0) return "To do";
+    if (progress === 100) return "In Progress";
+    return "Completion";
+  };
+
   return (
     <div className="inline-block">
       <div className="w-80 max-w-xs overflow-hidden rounded-lg  bg-white p-6">
         <div className="flex justify-between">
           <div className="flex flex-col">
-            <h6 className="font-bold text-xl">Map Name 12344.89</h6>
+            <h6 className="font-bold text-xl">{inspection.attributes.name}</h6>
 
-            <select className="block py-2.5 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer">
-              <option selected="">All</option>
+            <select
+              value={selectedStructureType} // Set the value to the state variable
+              onChange={handleChange} // Update state when the selection changes
+              className="block py-2.5 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+            >
+              <option value="">All</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
               <option value="FR">France</option>
@@ -33,8 +72,10 @@ export default function FavoriteInspectionCard() {
           <Progress progress={35} color="yellow" />
         </div>
         <div className="flex items-center justify-between pt-6 mt-6 border-t">
-          <span className="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-green-900 dark:text-green-300">
-            Completed
+          <span
+            className={`flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+          >
+            Complete{" "}
           </span>
 
           <div className="flex gap-2 items-center">

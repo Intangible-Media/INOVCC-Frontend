@@ -29,6 +29,9 @@ export default function Page({ params }) {
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [inspectionReport, setInspectionReport] = useState("");
   const [activeView, setActiveView] = useState("overview");
+  const [activeCompletion, setActiveCompletion] = useState(0);
+  const [structureAssetType, setStructureAssetType] = useState("");
+  const [structureProgressType, setStructureProgressType] = useState("");
 
   const activeMapStyleTab =
     "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
@@ -561,6 +564,21 @@ export default function Page({ params }) {
     }
   }, [selectedStructure]);
 
+  useEffect(() => {
+    // Filter structures with status "inspected"
+    const inspectedStructures = structures.filter(
+      (structure) => structure.attributes.status === "Inspected"
+    );
+
+    // Calculate the percentage and round it to the nearest whole number
+    const percentOfCompletion = Math.round(
+      (inspectedStructures.length / structures.length) * 100
+    );
+
+    // Set the percentage to the state
+    setActiveCompletion(percentOfCompletion);
+  }, [structures]); // You should depend on structures
+
   const ElipseIcon = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -584,7 +602,7 @@ export default function Page({ params }) {
     </svg>
   );
 
-  function getUniqueInspectors(structures) {
+  const getUniqueInspectors = (structures) => {
     const seenEmails = new Set();
     const uniqueInspectors = structures.flatMap((structure) =>
       structure.attributes.inspectors.data.filter((inspector) => {
@@ -597,7 +615,7 @@ export default function Page({ params }) {
       })
     );
     return uniqueInspectors;
-  }
+  };
 
   const uniqueInspectors = getUniqueInspectors(structures);
 
@@ -612,7 +630,10 @@ export default function Page({ params }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3 align-middle">
-          <InspectionDrawer btnText={"Edit Inspection"} />
+          <InspectionDrawer
+            btnText={"Edit Inspection"}
+            structures={structures}
+          />
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
             Add to Favorites{" "}
             <svg
@@ -693,25 +714,28 @@ export default function Page({ params }) {
                 onChange={(e) => setStructureSearch(e.target.value)}
               />
 
-              <div
-                className="exit-icon absolute right-5 cursor-pointer mt-3"
-                onClick={(e) => {
-                  setActiveView("overview");
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="none"
+              {structureSearch || activeView === "singleView" ? (
+                <div
+                  className="exit-icon absolute right-5 cursor-pointer mt-3"
+                  onClick={(e) => {
+                    setActiveView("overview");
+                    setStructureSearch("");
+                  }}
                 >
-                  <path
-                    d="M7.05864 6L11.0214 2.03721C11.0929 1.96814 11.15 1.88553 11.1892 1.79419C11.2285 1.70284 11.2491 1.6046 11.25 1.50519C11.2508 1.40578 11.2319 1.30719 11.1942 1.21518C11.1566 1.12317 11.101 1.03958 11.0307 0.969285C10.9604 0.898989 10.8768 0.843396 10.7848 0.805752C10.6928 0.768107 10.5942 0.749164 10.4948 0.750028C10.3954 0.750892 10.2972 0.771546 10.2058 0.810783C10.1145 0.850021 10.0319 0.907058 9.96279 0.978565L6 4.94136L2.03721 0.978565C1.896 0.842186 1.70688 0.766722 1.51058 0.768428C1.31428 0.770134 1.1265 0.848873 0.987685 0.987685C0.848873 1.1265 0.770134 1.31428 0.768428 1.51058C0.766722 1.70688 0.842186 1.896 0.978565 2.03721L4.94136 6L0.978565 9.96279C0.907058 10.0319 0.850021 10.1145 0.810783 10.2058C0.771546 10.2972 0.750892 10.3954 0.750028 10.4948C0.749164 10.5942 0.768107 10.6928 0.805752 10.7848C0.843396 10.8768 0.898989 10.9604 0.969285 11.0307C1.03958 11.101 1.12317 11.1566 1.21518 11.1942C1.30719 11.2319 1.40578 11.2508 1.50519 11.25C1.6046 11.2491 1.70284 11.2285 1.79419 11.1892C1.88553 11.15 1.96814 11.0929 2.03721 11.0214L6 7.05864L9.96279 11.0214C10.104 11.1578 10.2931 11.2333 10.4894 11.2316C10.6857 11.2299 10.8735 11.1511 11.0123 11.0123C11.1511 10.8735 11.2299 10.6857 11.2316 10.4894C11.2333 10.2931 11.1578 10.104 11.0214 9.96279L7.05864 6Z"
-                    fill="#6B7280"
-                  />
-                </svg>
-              </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                  >
+                    <path
+                      d="M7.05864 6L11.0214 2.03721C11.0929 1.96814 11.15 1.88553 11.1892 1.79419C11.2285 1.70284 11.2491 1.6046 11.25 1.50519C11.2508 1.40578 11.2319 1.30719 11.1942 1.21518C11.1566 1.12317 11.101 1.03958 11.0307 0.969285C10.9604 0.898989 10.8768 0.843396 10.7848 0.805752C10.6928 0.768107 10.5942 0.749164 10.4948 0.750028C10.3954 0.750892 10.2972 0.771546 10.2058 0.810783C10.1145 0.850021 10.0319 0.907058 9.96279 0.978565L6 4.94136L2.03721 0.978565C1.896 0.842186 1.70688 0.766722 1.51058 0.768428C1.31428 0.770134 1.1265 0.848873 0.987685 0.987685C0.848873 1.1265 0.770134 1.31428 0.768428 1.51058C0.766722 1.70688 0.842186 1.896 0.978565 2.03721L4.94136 6L0.978565 9.96279C0.907058 10.0319 0.850021 10.1145 0.810783 10.2058C0.771546 10.2972 0.750892 10.3954 0.750028 10.4948C0.749164 10.5942 0.768107 10.6928 0.805752 10.7848C0.843396 10.8768 0.898989 10.9604 0.969285 11.0307C1.03958 11.101 1.12317 11.1566 1.21518 11.1942C1.30719 11.2319 1.40578 11.2508 1.50519 11.25C1.6046 11.2491 1.70284 11.2285 1.79419 11.1892C1.88553 11.15 1.96814 11.0929 2.03721 11.0214L6 7.05864L9.96279 11.0214C10.104 11.1578 10.2931 11.2333 10.4894 11.2316C10.6857 11.2299 10.8735 11.1511 11.0123 11.0123C11.1511 10.8735 11.2299 10.6857 11.2316 10.4894C11.2333 10.2931 11.1578 10.104 11.0214 9.96279L7.05864 6Z"
+                      fill="#6B7280"
+                    />
+                  </svg>
+                </div>
+              ) : null}
             </div>
 
             {activeView === "overview" && (
@@ -841,7 +865,8 @@ export default function Page({ params }) {
               <h6 className="text-lg font-semibold">Structure Status</h6>
               <select
                 className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                defaultValue={"All"}
+                value={structureProgressType}
+                onChange={(e) => setStructureProgressType(e.target.value)}
               >
                 <option value="All">All</option>
                 <option value="US">United States</option>
@@ -881,7 +906,7 @@ export default function Page({ params }) {
             <ApexChart
               type="radialBar"
               options={options}
-              series={[70]}
+              series={[activeCompletion]}
               height={450}
               width={"100%"}
             />
@@ -925,27 +950,48 @@ export default function Page({ params }) {
                     <h6 className="leading-none text-xxs">
                       {image.attributes.name.slice(0, 15)}
                     </h6>
-                    <svg
-                      className="my-auto"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="5"
-                      viewBox="0 0 20 5"
-                      fill="none"
+                    <Dropdown
+                      inline
+                      label=""
+                      placement="top"
+                      dismissOnClick={false}
+                      renderTrigger={() => (
+                        <span className="flex">
+                          <svg
+                            className="m-auto"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="5"
+                            viewBox="0 0 20 5"
+                            fill="none"
+                          >
+                            <path
+                              d="M18 4.5C19.1046 4.5 20 3.60457 20 2.5C20 1.39543 19.1046 0.5 18 0.5C16.8954 0.5 16 1.39543 16 2.5C16 3.60457 16.8954 4.5 18 4.5Z"
+                              fill="#9CA3AF"
+                            />
+                            <path
+                              d="M10 4.5C11.1046 4.5 12 3.60457 12 2.5C12 1.39543 11.1046 0.5 10 0.5C8.89543 0.5 8 1.39543 8 2.5C8 3.60457 8.89543 4.5 10 4.5Z"
+                              fill="#9CA3AF"
+                            />
+                            <path
+                              d="M2 4.5C3.10457 4.5 4 3.60457 4 2.5C4 1.39543 3.10457 0.5 2 0.5C0.895431 0.5 0 1.39543 0 2.5C0 3.60457 0.895431 4.5 2 4.5Z"
+                              fill="#9CA3AF"
+                            />
+                          </svg>
+                        </span>
+                      )}
                     >
-                      <path
-                        d="M18 4.5C19.1046 4.5 20 3.60457 20 2.5C20 1.39543 19.1046 0.5 18 0.5C16.8954 0.5 16 1.39543 16 2.5C16 3.60457 16.8954 4.5 18 4.5Z"
-                        fill="#9CA3AF"
-                      />
-                      <path
-                        d="M10 4.5C11.1046 4.5 12 3.60457 12 2.5C12 1.39543 11.1046 0.5 10 0.5C8.89543 0.5 8 1.39543 8 2.5C8 3.60457 8.89543 4.5 10 4.5Z"
-                        fill="#9CA3AF"
-                      />
-                      <path
-                        d="M2 4.5C3.10457 4.5 4 3.60457 4 2.5C4 1.39543 3.10457 0.5 2 0.5C0.895431 0.5 0 1.39543 0 2.5C0 3.60457 0.895431 4.5 2 4.5Z"
-                        fill="#9CA3AF"
-                      />
-                    </svg>
+                      <Dropdown.Item>
+                        <div className="flex items-center">
+                          <span className="">Download</span>
+                        </div>
+                      </Dropdown.Item>
+                      <Dropdown.Item>
+                        <div className="flex items-center">
+                          <span className="">Remove</span>
+                        </div>
+                      </Dropdown.Item>
+                    </Dropdown>
                   </div>
                 </div>
               ))}
@@ -983,7 +1029,8 @@ export default function Page({ params }) {
               <h6 className="text-lg font-semibold">Assets</h6>
               <select
                 className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                defaultValue={"All"}
+                value={structureAssetType}
+                onChange={(e) => setStructureAssetType(e.target.value)}
               >
                 <option value="All">All</option>
                 <option value="US">United States</option>
@@ -1037,27 +1084,48 @@ export default function Page({ params }) {
                       <h6 className="leading-none text-xxs">
                         {image.attributes.name.slice(0, 15)}
                       </h6>
-                      <svg
-                        className="my-auto"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="5"
-                        viewBox="0 0 20 5"
-                        fill="none"
+                      <Dropdown
+                        inline
+                        label=""
+                        placement="top"
+                        dismissOnClick={false}
+                        renderTrigger={() => (
+                          <span className="flex">
+                            <svg
+                              className="m-auto"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="5"
+                              viewBox="0 0 20 5"
+                              fill="none"
+                            >
+                              <path
+                                d="M18 4.5C19.1046 4.5 20 3.60457 20 2.5C20 1.39543 19.1046 0.5 18 0.5C16.8954 0.5 16 1.39543 16 2.5C16 3.60457 16.8954 4.5 18 4.5Z"
+                                fill="#9CA3AF"
+                              />
+                              <path
+                                d="M10 4.5C11.1046 4.5 12 3.60457 12 2.5C12 1.39543 11.1046 0.5 10 0.5C8.89543 0.5 8 1.39543 8 2.5C8 3.60457 8.89543 4.5 10 4.5Z"
+                                fill="#9CA3AF"
+                              />
+                              <path
+                                d="M2 4.5C3.10457 4.5 4 3.60457 4 2.5C4 1.39543 3.10457 0.5 2 0.5C0.895431 0.5 0 1.39543 0 2.5C0 3.60457 0.895431 4.5 2 4.5Z"
+                                fill="#9CA3AF"
+                              />
+                            </svg>
+                          </span>
+                        )}
                       >
-                        <path
-                          d="M18 4.5C19.1046 4.5 20 3.60457 20 2.5C20 1.39543 19.1046 0.5 18 0.5C16.8954 0.5 16 1.39543 16 2.5C16 3.60457 16.8954 4.5 18 4.5Z"
-                          fill="#9CA3AF"
-                        />
-                        <path
-                          d="M10 4.5C11.1046 4.5 12 3.60457 12 2.5C12 1.39543 11.1046 0.5 10 0.5C8.89543 0.5 8 1.39543 8 2.5C8 3.60457 8.89543 4.5 10 4.5Z"
-                          fill="#9CA3AF"
-                        />
-                        <path
-                          d="M2 4.5C3.10457 4.5 4 3.60457 4 2.5C4 1.39543 3.10457 0.5 2 0.5C0.895431 0.5 0 1.39543 0 2.5C0 3.60457 0.895431 4.5 2 4.5Z"
-                          fill="#9CA3AF"
-                        />
-                      </svg>
+                        <Dropdown.Item>
+                          <div className="flex items-center">
+                            <span className="">Download</span>
+                          </div>
+                        </Dropdown.Item>
+                        <Dropdown.Item>
+                          <div className="flex items-center">
+                            <span className="">Remove</span>
+                          </div>
+                        </Dropdown.Item>
+                      </Dropdown>
                     </div>
                   </div>
                 ))
