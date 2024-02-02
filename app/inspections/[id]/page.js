@@ -493,6 +493,14 @@ export default function Page({ params }) {
             }
           );
 
+          // Convert the object to a JSON string
+          const jsonString = JSON.stringify(response);
+
+          // Calculate the size in bytes
+          const sizeInBytes = new TextEncoder().encode(jsonString).length;
+
+          console.log(`Size of the response object: ${sizeInBytes} bytes`);
+
           const structuresData = response.data.data.attributes.structures.data;
 
           setInspection(response.data.data.attributes);
