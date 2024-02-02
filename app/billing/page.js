@@ -65,8 +65,11 @@ export default function Page() {
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body className="divide-y">
-                {invoices.map((invoice) => (
-                  <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                {invoices.map((invoice, key) => (
+                  <Table.Row
+                    key={key}
+                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                  >
                     <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                       {invoice.attributes.name}
                     </Table.Cell>

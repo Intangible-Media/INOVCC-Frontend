@@ -49,8 +49,11 @@ export default function Page() {
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body className="divide-y">
-                {clients.map((client) => (
-                  <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                {clients.map((client, index) => (
+                  <Table.Row
+                    key={index}
+                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                  >
                     <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                       {client.attributes.name}
                     </Table.Cell>

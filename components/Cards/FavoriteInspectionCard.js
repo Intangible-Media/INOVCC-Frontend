@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Link from "next/link";
 import { Progress } from "flowbite-react";
 
 export default function FavoriteInspectionCard({ inspection }) {
@@ -9,31 +10,47 @@ export default function FavoriteInspectionCard({ inspection }) {
     setSelectedStructureType(event.target.value);
   };
 
-  const getInspectionColor = (status) => {
-    if (status.toLowerCase() == "complete") return "text-white bg-green-800";
-    if (status.toLowerCase() == "in progress")
-      return "text-yellow-800 bg-yellow-100";
-    else return "text-red-800 bg-red-100";
-  };
-
+  // Function to calculate the progress of inspection
   const getInspectionProgress = () => {
-    // Filter structures with status "inspected"
-    const inspectedStructures = inspection.attributes.structures.filter(
-      (structure) => structure.attributes.status === "Inspected"
-    );
+    if (
+      !inspection ||
+      !inspection.attributes ||
+      !inspection.attributes.structures ||
+      !inspection.attributes.structures.data
+    ) {
+      return 0; // Return 0 if the data is not available
+    }
 
-    // Calculate the percentage and round it to the nearest whole number
-    const percentOfCompletion = Math.round(
-      (inspectedStructures.length / structures.length) * 100
-    );
+    const totalStructures = inspection.attributes.structures.data.length;
+    const inspectedStructuresCount =
+      inspection.attributes.structures.data.filter(
+        (structure) => structure.attributes.status === "Inspected"
+      ).length;
 
-    return percentOfCompletion;
+    if (totalStructures === 0) {
+      return 0; // Avoid division by zero
+    }
+
+    const inspectedPercentage =
+      (inspectedStructuresCount / totalStructures) * 100;
+    return Math.round(inspectedPercentage); // Round to the nearest whole number
   };
 
-  const getInspectionProgressLabel = (progress) => {
-    if (progress === 0) return "To do";
-    if (progress === 100) return "In Progress";
-    return "Completion";
+  const getInspectionProgressColor = () => {
+    const progressPercentage = getInspectionProgress();
+
+    if (progressPercentage < 34) return "red";
+    if (progressPercentage > 33 && progressPercentage <= 65) return "yellow";
+    return "green";
+  };
+
+  const getInspectionProgressClasses = () => {
+    const progressPercentage = getInspectionProgress();
+
+    if (progressPercentage < 34) return "bg-red-100 text-red-800";
+    if (progressPercentage > 33 && progressPercentage <= 65)
+      return "bg-yellow-100 text-yellow-800";
+    return "bg-green-100 text-green-800";
   };
 
   return (
@@ -69,17 +86,23 @@ export default function FavoriteInspectionCard({ inspection }) {
           </svg>
         </div>
         <div className="my-5">
-          <Progress progress={35} color="yellow" />
+          <Progress
+            progress={getInspectionProgress()}
+            color={getInspectionProgressColor()}
+          />
         </div>
         <div className="flex items-center justify-between pt-6 mt-6 border-t">
           <span
-            className={`flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+            className={`${getInspectionProgressClasses()} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
           >
-            Complete{" "}
+            {getInspectionProgress()}%
           </span>
 
-          <div className="flex gap-2 items-center">
-            <p className="font-semibold text-gray-600">View Map</p>
+          <Link
+            href={`/inspections/${inspection.id}`}
+            className="flex gap-2 items-center"
+          >
+            <p className="text-sm font-semibold text-gray-600">View Map</p>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="15"
@@ -92,7 +115,7 @@ export default function FavoriteInspectionCard({ inspection }) {
                 fill="#4B5563"
               />
             </svg>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

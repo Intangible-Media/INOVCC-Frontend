@@ -38,6 +38,40 @@ export default function InspectionTable({ inspectionData }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedData, setPaginatedData] = useState([]);
 
+  const getInspectionProgress = (inspection) => {
+    if (
+      !inspection ||
+      !inspection.attributes ||
+      !inspection.attributes.structures ||
+      !inspection.attributes.structures.data
+    ) {
+      return 0; // Return 0 if the data is not available
+    }
+
+    const totalStructures = inspection.attributes.structures.data.length;
+    const inspectedStructuresCount =
+      inspection.attributes.structures.data.filter(
+        (structure) => structure.attributes.status === "Inspected"
+      ).length;
+
+    if (totalStructures === 0) {
+      return 0; // Avoid division by zero
+    }
+
+    const inspectedPercentage =
+      (inspectedStructuresCount / totalStructures) * 100;
+    return Math.round(inspectedPercentage); // Round to the nearest whole number
+  };
+
+  const getInspectionProgressClasses = (inspection) => {
+    const progressPercentage = getInspectionProgress(inspection);
+
+    if (progressPercentage < 34) return "bg-red-100 text-red-800";
+    if (progressPercentage > 33 && progressPercentage <= 65)
+      return "bg-yellow-100 text-yellow-800";
+    return "bg-green-100 text-green-800";
+  };
+
   useEffect(() => {
     // Function to perform searching and filtering
     const searchAndFilterData = () => {
@@ -438,16 +472,6 @@ export default function InspectionTable({ inspectionData }) {
                         src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
                         alt=""
                       />
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="https://flowbite.com/docs/images/people/profile-picture-2.jpg"
-                        alt=""
-                      />
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="https://flowbite.com/docs/images/people/profile-picture-3.jpg"
-                        alt=""
-                      />
                       <a
                         className="flex items-center justify-center w-10 h-10 text-xs font-medium text-white bg-gray-700 border-2 border-white rounded-full hover:bg-gray-600 dark:border-gray-800"
                         href="#"
@@ -457,8 +481,12 @@ export default function InspectionTable({ inspectionData }) {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-green-900 dark:text-green-300">
-                      Completed
+                    <span
+                      className={`${getInspectionProgressClasses(
+                        inspection
+                      )} inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-md`}
+                    >
+                      {getInspectionProgress(inspection)}%
                     </span>
                   </Table.Cell>
                   <Table.Cell>
@@ -475,7 +503,7 @@ export default function InspectionTable({ inspectionData }) {
                     >
                       <Dropdown.Item>
                         <div className="flex items-center">
-                          <span className="ml-2">
+                          <span>
                             <Link href={`/inspections/${inspection.id}`}>
                               View
                             </Link>

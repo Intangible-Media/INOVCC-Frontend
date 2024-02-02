@@ -59,6 +59,21 @@ export default function Dashboard() {
     },
   });
 
+  const favoriteInspectionsQuery = qs.stringify({
+    filters: {
+      favorited_by: {
+        id: {
+          $eq: session?.user.id,
+        },
+      },
+    },
+    populate: {
+      structures: {
+        fields: ["status", "name", "type"],
+      },
+    },
+  });
+
   const structureQuery = qs.stringify({
     populate: {
       structures: {
@@ -76,44 +91,38 @@ export default function Dashboard() {
     },
   });
 
-  const getFavoriteInspections = () => {
-    if (session && session.user && session.user.id) {
-      console.log(session.user.id);
-      const userId = session.user.id;
-
-      const usersFavoriteInspections = inspections.filter((inspection) => {
-        // Check if the user's ID is in the favorited_by array
-        return inspection.attributes.favorited_by.data.some(
-          (favoritedBy) => favoritedBy.id === userId
-        );
-      });
-
-      console.log(usersFavoriteInspections); // Log the filtered inspections or do something with them
-
-      setFavoriteInspections(usersFavoriteInspections);
-    }
-  };
-
   useEffect(() => {
     const fetchInspectionData = async () => {
       if (session?.accessToken) {
         try {
-          const [inspectionResponse, structureResponse] = await Promise.all([
+          const [
+            inspectionResponse,
+            structureResponse,
+            favoriteInspectionsResponse,
+          ] = await Promise.all([
             axios.get(
               `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${inspectionQuery}`,
               {
                 headers: { Authorization: `Bearer ${session.accessToken}` },
               }
             ),
+
             axios.get(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`, {
               headers: { Authorization: `Bearer ${session.accessToken}` },
             }),
+
+            axios.get(
+              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${favoriteInspectionsQuery}`,
+              {
+                headers: { Authorization: `Bearer ${session.accessToken}` },
+              }
+            ),
           ]);
 
           setInspections(inspectionResponse.data.data);
-          console.log(inspectionResponse.data);
-          getFavoriteInspections();
           processStructureData(structureResponse.data.data);
+          setFavoriteInspections(favoriteInspectionsResponse.data.data);
+          console.log(favoriteInspectionsResponse.data.data);
         } catch (error) {
           console.error("Error fetching data", error.response || error);
         }
@@ -183,8 +192,8 @@ export default function Dashboard() {
 
       <div className="flex overflow-x-scroll mb-4 hide-scroll-bar">
         <div className="flex flex-nowrap gap-3">
-          {favoriteInspections.map((inspection) => (
-            <FavoriteInspectionCard inspection={inspection} />
+          {favoriteInspections.map((inspection, index) => (
+            <FavoriteInspectionCard key={index} inspection={inspection} />
           ))}
         </div>
       </div>

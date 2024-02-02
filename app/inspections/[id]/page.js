@@ -31,7 +31,8 @@ export default function Page({ params }) {
   const [activeView, setActiveView] = useState("overview");
   const [activeCompletion, setActiveCompletion] = useState(0);
   const [structureAssetType, setStructureAssetType] = useState("");
-  const [structureProgressType, setStructureProgressType] = useState("");
+  const [structureProgressType, setStructureProgressType] = useState("all");
+  const [inspection, setInspection] = useState(null);
 
   const activeMapStyleTab =
     "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
@@ -161,6 +162,12 @@ export default function Page({ params }) {
     if (status.toLowerCase() == "inspected") return "text-green-600";
     if (status.toLowerCase() == "not inspected") return "text-yellow-400";
     else return "text-red-600";
+  };
+
+  const getAllStructureTypes = () => {
+    const types = structures.map((structure) => structure.attributes.type);
+    const uniqueTypes = [...new Set(types)]; // Removes duplicates
+    return uniqueTypes;
   };
 
   const getMarkerColor = (structure) => {
@@ -487,11 +494,8 @@ export default function Page({ params }) {
           );
 
           const structuresData = response.data.data.attributes.structures.data;
-          const clientName =
-            response.data.data.attributes.client.data.attributes.name;
-          const clientContacts =
-            response.data.data.attributes.client.data.attributes.contacts.data;
 
+          setInspection(response.data.data.attributes);
           setInspectionDocuments(response.data.data.attributes.documents.data);
           setStructures(structuresData);
 
@@ -565,19 +569,31 @@ export default function Page({ params }) {
   }, [selectedStructure]);
 
   useEffect(() => {
-    // Filter structures with status "inspected"
-    const inspectedStructures = structures.filter(
-      (structure) => structure.attributes.status === "Inspected"
+    updateProgressBar(structureProgressType);
+  }, [structureProgressType, structures]); // Depend on structures as well
+
+  const updateProgressBar = (type = "all") => {
+    const filteredStructuresByType = structures.filter((structure) => {
+      if (type.trim().toLowerCase() === "all") {
+        return true; // Include all structures
+      }
+      // Otherwise, filter by the specified type
+      return structure.attributes.type.toLowerCase() === type.toLowerCase();
+    });
+
+    const inspectedStructures = filteredStructuresByType.filter(
+      (structure) => structure.attributes.status.toLowerCase() === "inspected"
     );
 
-    // Calculate the percentage and round it to the nearest whole number
-    const percentOfCompletion = Math.round(
-      (inspectedStructures.length / structures.length) * 100
-    );
+    const percentOfCompletion =
+      filteredStructuresByType.length > 0
+        ? Math.round(
+            (inspectedStructures.length / filteredStructuresByType.length) * 100
+          )
+        : 0; // Avoid division by zero
 
-    // Set the percentage to the state
-    setActiveCompletion(percentOfCompletion);
-  }, [structures]); // You should depend on structures
+    setActiveCompletion(percentOfCompletion); // Update the state
+  };
 
   const ElipseIcon = () => (
     <svg
@@ -624,9 +640,9 @@ export default function Page({ params }) {
       <div className="flex justify-between py-6">
         <div className="flex flex-col gap-3">
           <h1 className="leading-tight text-2xl font-medium">
-            Map Name 12344.89
+            {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>
-          <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3>
+          {/* <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3> */}
         </div>
 
         <div className="grid grid-cols-2 gap-3 align-middle">
@@ -744,7 +760,7 @@ export default function Page({ params }) {
                 <div className="flex items-center gap-2">
                   <Checkbox id="cant-inspect" />
                   <Label className="text-sm font-medium" htmlFor="cant-inspect">
-                    Can't Inspect
+                    {"Can't Inspect"}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -866,13 +882,16 @@ export default function Page({ params }) {
               <select
                 className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
                 value={structureProgressType}
-                onChange={(e) => setStructureProgressType(e.target.value)}
+                onChange={(e) => {
+                  setStructureProgressType(e.target.value);
+                }}
               >
                 <option value="All">All</option>
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="FR">France</option>
-                <option value="DE">Germany</option>
+                {getAllStructureTypes().map((structureType, index) => (
+                  <option key={index} value={structureType}>
+                    {structureType}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

@@ -147,9 +147,9 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
                   {inspectionName === "" ? (
-                    <span>“Map Name Here”</span>
+                    <span>&quot;Map Name Here&quot;</span>
                   ) : (
-                    <span>"{inspectionName}"</span>
+                    <span>&quot;{inspectionName}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -388,9 +388,9 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
                   {inspectionName === "" ? (
-                    <span>"Structure Name Here”</span>
+                    <span>&quot;Structure Name Here&quot;</span>
                   ) : (
-                    <span>"{inspectionName}"</span>
+                    <span>&quot;{inspectionName}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">

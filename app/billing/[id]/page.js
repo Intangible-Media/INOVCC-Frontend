@@ -435,8 +435,8 @@ export default function Page({ params }) {
                 </thead>
                 <tbody>
                   {/* Repeat for each item */}
-                  {Object.keys(groupedStructures).map((type) => (
-                    <tr>
+                  {Object.keys(groupedStructures).map((type, key) => (
+                    <tr key={key}>
                       <td className="py-3">{type}</td>
                       <td className="text-right py-3">
                         {groupedStructures[type].length}
@@ -469,9 +469,9 @@ export default function Page({ params }) {
               <p className="text-sm">Total: ${totalPrice}</p>
             </section>
 
-            {Object.keys(groupedStructures).map((type) => {
+            {Object.keys(groupedStructures).map((type, index) => {
               return (
-                <>
+                <div key={index}>
                   <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
                     {type}
                   </p>
@@ -502,7 +502,7 @@ export default function Page({ params }) {
                       ))}
                     </Table.Body>
                   </Table>
-                </>
+                </div>
               );
             })}
           </div>

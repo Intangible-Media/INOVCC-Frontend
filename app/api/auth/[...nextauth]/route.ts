@@ -1,6 +1,31 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session, User as NextAuthUser } from "next-auth";
+import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  // add other user properties here
+}
+
+interface ExtendedUser extends User {
+  jwt?: string;
+  user?: any; // Replace 'any' with a more specific type if you know the structure
+}
+
+// Extending the NextAuth Token type
+interface ExtendedToken extends JWT {
+  accessToken?: string;
+  user?: ExtendedUser;
+}
+
+// Extending the NextAuth Session type
+interface ExtendedSession extends Session {
+  accessToken?: string;
+  user?: ExtendedUser;
+}
 
 const handler = NextAuth({
   session: {
@@ -15,7 +40,6 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         try {
-          // Add logic here to look up the user from the credentials supplied
           const res = await axios.post(
             `http://localhost:1337/api/auth/local`,
             {
@@ -25,10 +49,8 @@ const handler = NextAuth({
           );
 
           if (res.data) {
-            // Any object returned will be saved in `user` property of the JWT
             return res.data;
           } else {
-            // If you return null or false then the credentials will be rejected
             return null;
           }
         } catch (e) {
@@ -42,30 +64,34 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
-      // Handle sign in and return true if the user is authenticated,
-      // false otherwise. This is where you'd handle the Strapi JWT.
+      // Your signIn logic here
       return true;
     },
-    async jwt({ token, user, account, profile }) {
-      // This is called whenever a JWT is created or updated
+    async jwt({ token, user: rawUser, account }) {
+      const user = rawUser as ExtendedUser;
+      const extendedToken = token as ExtendedToken; // Use the ExtendedToken type
       if (account && user) {
-        console.log(user)
-        // console.log(account)
-        // console.log(token)
-        // console.log(profile)
-        token.accessToken = user.jwt; // Store the JWT from Strapi in the token
-        token.user = user.user; // Store the user details in the token
+        if (user.jwt) {
+          extendedToken.accessToken = user.jwt;
+        }
+        if (user.user) {
+          extendedToken.user = user.user;
+        }
       }
-      return token;
+      return extendedToken;
     },
-    
     async session({ session, token }) {
-      // This is called whenever a session is checked
-      session.accessToken = token.accessToken; // Attach the JWT token to the session
-      session.user = token.user; // Attach the user details to the session
-      return session;
+      const extendedSession = session as ExtendedSession; // Use the ExtendedSession type
+      const extendedToken = token as ExtendedToken;
+      if (extendedToken.accessToken) {
+        extendedSession.accessToken = extendedToken.accessToken;
+      }
+      if (extendedToken.user) {
+        extendedSession.user = extendedToken.user;
+      }
+      return extendedSession;
     },
   },
 });
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };
