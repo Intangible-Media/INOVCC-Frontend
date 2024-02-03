@@ -11,6 +11,7 @@ import InspectionModal from "../../components/Modals/InspectionModal";
 import InspectionDrawer from "../../components/Drawers/InspectionDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import ActivityLog from "../../components/ActivityLog";
+import { GoPlus } from "react-icons/go";
 import qs from "qs";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -190,11 +191,16 @@ export default function Dashboard() {
         <InspectionDrawer />
       </div>
 
-      <div className="flex overflow-x-scroll mb-4 hide-scroll-bar">
+      <div className="flex overflow-x-scroll mb-4 hide-scroll-bar py-2">
         <div className="flex flex-nowrap gap-3">
           {favoriteInspections.map((inspection, index) => (
             <FavoriteInspectionCard key={index} inspection={inspection} />
           ))}
+
+          <div className="flex flex-col justify-center align-middle gap-1 w-80 max-w-xs overflow-hidden rounded-lg bg-gray-100 border shadow p-6 hover:shadow-lg hover:bg-gray-50 transition-all duration-200 ease-in-out">
+            <GoPlus className="text-center mx-auto" />
+            <p className="text-center">Add Favorite</p>
+          </div>
         </div>
       </div>
 

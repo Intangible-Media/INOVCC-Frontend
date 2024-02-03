@@ -54,8 +54,8 @@ export default function FavoriteInspectionCard({ inspection }) {
   };
 
   return (
-    <div className="inline-block">
-      <div className="w-80 max-w-xs overflow-hidden rounded-lg  bg-white p-6">
+    <div className="inline-block rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-200 ease-in-out">
+      <div className="w-80 max-w-xs  bg-white p-6">
         <div className="flex justify-between">
           <div className="flex flex-col">
             <h6 className="font-bold text-xl">{inspection.attributes.name}</h6>

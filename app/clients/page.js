@@ -107,8 +107,8 @@ export default function Page({ params }) {
       <div className="flex flex-col p-8 bg-white rounded-md gap-4">
         <TextInput className="bg-gray-50 w-full" />
         <div className="grid grid-cols-3 p-6 bg-gray-100 rounded-md gap-3 shadow-inner">
-          {clients.map((client) => (
-            <ClientCard />
+          {clients.map((client, index) => (
+            <ClientCard key={index} />
           ))}
         </div>
       </div>

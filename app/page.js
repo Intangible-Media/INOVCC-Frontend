@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
         <div className="flex flex-col bg-white p-7 rounded-lg">
           <div className="h-11">
             <h5 className="text-xl font-bold dark:text-white">
