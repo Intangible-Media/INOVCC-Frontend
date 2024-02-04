@@ -1,3 +1,5 @@
+import JSZip from "jszip";
+
 export const downloadImage = (file) => {
   // Create a URL for the file
   const url = URL.createObjectURL(file);
@@ -60,6 +62,33 @@ export const downloadFilesFromUrls = async (files) => {
       console.error("Error downloading file", url, error);
     }
   }
+};
+
+export const downloadFilesAsZip = async (files, zipFilename) => {
+  const zip = new JSZip();
+
+  for (const { url, name } of files) {
+    try {
+      const response = await fetch(url);
+      const data = await response.blob();
+      zip.file(name, data, { binary: true });
+    } catch (error) {
+      console.error("Error downloading or adding file to zip", name, error);
+    }
+  }
+
+  zip.generateAsync({ type: "blob" }).then((content) => {
+    const objectUrl = URL.createObjectURL(content);
+
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = zipFilename || "files.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(objectUrl);
+  });
 };
 
 // Utility function to format the file name

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
@@ -12,6 +13,7 @@ import {
   formatFileName,
   downloadFileFromUrl,
   downloadFilesFromUrls,
+  downloadFilesAsZip,
 } from "../../../utils/strings";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import Link from "next/link";
@@ -19,9 +21,13 @@ import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
+import path from "path";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function Page({ params }) {
+export default function Page(props) {
+  const { params } = props;
+  const pathname = usePathname();
+
   const { data: session, loading } = useSession();
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -79,19 +85,46 @@ export default function Page({ params }) {
     labels: ["All Structures"],
   };
 
-  const query = qs.stringify({
-    populate: {
-      structures: {
-        populate: "*",
-      },
-      client: {
-        populate: ["contacts"],
-      },
-      documents: {
-        populate: "*",
+  const query = qs.stringify(
+    {
+      populate: {
+        structures: {
+          populate: {
+            inspectors: {
+              populate: "*",
+            },
+            images: {
+              populate: "*",
+            },
+          },
+        },
+        client: {
+          populate: {
+            contacts: {
+              populate: {
+                picture: "*", // Populate the 'picture' relation
+              },
+              fields: [
+                // Specify fields you want from 'contacts'
+                "firstName",
+                "lastName",
+                "email",
+                "phone",
+                "jobTitle",
+                "picture", // Include 'picture' in the fields if you want its ID
+              ],
+            },
+          },
+        },
+        documents: {
+          populate: "*",
+        },
       },
     },
-  });
+    {
+      encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+    }
+  );
 
   const getArrayOfUrls = (files) => {
     const arrayOfFileUrls = files.map((file) => ({
@@ -509,6 +542,7 @@ export default function Page({ params }) {
           const structuresData = response.data.data.attributes.structures.data;
 
           setInspection(response.data.data.attributes);
+          console.log(response.data.data.attributes);
           setInspectionDocuments(response.data.data.attributes.documents.data);
           setStructures(structuresData);
 
@@ -763,6 +797,9 @@ export default function Page({ params }) {
   );
 
   const uniqueInspectors = getUniqueInspectors(structures);
+  const inspectorsEmails = uniqueInspectors
+    .map((inspector) => `${inspector.attributes.email},`)
+    .join(" ");
 
   return (
     <>
@@ -1017,7 +1054,7 @@ export default function Page({ params }) {
                 return (
                   <div
                     key={index}
-                    className="flex aspect-square relative rounded-md overflow-hidden bg-gray-100 border"
+                    className="flex aspect-square relative rounded-md overflow-hidden bg-gray-100 hover:bg-gray-50 transition-all duration-100 border"
                   >
                     <ImageIcon />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
@@ -1062,30 +1099,16 @@ export default function Page({ params }) {
             <button
               className="text-sm text-gray-500 font-medium"
               onClick={(e) => {
-                console.log(getArrayOfUrls(inspectionDocuments));
-                downloadFilesFromUrls(getArrayOfUrls(inspectionDocuments));
+                downloadFilesAsZip(
+                  getArrayOfUrls(inspectionDocuments),
+                  `${inspection?.name} Documents`
+                );
               }}
             >
               Download All
             </button>
             <button className="flex align-middle text-sm font-semibold">
-              Add Documents{" "}
-              <svg
-                className="m-auto ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                width="10"
-                height="11"
-                viewBox="0 0 10 11"
-                fill="none"
-              >
-                <path
-                  d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-                  stroke="#4B5563"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              Add Documents <PlusIcon />
             </button>
           </div>
         </div>
@@ -1134,7 +1157,7 @@ export default function Page({ params }) {
                   >
                     <img
                       key={`structure-${structure.id}-image-${image.id}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover hover:saturate-50"
                       src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
                       alt=""
                     />
@@ -1177,27 +1200,31 @@ export default function Page({ params }) {
             </div>
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">
+            <button
+              className="text-sm text-gray-500 font-medium"
+              onClick={(e) => {
+                const assetsToDownload = [];
+                const zipFileName = `All Assets`;
+
+                structures.filter((structure) => {
+                  const structureImages = structure.attributes.images.data;
+                  if (structureImages) {
+                    for (let image of structureImages) {
+                      assetsToDownload.push(image);
+                    }
+                  }
+                });
+
+                downloadFilesAsZip(
+                  getArrayOfUrls(assetsToDownload),
+                  zipFileName
+                );
+              }}
+            >
               Download All
             </button>
             <button className="flex align-middle text-sm font-semibold">
-              Add Documents{" "}
-              <svg
-                className="m-auto ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                width="10"
-                height="11"
-                viewBox="0 0 10 11"
-                fill="none"
-              >
-                <path
-                  d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-                  stroke="#4B5563"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              Add Documents <PlusIcon />
             </button>
           </div>
         </div>
@@ -1241,16 +1268,21 @@ export default function Page({ params }) {
                 className="alternate-bg flex gap-4 align-middle border-t py-1"
               >
                 <img
-                  className="w-12 h-12 border-2 border-white rounded-full dark:border-gray-800"
-                  src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                  className="w-12 h-12 border-2 border-white rounded-full dark:border-gray-800 object-cover"
+                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.url}`}
                   alt=""
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
-                    {inspector.attributes.username}
+                    {`${inspector.attributes.firstName} ${inspector.attributes.lastName}`}
                   </p>
                   <p className="leading-none text-xs">
-                    {inspector.attributes.email}
+                    <a
+                      href={`mailto:${inspector.attributes.email}`}
+                      target="_blank"
+                    >
+                      {inspector.attributes.email}
+                    </a>
                   </p>
                 </div>
               </div>
@@ -1263,71 +1295,58 @@ export default function Page({ params }) {
             </button>
             <a
               target="_blank"
-              href="mailto:person1@example.com,person2@example.com?cc=person3@example.com,person4@example.com&bcc=person5@example.com&subject=Mail from Our Site&body=<h1>Hello</h1>, this is a message from the site!"
+              href={`mailto:${inspectorsEmails}?subject=Inspection | ${inspection?.name}&body=${process.env.NEXT_PUBLIC_STRAPI_URL}${pathname}, this is a message from the site!`}
               className="flex align-middle text-sm font-semibold"
             >
-              Email Team{" "}
-              <svg
-                className="m-auto ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                width="10"
-                height="11"
-                viewBox="0 0 10 11"
-                fill="none"
-              >
-                <path
-                  d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-                  stroke="#4B5563"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              Email Team <PlusIcon />
             </a>
           </div>
         </div>
 
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
-          <h6 className="text-lg font-semibold">Client</h6>
+          <h6 className="text-lg font-semibold">
+            {inspection?.client.data.attributes.name}
+          </h6>
 
-          <div className="alternate-bg flex gap-4 align-middle py-1">
-            <img
-              className="border-2 w-12 h-12 border-white rounded-full dark:border-gray-800"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt=""
-            />
-            <div className="flex flex-col gap-1 align-middle justify-center">
-              <p className="leading-none text-sm font-medium">
-                Matthew John Keefer
-              </p>
-              <p className="leading-none text-xs mb-3">Lead UX / UI Designer</p>
-              <p className="leading-none text-xs">E: matt@madebykeefer.com</p>
-              <p className="leading-none text-xs">P: +1 (443) 542 3325</p>
-            </div>
-          </div>
+          {inspection?.client.data.attributes.contacts.data.map(
+            (clientContact, index) => (
+              <div
+                key={index}
+                className="alternate-bg flex gap-4 align-middle py-1"
+              >
+                <img
+                  className="border-2 w-12 h-12 border-white rounded-full dark:border-gray-800 object-cover"
+                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact.attributes.picture.data.attributes.url}`}
+                  alt=""
+                />
+                <div className="flex flex-col gap-1 align-middle justify-center">
+                  <p className="leading-none text-sm font-medium">
+                    {`${clientContact.attributes.firstName} ${clientContact.attributes.lastName}`}
+                  </p>
+                  <p className="leading-none text-xs mb-3">
+                    {clientContact.attributes.jobTitle}
+                  </p>
+                  <p className="leading-none text-xs">
+                    <a href={`mailto:${clientContact.attributes.email}`}>
+                      E: {clientContact.attributes.email}
+                    </a>
+                  </p>
+                  <p className="leading-none text-xs">
+                    <a href={`tel:${clientContact.attributes.phone}`}>
+                      P: +{clientContact.attributes.phone}
+                    </a>
+                  </p>
+                </div>
+              </div>
+            )
+          )}
 
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button className="text-sm text-gray-500 font-medium">
               Download All
             </button>
             <button className="flex align-middle text-sm font-semibold">
-              Add Documents{" "}
-              <svg
-                className="m-auto ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                width="10"
-                height="11"
-                viewBox="0 0 10 11"
-                fill="none"
-              >
-                <path
-                  d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-                  stroke="#4B5563"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              Email Client <PlusIcon />
             </button>
           </div>
         </div>

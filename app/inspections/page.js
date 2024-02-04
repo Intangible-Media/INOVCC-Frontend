@@ -197,7 +197,7 @@ export default function Dashboard() {
             <FavoriteInspectionCard key={index} inspection={inspection} />
           ))}
 
-          <div className="flex flex-col justify-center align-middle gap-1 w-80 max-w-xs overflow-hidden rounded-lg bg-gray-100 border shadow p-6 hover:shadow-lg hover:bg-gray-50 transition-all duration-200 ease-in-out">
+          <div className="flex flex-col justify-center align-middle gap-1 w-80 max-w-xs overflow-hidden rounded-lg bg-gray-100 border shadow p-6 hover:shadow-lg hover:bg-gray-50 transition-all duration-100 ease-in-out cursor-pointer">
             <GoPlus className="text-center mx-auto" />
             <p className="text-center">Add Favorite</p>
           </div>

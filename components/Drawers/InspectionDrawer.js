@@ -103,7 +103,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
       >
         <button
           onClick={toggleDrawer}
-          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-6 h-6 absolute top-20 right-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white"
+          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-6 h-6 absolute top-20 right-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-50"
           aria-label="Close menu"
         >
           <svg
