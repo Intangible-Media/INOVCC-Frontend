@@ -91,6 +91,10 @@ export const downloadFilesAsZip = async (files, zipFilename) => {
   });
 };
 
+export const isImage = (fileName) => {
+  return /\.(jpe?g|png)$/i.test(fileName);
+};
+
 // Utility function to format the file name
 export const formatFileName = (fileName) => {
   const maxLength = 14; // Max length before truncating

@@ -7,13 +7,12 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { MdLocationPin } from "react-icons/md";
-import DownloadImage from "../../../components/DownloadImage";
 import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
 import {
   formatFileName,
   downloadFileFromUrl,
-  downloadFilesFromUrls,
   downloadFilesAsZip,
+  isImage,
 } from "../../../utils/strings";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import Link from "next/link";
@@ -21,7 +20,9 @@ import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
-import path from "path";
+import Image from "next/image";
+import ChatInterface from "../../../components/ChatInterface";
+
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page(props) {
@@ -275,12 +276,14 @@ export default function Page(props) {
 
   function getColorBasedOnStatus(status) {
     switch (status) {
-      case "Not Inspected":
-        return "#E3A008"; // Red
+      case "Uploaded":
+        return "drkgreen";
       case "Inspected":
-        return "#057A55"; // Green
+        return "green"; // Green
+      case "Not Inspected":
+        return "yellow"; // Red
       default:
-        return "#E02424"; // Black or any default color
+        return "red"; // Black or any default color
     }
   }
 
@@ -301,7 +304,30 @@ export default function Page(props) {
         map.current.easeTo({ pitch: 0 });
       }
     } else {
-      console.warn("Satellite layer not found on the map.");
+      function addSatelliteLayer() {
+        if (!map.current.getLayer("satellite")) {
+          if (!map.current.getSource("satellite-source")) {
+            map.current.addSource("satellite-source", {
+              type: "raster",
+              url: "mapbox://mapbox.satellite",
+              tileSize: 256,
+            });
+          }
+
+          map.current.addLayer({
+            id: "satellite",
+            source: "satellite-source",
+            type: "raster",
+            layout: {
+              visibility: "none",
+            },
+          });
+        }
+      }
+
+      console.warn("Satellite layer not found on the map but just made it.");
+      addSatelliteLayer();
+      return toggleSatelliteLayer();
     }
   };
 
@@ -309,72 +335,83 @@ export default function Page(props) {
   useEffect(() => {
     if (!map.current || structures.length === 0) return;
 
-    fetch("/location-pin.svg")
-      .then((response) => response.text())
-      .then((svg) => {
-        structures.forEach((structure) => {
-          const color = getColorBasedOnStatus(structure.attributes.status);
-          const coloredSVG = createColoredMarkerSVG(svg, color);
+    // Load the specific PNG files based on the status
+    const loadIcon = (color) => {
+      switch (color) {
+        case "red":
+          return "/location-red.png";
+        case "yellow":
+          return "/location-yellow.png";
+        case "drkgreen":
+          return "/location-dark.png";
+        case "green":
+          return "/location-green.png";
+        default:
+          return "/location-red.png"; // default icon if color is not matched
+      }
+    };
 
-          const blob = new Blob([coloredSVG], { type: "image/svg+xml" });
-          const url = URL.createObjectURL(blob);
-          const image = new Image();
-          image.src = url;
+    structures.forEach((structure) => {
+      const color = getColorBasedOnStatus(structure.attributes.status);
+      const iconName = `profile-icon-${color}`;
 
-          image.onload = () => {
-            const imageName = `profile-icon-${structure.id}`;
+      // Only load the image if it's not already on the map
+      if (!map.current.hasImage(iconName)) {
+        const url = loadIcon(color);
+        map.current.loadImage(url, (error, image) => {
+          if (error) {
+            console.error(`Error loading ${color} icon:`, error);
+            return;
+          }
 
-            // Check if the image already exists on the map
-            if (map.current.hasImage(imageName)) {
-              // Optionally remove the existing image
-              map.current.removeImage(imageName);
-            }
-
-            map.current.addImage(imageName, image);
-            URL.revokeObjectURL(url);
-          };
+          map.current.addImage(iconName, image);
         });
+      }
+    });
 
-        const geojsonData = {
-          type: "FeatureCollection",
-          features: structures.map((structure) => ({
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [
-                structure.attributes.longitude,
-                structure.attributes.latitude,
-              ],
-            },
-            properties: {
-              id: structure.id,
-              icon: `profile-icon-${structure.id}`,
-            },
-          })),
+    const geojsonData = {
+      type: "FeatureCollection",
+      features: structures.map((structure) => {
+        const color = getColorBasedOnStatus(structure.attributes.status);
+        const iconName = `profile-icon-${color}`;
+
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [
+              structure.attributes.longitude,
+              structure.attributes.latitude,
+            ],
+          },
+          properties: {
+            id: structure.id,
+            icon: iconName,
+          },
         };
+      }),
+    };
 
-        if (!map.current.getSource("markers")) {
-          map.current.addSource("markers", {
-            type: "geojson",
-            data: geojsonData,
-          });
-        } else {
-          map.current.getSource("markers").setData(geojsonData);
-        }
+    if (!map.current.getSource("markers")) {
+      map.current.addSource("markers", {
+        type: "geojson",
+        data: geojsonData,
+      });
+    } else {
+      map.current.getSource("markers").setData(geojsonData);
+    }
 
-        if (!map.current.getLayer("marker-layer")) {
-          map.current.addLayer({
-            id: "marker-layer",
-            type: "symbol",
-            source: "markers",
-            layout: {
-              "icon-image": ["get", "icon"],
-              "icon-size": 0.18, // Adjust icon size as needed
-            },
-          });
-        }
-      })
-      .catch((error) => console.error("Error loading SVG:", error));
+    if (!map.current.getLayer("marker-layer")) {
+      map.current.addLayer({
+        id: "marker-layer",
+        type: "symbol",
+        source: "markers",
+        layout: {
+          "icon-image": ["get", "icon"],
+          "icon-size": 0.6, // Adjust icon size as needed
+        },
+      });
+    }
   }, [structures]);
 
   useEffect(() => {
@@ -413,28 +450,6 @@ export default function Page(props) {
       const padding = isPhone ? { bottom: 400 } : { right: 400 };
 
       map.current.easeTo({ padding: padding });
-
-      // Function to add a satellite layer
-      function addSatelliteLayer() {
-        if (!map.current.getLayer("satellite")) {
-          if (!map.current.getSource("satellite-source")) {
-            map.current.addSource("satellite-source", {
-              type: "raster",
-              url: "mapbox://mapbox.satellite",
-              tileSize: 256,
-            });
-          }
-
-          map.current.addLayer({
-            id: "satellite",
-            source: "satellite-source",
-            type: "raster",
-            layout: {
-              visibility: "none",
-            },
-          });
-        }
-      }
 
       // Function to add a traffic layer
       function addTrafficLayer() {
@@ -490,9 +505,6 @@ export default function Page(props) {
         });
       }
 
-      // Add the satellite layer
-      addSatelliteLayer();
-
       // Add the traffic layer
       addTrafficLayer();
 
@@ -500,6 +512,35 @@ export default function Page(props) {
       addZoomEvent();
     });
   }, [lng, lat]);
+
+  // useEffect(() => {
+  //   console.log("new layer");
+  //   console.log(activeMapStyle);
+  //   function addSatelliteLayer() {
+  //     if (!map.current.getLayer("satellite")) {
+  //       if (!map.current.getSource("satellite-source")) {
+  //         map.current.addSource("satellite-source", {
+  //           type: "raster",
+  //           url: "mapbox://mapbox.satellite",
+  //           tileSize: 256,
+  //         });
+  //       }
+
+  //       map.current.addLayer({
+  //         id: "satellite",
+  //         source: "satellite-source",
+  //         type: "raster",
+  //         layout: {
+  //           visibility: "none",
+  //         },
+  //       });
+  //     }
+  //   }
+
+  //   if (activeMapStyle === "3d") return;
+
+  //   return addSatelliteLayer();
+  // }, [activeMapStyle]);
 
   useEffect(() => {
     // Function to animate the map and get location details
@@ -608,8 +649,8 @@ export default function Page(props) {
       map.current.setLayoutProperty("marker-layer", "icon-size", [
         "case",
         ["==", ["get", "id"], selectedStructure.id],
-        0.4, // Larger size for selected structure
-        0.18, // Normal size
+        1, // Larger size for selected structure
+        0.6, // Normal size
       ]);
     }
   }, [selectedStructure]);
@@ -815,6 +856,7 @@ export default function Page(props) {
           <InspectionDrawer
             btnText={"Edit Inspection"}
             structures={structures}
+            currentDocuments={inspectionDocuments}
           />
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
             Add to Favorites <FavoriteIcon />
@@ -1054,9 +1096,27 @@ export default function Page(props) {
                 return (
                   <div
                     key={index}
-                    className="flex aspect-square relative rounded-md overflow-hidden bg-gray-100 hover:bg-gray-50 transition-all duration-100 border"
+                    className="flex aspect-square relative rounded-md overflow-hidden border"
+                    style={
+                      isImage(
+                        `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
+                      )
+                        ? {
+                            // If there's a picture, set it as the background
+                            backgroundImage: `url(${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url})`,
+                            backgroundSize: "cover",
+                          }
+                        : {
+                            // Otherwise, set a default background
+                            backgroundColor: "bg-gray-100",
+                          }
+                    }
                   >
-                    <ImageIcon />
+                    {!isImage(
+                      `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
+                    ) && ( // If there's no picture, show the ImageIcon
+                      <ImageIcon />
+                    )}
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                       <h6 className="leading-none text-xxs">
                         {formatFileName(image.attributes.name)}
@@ -1155,11 +1215,13 @@ export default function Page(props) {
                     key={`${structure.id}-${index}`}
                     className="aspect-square rounded-md overflow-hidden relative border"
                   >
-                    <img
+                    <Image
                       key={`structure-${structure.id}-image-${image.id}`}
-                      className="w-full h-full object-cover hover:saturate-50"
-                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
-                      alt=""
+                      className="object-cover hover:saturate-50" // Step 2: Use the Image component
+                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.formats.small.url}`}
+                      alt="fasfdsafdsa"
+                      sizes="(max-width: 768px) 200px, 200px" // 48px on mobile, 24px on larger screens
+                      fill={true}
                     />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                       <h6 className="leading-none text-xxs">
@@ -1232,30 +1294,9 @@ export default function Page(props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
-          <h6 className="text-lg font-semibold">Structure Status</h6>
+          <h6 className="text-lg font-semibold">Chat GPT</h6>
 
-          <div className="direction-details">
-            <p className="leading-none text-sm mb-2">Address </p>
-            <p className="text-sm font-medium mb-5">
-              2504 East Roma Ave. Phoenix, AZ 85016
-            </p>
-
-            <button
-              type="button"
-              className="text-white bg-dark-blue-700 hover:bg-dark-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-            >
-              Get Directions
-            </button>
-          </div>
-
-          <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">
-              Download All
-            </button>
-            <button className="flex align-middle text-sm font-semibold">
-              Add Documents <PlusIcon />
-            </button>
-          </div>
+          <ChatInterface contextData={inspection} />
         </div>
 
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
@@ -1267,10 +1308,14 @@ export default function Page(props) {
                 key={`${inspector.id}-${index}`}
                 className="alternate-bg flex gap-4 align-middle border-t py-1"
               >
-                <img
-                  className="w-12 h-12 border-2 border-white rounded-full dark:border-gray-800 object-cover"
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.url}`}
-                  alt=""
+                <Image
+                  className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
+                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
+                  alt="Inspector Picture"
+                  width={48} // Width of the image in pixels
+                  height={48} // Height of the image in pixels
+                  quality={100} // Optional: You can specify the quality of the image (1-100)
+                  sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
@@ -1290,9 +1335,7 @@ export default function Page(props) {
           </div>
 
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">
-              Download All
-            </button>
+            <button className="text-sm text-gray-500 font-medium">Edit</button>
             <a
               target="_blank"
               href={`mailto:${inspectorsEmails}?subject=Inspection | ${inspection?.name}&body=${process.env.NEXT_PUBLIC_STRAPI_URL}${pathname}, this is a message from the site!`}
@@ -1312,12 +1355,16 @@ export default function Page(props) {
             (clientContact, index) => (
               <div
                 key={index}
-                className="alternate-bg flex gap-4 align-middle py-1"
+                className="alternate-bg flex gap-4 align-middle py-2"
               >
-                <img
-                  className="border-2 w-12 h-12 border-white rounded-full dark:border-gray-800 object-cover"
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact.attributes.picture.data.attributes.url}`}
-                  alt=""
+                <Image
+                  className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
+                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact.attributes.picture.data.attributes.formats.thumbnail.url}`}
+                  alt="fdsfdsfds"
+                  width={48} // Width of the image in pixels (w-12 is equivalent to 3rem or 48px)
+                  height={48} // Height of the image in pixels (h-12 is equivalent to 3rem or 48px)
+                  quality={100} // Optional: You can specify the quality of the image (1-100)
+                  sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
@@ -1342,9 +1389,7 @@ export default function Page(props) {
           )}
 
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">
-              Download All
-            </button>
+            <button className="text-sm text-gray-500 font-medium">Edit</button>
             <button className="flex align-middle text-sm font-semibold">
               Email Client <PlusIcon />
             </button>
@@ -1353,12 +1398,12 @@ export default function Page(props) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
-        <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        {/* <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
           <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
             Inspection Report
           </p>
           <InspectionReport reportText={inspectionReport} />
-        </div>
+        </div> */}
       </div>
     </>
   );
