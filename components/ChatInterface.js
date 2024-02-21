@@ -6,6 +6,24 @@ const ChatInterface = ({ contextData }) => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
 
+  function objectToPassage(obj, indentLevel = 0) {
+    let passage = "";
+    const indent = " ".repeat(indentLevel * 2); // Create an indent based on the hierarchy level
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === "object" && value !== null) {
+        // If it's a nested object or array, describe it in a new paragraph or list
+        passage += `\n${indent}${key} consists of the following: `;
+        passage += objectToPassage(value, indentLevel + 1); // Recursively convert the nested object
+      } else {
+        // Convert key-value pairs into sentences
+        passage += `\n${indent}${key} is ${value}.`;
+      }
+    }
+
+    return passage;
+  }
+
   const sendMessage = async (userMessage) => {
     // Prevent sending empty messages
     if (!userMessage.trim()) return;
