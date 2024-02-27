@@ -47,12 +47,7 @@ export default function Page(props) {
   const [structureAssetType, setStructureAssetType] = useState("all");
   const [inspection, setInspection] = useState(null);
 
-  const activeMapStyleTab =
-    "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
-  const inactiveMapStyleTab =
-    "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
-
-  const options = {
+  const [options, setOptions] = useState({
     series: [70],
     chart: {
       type: "radialBar",
@@ -81,8 +76,22 @@ export default function Page(props) {
         },
       },
     },
-    labels: ["All Structures"],
+    labels: [structureAssetType],
+  });
+
+  const activeMapStyleTab =
+    "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
+  const inactiveMapStyleTab =
+    "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
+
+  const iconMap = {
+    red: "/location-red.png",
+    yellow: "/location-yellow.png",
+    drkgreen: "/location-dark.png",
+    green: "/location-green.png",
   };
+
+  const loadIcon = (color) => iconMap[color] || "/location-red.png";
 
   const query = qs.stringify(
     {
@@ -304,25 +313,19 @@ export default function Page(props) {
     }
   };
 
+  useEffect(() => {
+    console.log("this has been rerendered");
+    setOptions((prevOptions) => ({
+      ...prevOptions,
+      labels: [structureProgressType],
+    }));
+  }, [structureProgressType]);
+
   // Separate useEffect for the marker layer
   useEffect(() => {
     if (!map.current || structures.length === 0) return;
 
     // Load the specific PNG files based on the status
-    const loadIcon = (color) => {
-      switch (color) {
-        case "red":
-          return "/location-red.png";
-        case "yellow":
-          return "/location-yellow.png";
-        case "drkgreen":
-          return "/location-dark.png";
-        case "green":
-          return "/location-green.png";
-        default:
-          return "/location-red.png"; // default icon if color is not matched
-      }
-    };
 
     structures.forEach((structure) => {
       const color = getColorBasedOnStatus(structure.attributes.status);
@@ -391,7 +394,6 @@ export default function Page(props) {
     if (!map.current) return;
 
     const onMarkerClick = (e) => {
-      const markerId = e.features[0].properties.id;
       // Handle marker click event
     };
 
@@ -502,7 +504,7 @@ export default function Page(props) {
       });
 
       try {
-        const locationDetails = await getLocationDetails(lng, lat);
+        await getLocationDetails(lng, lat);
       } catch (error) {
         console.error("Error getting location details:", error);
       }
@@ -603,14 +605,18 @@ export default function Page(props) {
     updateProgressBar(structureProgressType);
   }, [structureProgressType, structures]); // Depend on structures as well
 
+  /**
+   * Updates the progress bar based on the percentage of inspected structures.
+   *
+   * @param {string} type - The type of structures to consider. Defaults to "all".
+   */
   const updateProgressBar = (type = "all") => {
-    const filteredStructuresByType = structures.filter((structure) => {
-      if (type.trim().toLowerCase() === "all") {
-        return true; // Include all structures
-      }
-      // Otherwise, filter by the specified type
-      return structure.attributes.type.toLowerCase() === type.toLowerCase();
-    });
+    type = type.trim().toLowerCase();
+
+    const filteredStructuresByType = structures.filter(
+      (structure) =>
+        type === "all" || structure.attributes.type.toLowerCase() === type
+    );
 
     const inspectedStructures = filteredStructuresByType.filter(
       (structure) => structure.attributes.status.toLowerCase() === "inspected"
@@ -621,24 +627,34 @@ export default function Page(props) {
         ? Math.round(
             (inspectedStructures.length / filteredStructuresByType.length) * 100
           )
-        : 0; // Avoid division by zero
+        : 0;
 
-    setActiveCompletion(percentOfCompletion); // Update the state
+    setActiveCompletion(percentOfCompletion);
   };
 
+  /**
+   * Returns a list of unique inspectors based on their email.
+   *
+   * @param {Array} structures - The list of structures to extract inspectors from.
+   * @returns {Array} The list of unique inspectors.
+   */
   const getUniqueInspectors = (structures) => {
     const seenEmails = new Set();
-    const uniqueInspectors = structures.flatMap((structure) =>
-      structure.attributes.inspectors.data.filter((inspector) => {
-        const email = inspector.attributes.email;
-        if (!seenEmails.has(email)) {
-          seenEmails.add(email);
-          return true;
+
+    return structures.reduce((uniqueInspectors, structure) => {
+      const newInspectors = structure.attributes.inspectors.data.filter(
+        (inspector) => {
+          const email = inspector.attributes.email;
+          if (!seenEmails.has(email)) {
+            seenEmails.add(email);
+            return true;
+          }
+          return false;
         }
-        return false;
-      })
-    );
-    return uniqueInspectors;
+      );
+
+      return [...uniqueInspectors, ...newInspectors];
+    }, []);
   };
 
   const CheckMark = () => (
@@ -781,10 +797,17 @@ export default function Page(props) {
     </svg>
   );
 
+  /**
+   * Retrieves unique inspectors from the provided structures and
+   * concatenates their emails into a single string, separated by commas.
+   *
+   * @param {Array} structures - The list of structures to extract inspectors from.
+   * @returns {string} The concatenated string of unique inspector emails.
+   */
   const uniqueInspectors = getUniqueInspectors(structures);
   const inspectorsEmails = uniqueInspectors
-    .map((inspector) => `${inspector.attributes.email},`)
-    .join(" ");
+    .map((inspector) => inspector.attributes.email)
+    .join(", ");
 
   return (
     <>
@@ -806,77 +829,6 @@ export default function Page(props) {
             Add to Favorites <FavoriteIcon />
           </Button>
         </div>
-      </div>
-
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-5">
-        <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-          <li className="me-2">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center p-4 text-dark-blue-700 border-b-2 border-dark-blue-700 rounded-t-lg active dark:text-dark-blue-700 dark:border-dark-blue-700 group"
-              aria-current="page"
-            >
-              <svg
-                className="w-4 h-4 me-2 text-dark-blue-700 dark:text-dark-blue-700"
-                aria-hidden="true"
-                fill="currentColor"
-                viewBox="0 0 18 18"
-              >
-                <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
-              </svg>
-              Dashboard
-            </a>
-          </li>
-          <li className="me-2">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-            >
-              <svg
-                className="w-4 h-4 me-2 text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300"
-                aria-hidden="true"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z" />
-              </svg>
-              Profile
-            </a>
-          </li>
-
-          <li className="me-2">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-            >
-              <svg
-                className="w-4 h-4 me-2 text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300"
-                aria-hidden="true"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152ZM19.25 14.5A3.243 3.243 0 0 0 17 11.424V1a1 1 0 0 0-2 0v10.424a3.227 3.227 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.243 3.243 0 0 0 2.25-3.076Zm-6-9A3.243 3.243 0 0 0 11 2.424V1a1 1 0 0 0-2 0v1.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0V8.576A3.243 3.243 0 0 0 13.25 5.5Z" />
-              </svg>
-              Settings
-            </a>
-          </li>
-          <li className="me-2">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-            >
-              <svg
-                className="w-4 h-4 me-2 text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-300"
-                aria-hidden="true"
-                fill="currentColor"
-                viewBox="0 0 18 20"
-              >
-                <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z" />
-              </svg>
-              Contacts
-            </a>
-          </li>
-        </ul>
       </div>
 
       <div
@@ -995,11 +947,11 @@ export default function Page(props) {
                   }}
                 >
                   <div className="flex">
-                    <MdLocationPin
-                      className={`${getInspectionIconColor(
-                        structure.attributes.status
-                      )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                      style={{ width: 40, height: 40 }}
+                    <img
+                      src={loadIcon(
+                        getColorBasedOnStatus(structure.attributes.status)
+                      )}
+                      style={{ height: 27 }}
                     />
 
                     <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
@@ -1053,38 +1005,6 @@ export default function Page(props) {
           )}
         </div>
       </div>
-
-      {/* <div class="flex overflow-x-auto">
-        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
-          <h2 class="font-bold text-lg mb-2">To Do</h2>
-          <div id="todo" class="flex flex-col gap-2">
-            <div class="bg-white p-4 rounded shadow">
-              <h3 class="font-semibold">Task 1</h3>
-              <p>Description of Task 1.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
-          <h2 class="font-bold text-lg mb-2">In Progress</h2>
-          <div id="inprogress" class="flex flex-col gap-2">
-            <div class="bg-white p-4 rounded shadow">
-              <h3 class="font-semibold">Task 2</h3>
-              <p>Description of Task 2.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
-          <h2 class="font-bold text-lg mb-2">Done</h2>
-          <div id="done" class="flex flex-col gap-2">
-            <div class="bg-white p-4 rounded shadow">
-              <h3 class="font-semibold">Task 3</h3>
-              <p>Description of Task 3.</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
 
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
@@ -1340,12 +1260,6 @@ export default function Page(props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-        {/* <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
-          <h6 className="text-lg font-semibold">Chat GPT</h6>
-
-          <ChatInterface contextData={inspection} />
-        </div> */}
-
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">Inspectors</h6>
 
