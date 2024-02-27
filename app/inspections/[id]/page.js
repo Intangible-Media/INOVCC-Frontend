@@ -52,9 +52,6 @@ export default function Page(props) {
   const inactiveMapStyleTab =
     "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
 
-  mapboxgl.accessToken =
-    "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
-
   const options = {
     series: [70],
     chart: {
@@ -128,37 +125,40 @@ export default function Page(props) {
     }
   );
 
+  /**
+   * This function takes an array of files and returns an array of URLs.
+   * @param {Array} files - The files to get the URLs from.
+   * @returns {Array} The array of URLs.
+   */
   const getArrayOfUrls = (files) => {
-    const arrayOfFileUrls = files.map((file) => ({
+    return files.map((file) => ({
       url: `${process.env.NEXT_PUBLIC_STRAPI_URL}${file.attributes.url}`,
       name: file.attributes.name,
     }));
-    return arrayOfFileUrls;
   };
 
+  /**
+   * This async function gets the location details for a given longitude and latitude.
+   * @param {number} longitude - The longitude of the location.
+   * @param {number} latitude - The latitude of the location.
+   * @returns {Promise} A promise that resolves to the location details.
+   */
   const getLocationDetails = async (longitude, latitude) => {
-    const endpoint = "mapbox.places"; // or 'mapbox.places-permanent'
-    const accessToken =
-      "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q"; // Replace with your Mapbox access token
+    const endpoint = "mapbox.places";
+    const accessToken = process.env.MAPBOX_ACCESS_TOKEN;
     const url = `https://api.mapbox.com/geocoding/v5/${endpoint}/${longitude},${latitude}.json?access_token=${accessToken}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
 
-      // Extracting city, state, address, and zip code from the response
-      const place = data.features.find((feature) =>
-        feature.place_type.includes("place")
-      ); // City
-      const region = data.features.find((feature) =>
-        feature.place_type.includes("region")
-      ); // State
-      const address = data.features.find((feature) =>
-        feature.place_type.includes("address")
-      ); // Address
-      const postcode = data.features.find((feature) =>
-        feature.place_type.includes("postcode")
-      ); // Zip Code
+      const findFeature = (type) =>
+        data.features.find((feature) => feature.place_type.includes(type));
+
+      const place = findFeature("place");
+      const region = findFeature("region");
+      const address = findFeature("address");
+      const postcode = findFeature("postcode");
 
       return {
         State: region ? region.text : "Not found",
@@ -177,32 +177,48 @@ export default function Page(props) {
     }
   };
 
+  /**
+   * This function filters structures based on a search term.
+   * @param {string} searchTerm - The term to search for.
+   * @returns {Array} The filtered structures.
+   */
   const filterStructures = (searchTerm) => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
     return structures.filter((structure) => {
       const attributes = structure.attributes;
-      return (
-        attributes.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attributes.mapSection
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        attributes.type.toLowerCase().includes(searchTerm.toLowerCase())
-        // Add more fields to check if needed
+      return ["status", "mapSection", "type"].some((field) =>
+        attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
       );
     });
   };
 
+  /**
+   * This function updates the center of the map.
+   * @param {number} longitude - The longitude of the new center.
+   * @param {number} latitude - The latitude of the new center.
+   */
   const updateCenterOnClick = (longitude, latitude) => {
     setLng(longitude);
     setLat(latitude);
   };
 
+  /**
+   * This function gets the color for an inspection based on its status.
+   * @param {string} status - The status of the inspection.
+   * @returns {string} The color for the inspection.
+   */
   const getInspectionColor = (status) => {
-    if (status.toLowerCase() == "uploaded") return "text-white bg-green-800";
-    if (status.toLowerCase() == "inspected")
-      return "text-green-800 bg-green-100";
-    if (status.toLowerCase() == "not inspected")
-      return "text-yellow-800 bg-yellow-100";
-    else return "text-red-800 bg-red-100";
+    switch (status.toLowerCase()) {
+      case "uploaded":
+        return "text-white bg-green-800";
+      case "inspected":
+        return "text-green-800 bg-green-100";
+      case "not inspected":
+        return "text-yellow-800 bg-yellow-100";
+      default:
+        return "text-red-800 bg-red-100";
+    }
   };
 
   const getInspectionIconColor = (status) => {
@@ -218,76 +234,53 @@ export default function Page(props) {
     return uniqueTypes;
   };
 
-  const getMarkerColor = (structure) => {
-    const { status } = structure.attributes;
-
-    if (status.toLowerCase() == "inspected") return "#27A9EF";
-    if (status.toLowerCase() == "not inspected") return "rgb(250 204 21)";
-    else return "rgb(220 38 38)";
-  };
-
   const filteredStructures = filterStructures(structureSearch);
 
-  const calculateTypeFrequencies = (structures) => {
-    const typeCounts = structures.reduce((acc, structure) => {
-      // Extract type and status from the structure's attributes
-      const type = structure.attributes.type.toLowerCase().replace(/ /g, "-");
-      const status = structure.attributes.status;
-
-      // Initialize the object for the type if it doesn't exist
-      if (!acc[type]) {
-        acc[type] = { totalOfType: 0, totalInspected: 0 };
-      }
-
-      // Increment the total count for this type
-      acc[type].totalOfType++;
-
-      // Increment the inspected count if the structure's status is 'inspected'
-      if (status === "Inspected") {
-        // Assuming 'Inspected' is the exact string to check
-        acc[type].totalInspected++;
-      }
-
-      return acc;
-    }, {});
-
-    return typeCounts;
-  };
-
-  function InspectionReport({ reportText }) {
-    const formattedText = reportText.split("\n").map((line, index) => (
-      <span key={index}>
-        {line}
-        <br />
-      </span>
-    ));
-
-    return (
-      <div>
-        <h2>Inspection Report</h2>
-        <div>{formattedText}</div>
-      </div>
-    );
-  }
-
-  function createColoredMarkerSVG(svg, color) {
-    // Replace the fill color in the SVG
-    return svg.replace(/fill="currentColor"/g, `fill="${color}"`);
-  }
-
+  /**
+   * This function returns a color based on the status.
+   * @param {string} status - The status to get the color for.
+   * @returns {string} The color for the status.
+   */
   function getColorBasedOnStatus(status) {
-    switch (status) {
-      case "Uploaded":
+    switch (status.toLowerCase()) {
+      case "uploaded":
         return "drkgreen";
-      case "Inspected":
-        return "green"; // Green
-      case "Not Inspected":
-        return "yellow"; // Red
+      case "inspected":
+        return "green";
+      case "not inspected":
+        return "yellow";
       default:
-        return "red"; // Black or any default color
+        return "red";
     }
   }
 
+  /**
+   * This function adds a satellite layer to the map.
+   */
+  function addSatelliteLayer() {
+    if (!map.current.getLayer("satellite")) {
+      if (!map.current.getSource("satellite-source")) {
+        map.current.addSource("satellite-source", {
+          type: "raster",
+          url: "mapbox://mapbox.satellite",
+          tileSize: 256,
+        });
+      }
+
+      map.current.addLayer({
+        id: "satellite",
+        source: "satellite-source",
+        type: "raster",
+        layout: {
+          visibility: "none",
+        },
+      });
+    }
+  }
+
+  /**
+   * This function toggles the satellite layer on the map.
+   */
   const toggleSatelliteLayer = () => {
     if (map.current && map.current.getLayer("satellite")) {
       const visibility = map.current.getLayoutProperty(
@@ -305,27 +298,6 @@ export default function Page(props) {
         map.current.easeTo({ pitch: 0 });
       }
     } else {
-      function addSatelliteLayer() {
-        if (!map.current.getLayer("satellite")) {
-          if (!map.current.getSource("satellite-source")) {
-            map.current.addSource("satellite-source", {
-              type: "raster",
-              url: "mapbox://mapbox.satellite",
-              tileSize: 256,
-            });
-          }
-
-          map.current.addLayer({
-            id: "satellite",
-            source: "satellite-source",
-            type: "raster",
-            layout: {
-              visibility: "none",
-            },
-          });
-        }
-      }
-
       console.warn("Satellite layer not found on the map but just made it.");
       addSatelliteLayer();
       return toggleSatelliteLayer();
