@@ -22,24 +22,6 @@ export default function Dashboard() {
   const [favoriteInspections, setFavoriteInspections] = useState([]);
   const [chartSeries, setChartSeries] = useState([]);
 
-  const option = {
-    chart: {
-      id: "apexchart-example",
-      width: "100%",
-      type: "area",
-      stroke: {
-        curve: "smooth",
-      },
-    },
-    xaxis: {
-      type: "datetime",
-    },
-
-    yaxis: {
-      min: 0,
-    },
-  };
-
   const inspectionQuery = qs.stringify({
     populate: {
       structures: {
@@ -75,113 +57,111 @@ export default function Dashboard() {
     },
   });
 
-  const structureQuery = qs.stringify({
-    populate: {
-      structures: {
-        populate: {
-          inspectors: {
-            fields: ["username"],
-          },
-        },
-      },
-      client: {
-        populate: {
-          fields: ["name"],
-        },
-      },
-    },
-  });
-
+  /**
+   * This effect is responsible for fetching inspection data, structure data, and favorite inspections data.
+   * It runs whenever the `session` or `inspectionQuery` changes.
+   */
   useEffect(() => {
+    /**
+     * This async function fetches the data from the server.
+     */
     const fetchInspectionData = async () => {
+      // Check if there is an access token in the session
       if (session?.accessToken) {
-        try {
-          const [
-            inspectionResponse,
-            structureResponse,
-            favoriteInspectionsResponse,
-          ] = await Promise.all([
-            axios.get(
-              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${inspectionQuery}`,
+        /**
+         * This async function fetches data from a specific API endpoint.
+         * @param {string} url - The API endpoint to fetch data from.
+         * @param {string} query - The query parameters to include in the request.
+         * @returns {Promise} A promise that resolves to the fetched data.
+         */
+        const fetchData = async (url, query) => {
+          try {
+            // Fetch the data from the server
+            const response = await axios.get(
+              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/${url}?${query}`,
               {
                 headers: { Authorization: `Bearer ${session.accessToken}` },
               }
-            ),
+            );
+            // Return the fetched data
+            return response.data.data;
+          } catch (error) {
+            // Log any errors that occurred while fetching the data
+            console.error(`Error fetching ${url}`, error.response || error);
+          }
+        };
 
-            axios.get(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`, {
-              headers: { Authorization: `Bearer ${session.accessToken}` },
-            }),
-
-            axios.get(
-              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${favoriteInspectionsQuery}`,
-              {
-                headers: { Authorization: `Bearer ${session.accessToken}` },
-              }
-            ),
+        // Fetch the inspection data, structure data, and favorite inspections data concurrently
+        const [inspections, structures, favoriteInspections] =
+          await Promise.all([
+            fetchData("inspections", inspectionQuery),
+            fetchData("structures", ""),
+            fetchData("inspections", favoriteInspectionsQuery),
           ]);
 
-          setInspections(inspectionResponse.data.data);
-          processStructureData(structureResponse.data.data);
-          setFavoriteInspections(favoriteInspectionsResponse.data.data);
-          console.log(favoriteInspectionsResponse.data.data);
-        } catch (error) {
-          console.error("Error fetching data", error.response || error);
+        // Update the state with the fetched data if it was successfully fetched
+        if (inspections) setInspections(inspections);
+        if (structures) processStructureData(structures);
+        if (favoriteInspections) {
+          setFavoriteInspections(favoriteInspections);
+          console.log(favoriteInspections);
         }
       }
     };
 
+    // Call the fetch function
     fetchInspectionData();
-  }, [session, inspectionQuery]);
+  }, [session, inspectionQuery]); // The effect depends on `session` and `inspectionQuery`
 
+  /**
+   * Processes structure data and prepares it for charting.
+   *
+   * @param {Array} structureData - The structure data to process. Each element should be an object with an `attributes` property, which should be an object with `inspectionDate` and `type` properties.
+   */
   const processStructureData = (structureData) => {
-    // Use objects to track counts and to find the date range
+    // Initialize an empty object to store the counts of each type for each date
     const countsByTypeAndDate = {};
-    let minDate = new Date(structureData[0].attributes.inspectionDate);
-    let maxDate = new Date(structureData[0].attributes.inspectionDate);
 
+    // Initialize the minimum and maximum dates to the inspection date of the first structure
+    let minDate = Infinity;
+    let maxDate = -Infinity;
+
+    // Iterate over each structure in the data
     structureData.forEach((structure) => {
-      const date = new Date(structure.attributes.inspectionDate);
-      minDate = date < minDate ? date : minDate;
-      maxDate = date > maxDate ? date : maxDate;
+      // Convert the inspection date to a timestamp
+      const date = new Date(structure.attributes.inspectionDate).getTime();
 
-      const dateString = date.toISOString().split("T")[0];
+      // Update the minimum and maximum dates if necessary
+      minDate = Math.min(minDate, date);
+      maxDate = Math.max(maxDate, date);
+
+      // Get the type of the structure
       const type = structure.attributes.type;
 
-      if (!countsByTypeAndDate[type]) {
-        countsByTypeAndDate[type] = {};
-      }
+      // Initialize the count object for this type if it doesn't exist yet
+      countsByTypeAndDate[type] = countsByTypeAndDate[type] || {};
 
-      if (!countsByTypeAndDate[type][dateString]) {
-        countsByTypeAndDate[type][dateString] = 0;
-      }
-
-      countsByTypeAndDate[type][dateString]++;
+      // Increment the count for this type on this date
+      countsByTypeAndDate[type][date] =
+        (countsByTypeAndDate[type][date] || 0) + 1;
     });
 
-    // Fill in missing dates with zero counts
-    for (const type in countsByTypeAndDate) {
-      for (
-        let d = new Date(minDate);
-        d <= maxDate;
-        d.setDate(d.getDate() + 1)
-      ) {
-        const dateString = d.toISOString().split("T")[0];
-        if (!countsByTypeAndDate[type][dateString]) {
-          countsByTypeAndDate[type][dateString] = 0;
-        }
-      }
-    }
-
-    // Convert the object into a series format expected by ApexCharts
+    // Convert the counts into a series format suitable for ApexCharts
     const series = Object.entries(countsByTypeAndDate).map(([type, dates]) => {
-      const seriesData = Object.entries(dates).map(([dateString, count]) => {
-        return [new Date(dateString).getTime(), count];
-      });
+      // Initialize an empty array to store the series data for this type
+      const seriesData = [];
 
-      seriesData.sort((a, b) => a[0] - b[0]);
+      // Iterate over each date in the range from the minimum to the maximum date
+      for (let date = minDate; date <= maxDate; date += 24 * 60 * 60 * 1000) {
+        // Add the count for this type on this date to the series data, or 0 if there is no count
+        seriesData.push([date, dates[date] || 0]);
+      }
+
+      // Return the series data for this type, limited to the first 25 entries
       return { name: type, data: seriesData.slice(0, 25) };
     });
 
+    // Update the chart series with the new data
     setChartSeries(series);
   };
 

@@ -438,7 +438,6 @@ export default function InspectionTable({ inspectionData }) {
               <Table.HeadCell>Inspection</Table.HeadCell>
               <Table.HeadCell>Client</Table.HeadCell>
               <Table.HeadCell>Structures</Table.HeadCell>
-              <Table.HeadCell>Team</Table.HeadCell>
               <Table.HeadCell>Progress</Table.HeadCell>
               <Table.HeadCell>
                 <span className="sr-only">Edit</span>
@@ -465,21 +464,7 @@ export default function InspectionTable({ inspectionData }) {
                       searchQuery
                     )}
                   </Table.Cell>
-                  <Table.Cell className="text-center">
-                    <div className="flex -space-x-4 rtl:space-x-reverse">
-                      <img
-                        className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                        src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                        alt=""
-                      />
-                      <a
-                        className="flex items-center justify-center w-10 h-10 text-xs font-medium text-white bg-gray-700 border-2 border-white rounded-full hover:bg-gray-600 dark:border-gray-800"
-                        href="#"
-                      >
-                        +99
-                      </a>
-                    </div>
-                  </Table.Cell>
+
                   <Table.Cell>
                     <span
                       className={`${getInspectionProgressClasses(

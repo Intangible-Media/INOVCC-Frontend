@@ -514,35 +514,6 @@ export default function Page(props) {
     });
   }, [lng, lat]);
 
-  // useEffect(() => {
-  //   console.log("new layer");
-  //   console.log(activeMapStyle);
-  //   function addSatelliteLayer() {
-  //     if (!map.current.getLayer("satellite")) {
-  //       if (!map.current.getSource("satellite-source")) {
-  //         map.current.addSource("satellite-source", {
-  //           type: "raster",
-  //           url: "mapbox://mapbox.satellite",
-  //           tileSize: 256,
-  //         });
-  //       }
-
-  //       map.current.addLayer({
-  //         id: "satellite",
-  //         source: "satellite-source",
-  //         type: "raster",
-  //         layout: {
-  //           visibility: "none",
-  //         },
-  //       });
-  //     }
-  //   }
-
-  //   if (activeMapStyle === "3d") return;
-
-  //   return addSatelliteLayer();
-  // }, [activeMapStyle]);
-
   useEffect(() => {
     // Function to animate the map and get location details
     const updateMapAndLocation = async () => {
@@ -1111,6 +1082,38 @@ export default function Page(props) {
         </div>
       </div>
 
+      {/* <div class="flex overflow-x-auto">
+        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
+          <h2 class="font-bold text-lg mb-2">To Do</h2>
+          <div id="todo" class="flex flex-col gap-2">
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold">Task 1</h3>
+              <p>Description of Task 1.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
+          <h2 class="font-bold text-lg mb-2">In Progress</h2>
+          <div id="inprogress" class="flex flex-col gap-2">
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold">Task 2</h3>
+              <p>Description of Task 2.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-none w-72 bg-gray-100 p-4 m-2 rounded-lg">
+          <h2 class="font-bold text-lg mb-2">Done</h2>
+          <div id="done" class="flex flex-col gap-2">
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold">Task 3</h3>
+              <p>Description of Task 3.</p>
+            </div>
+          </div>
+        </div>
+      </div> */}
+
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
           <div className="flex justify-between">
@@ -1364,12 +1367,12 @@ export default function Page(props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+        {/* <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">Chat GPT</h6>
 
           <ChatInterface contextData={inspection} />
-        </div>
+        </div> */}
 
         <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">Inspectors</h6>
