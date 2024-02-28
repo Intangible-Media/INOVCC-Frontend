@@ -36,7 +36,7 @@ export default function InspectionModal() {
       if (session?.accessToken) {
         try {
           const [clientResponse] = await Promise.all([
-            axios.get(`http://localhost:1337/api/clients`, {
+            axios.get(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients`, {
               headers: { Authorization: `Bearer ${session.accessToken}` },
             }),
           ]);
@@ -90,7 +90,7 @@ export default function InspectionModal() {
     if (session?.accessToken) {
       try {
         const clientResponse = await axios.post(
-          `http://localhost:1337/api/inspections`,
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections`,
           inspectionData, // the data to be sent in the POST request
           {
             headers: { Authorization: `Bearer ${session.accessToken}` },
