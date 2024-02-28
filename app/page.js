@@ -164,7 +164,7 @@ export default function Home() {
       if (session?.accessToken) {
         try {
           const response = await axios.get(
-            `http://localhost:1337/api/inspections?${query}`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${query}`,
             {
               headers: {
                 Authorization: `Bearer ${session.accessToken}`,

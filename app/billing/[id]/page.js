@@ -198,7 +198,7 @@ export default function Page({ params }) {
     if (session?.accessToken) {
       try {
         const invoiceResponse = await axios.get(
-          `http://localhost:1337/api/invoices/${params.id}?${query}`,
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/invoices/${params.id}?${query}`,
           {
             headers: {
               Authorization: `Bearer ${session.accessToken}`,

@@ -41,7 +41,7 @@ const handler = NextAuth({
       async authorize(credentials) {
         try {
           const res = await axios.post(
-            `http://localhost:1337/api/auth/local`,
+            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local`,
             {
               identifier: credentials.username,
               password: credentials.password,
