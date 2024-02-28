@@ -6,7 +6,6 @@ import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
-import { MdLocationPin } from "react-icons/md";
 import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
 import {
   formatFileName,
@@ -21,10 +20,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import Image from "next/image";
-import ChatInterface from "../../../components/ChatInterface";
-import Kanban from "../../../components/Kanban";
 
-// const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page(props) {
   const { params } = props;
@@ -344,7 +341,10 @@ export default function Page(props) {
             return;
           }
 
-          map.current.addImage(iconName, image);
+          // Check if the image already exists before adding it
+          if (!map.current.hasImage(iconName)) {
+            map.current.addImage(iconName, image);
+          }
         });
       }
     });
@@ -394,19 +394,19 @@ export default function Page(props) {
     }
   }, [structures]);
 
-  useEffect(() => {
-    if (!map.current) return;
+  // useEffect(() => {
+  //   if (!map.current) return;
 
-    const onMarkerClick = (e) => {
-      // Handle marker click event
-    };
+  //   const onMarkerClick = (e) => {
+  //     // Handle marker click event
+  //   };
 
-    map.current.on("click", "marker-layer", onMarkerClick);
+  //   map.current.on("click", "marker-layer", onMarkerClick);
 
-    return () => {
-      map.current.off("click", "marker-layer", onMarkerClick);
-    };
-  }, [map.current]);
+  //   return () => {
+  //     map.current.off("click", "marker-layer", onMarkerClick);
+  //   };
+  // }, [map.current]);
 
   useEffect(() => {
     if (map.current) return; // Initialize map only once
@@ -1046,13 +1046,13 @@ export default function Page(props) {
             </div>
           </div>
           <div className="w-full mt-auto">
-            {/* <ApexChart
+            <ApexChart
               type="radialBar"
               options={options}
               series={[activeCompletion]}
               height={450}
               width={"100%"}
-            /> */}
+            />
           </div>
         </div>
 
