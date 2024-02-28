@@ -24,7 +24,7 @@ import Image from "next/image";
 import ChatInterface from "../../../components/ChatInterface";
 import Kanban from "../../../components/Kanban";
 
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+// const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page(props) {
   const { params } = props;
@@ -83,6 +83,9 @@ export default function Page(props) {
     "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
   const inactiveMapStyleTab =
     "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
+
+  mapboxgl.accessToken =
+    "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
   const iconMap = {
     red: "/location-red.png",
@@ -154,7 +157,8 @@ export default function Page(props) {
    */
   const getLocationDetails = async (longitude, latitude) => {
     const endpoint = "mapbox.places";
-    const accessToken = process.env.MAPBOX_ACCESS_TOKEN;
+    const accessToken =
+      "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q"; // Replace with your Mapbox access token
     const url = `https://api.mapbox.com/geocoding/v5/${endpoint}/${longitude},${latitude}.json?access_token=${accessToken}`;
 
     try {
@@ -1042,13 +1046,13 @@ export default function Page(props) {
             </div>
           </div>
           <div className="w-full mt-auto">
-            <ApexChart
+            {/* <ApexChart
               type="radialBar"
               options={options}
               series={[activeCompletion]}
               height={450}
               width={"100%"}
-            />
+            /> */}
           </div>
         </div>
 
