@@ -308,7 +308,7 @@ export default function MapPanel({ structure }) {
               </div>
               <div className="flex flex-col blorder-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
-                <StructureNotes />
+                <StructureNotes notes={structure.attributes.notes} />
               </div>
             </div>
           )}
@@ -351,7 +351,7 @@ export default function MapPanel({ structure }) {
           {currentPanel === "notes" && (
             <div id="inspectors-content" className="w-full">
               <div className="flex flex-col px-8 py-6">
-                <StructureNotes />
+                <StructureNotes notes={structure.attributes.notes} />
               </div>
             </div>
           )}
@@ -365,104 +365,33 @@ export default function MapPanel({ structure }) {
   );
 }
 
-function StructureNotes() {
+function StructureNotes({ notes = [] }) {
   return (
     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-      <li className="pb-3 sm:pb-4">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <div className="flex-shrink-0">
-            <img
-              className="w-8 h-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt="Neil image"
-            />
+      {notes.map((note, index) => (
+        <li key={index} className="py-3 first-of-type:pt-0 sm:pb-4">
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            <div className="flex-shrink-0">
+              <img
+                className="w-8 h-8 rounded-full"
+                src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                alt="Neil image"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                {note.author.data.attributes.firstName}{" "}
+                {note.author.data.attributes.lastName}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-              Neil Sims
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              email@flowbite.com
-            </p>
-          </div>
-        </div>
-      </li>
-      <li className="py-3 sm:py-4">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <div className="flex-shrink-0">
-            <img
-              className="w-8 h-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt="Neil image"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-              Bonnie Green
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              email@flowbite.com
+          <div className="mt-2">
+            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+              {note.text}
             </p>
           </div>
-        </div>
-      </li>
-      <li className="py-3 sm:py-4">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <div className="flex-shrink-0">
-            <img
-              className="w-8 h-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt="Neil image"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-              Michael Gough
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              email@flowbite.com
-            </p>
-          </div>
-        </div>
-      </li>
-      <li className="py-3 sm:py-4">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <div className="flex-shrink-0">
-            <img
-              className="w-8 h-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt="Neil image"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-              Thomas Lean
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              email@flowbite.com
-            </p>
-          </div>
-        </div>
-      </li>
-      <li className="pt-3 pb-0 sm:pt-4">
-        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-          <div className="flex-shrink-0">
-            <img
-              className="w-8 h-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-              alt="Neil image"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-              Lana Byrd
-            </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
-              email@flowbite.com
-            </p>
-          </div>
-        </div>
-      </li>
+        </li>
+      ))}
     </ul>
   );
 }

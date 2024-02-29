@@ -104,6 +104,9 @@ export default function Page(props) {
             images: {
               populate: "*",
             },
+            notes: {
+              populate: "*",
+            },
           },
         },
         client: {
