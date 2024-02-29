@@ -1157,13 +1157,13 @@ export default function Page(props) {
                     key={`${structure.id}-${index}`}
                     className="aspect-square rounded-md overflow-hidden relative border"
                   >
-                    <img
+                    {/* <img
                       key={`structure-${structure.id}-image-${image.id}`}
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
                       src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes?.formats?.small?.url}`}
                       alt="fasfdsafdsa"
                       sizes="(max-width: 768px) 200px, 200px" // 48px on mobile, 24px on larger screens
-                    />
+                    /> */}
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                       <h6 className="leading-none text-xxs">
                         {formatFileName(image.attributes.name)}
