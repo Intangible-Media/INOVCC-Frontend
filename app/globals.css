@@ -37,6 +37,18 @@
   }
 }
 
+@media (max-width: 700px) {
+  
+  .main-navigation {
+    transform: translateX(-100%);
+  }
+
+  .main-navigation.open {
+    transform: translateX(0);
+  }
+  
+}
+
 .status-bar {
   background-color: #4CAF50;
   color: #ffffff;

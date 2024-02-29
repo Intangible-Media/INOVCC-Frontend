@@ -32,6 +32,38 @@ const inter = Inter({ subsets: ["latin"] });
 export default function RootLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openMobileMenu, setOpenMobileMenu] = useState(false);
+
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Minimum distance (in pixels) that a swipe must travel to be considered a swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    // Get the initial touch position
+    const touchDown = e.touches[0].clientX;
+    setTouchStart(touchDown);
+  };
+
+  const onTouchEnd = (e) => {
+    // Get the final touch position
+    const touchDown = e.changedTouches[0].clientX;
+    setTouchEnd(touchDown);
+  };
+
+  useEffect(() => {
+    // Check if the swipe is a left-to-right swipe
+    if (touchStart < touchEnd) {
+      // Handle left to right swipe
+      console.log("Swiped left to right");
+      return setOpenMobileMenu(true);
+      // You can add any action you want to perform on left to right swipe here
+    }
+
+    console.log("Swiped right to left");
+    return setOpenMobileMenu(false);
+  }, [touchStart, touchEnd]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -40,7 +72,11 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-gray-100`}>
+      <body
+        className={`${inter.className} bg-gray-100`}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <AuthProvider>
           <>
             <Navbar
@@ -107,11 +143,13 @@ export default function RootLayout({ children }) {
             </Navbar>
 
             <div
-              className={`fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300  px-3 py-4 ${
+              className={`main-navigation fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300 px-3 py-4 transform" ${
                 isCollapsed ? "w-auto" : "w-64"
-              } bg-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-all`}
+              } bg-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-all ${
+                openMobileMenu ? "open" : "fdfds"
+              }`}
             >
-              <button onClick={toggleSidebar}>
+              <button className="hidden lg:block" onClick={toggleSidebar}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
