@@ -607,7 +607,7 @@ export default function Page(props) {
     const seenEmails = new Set();
 
     return structures.reduce((uniqueInspectors, structure) => {
-      const newInspectors = structure.attributes.inspectors?.data.filter(
+      const newInspectors = structure.attributes.inspectors?.data?.filter(
         (inspector) => {
           const email = inspector.attributes.email;
           if (!seenEmails.has(email)) {
