@@ -1160,7 +1160,7 @@ export default function Page(props) {
                     <Image
                       key={`structure-${structure.id}-image-${image.id}`}
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
-                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.formats.small.url}`}
+                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes?.formats?.small?.url}`}
                       alt="fasfdsafdsa"
                       sizes="(max-width: 768px) 200px, 200px" // 48px on mobile, 24px on larger screens
                       fill={true}
