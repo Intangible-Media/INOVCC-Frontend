@@ -1157,13 +1157,12 @@ export default function Page(props) {
                     key={`${structure.id}-${index}`}
                     className="aspect-square rounded-md overflow-hidden relative border"
                   >
-                    <Image
+                    <img
                       key={`structure-${structure.id}-image-${image.id}`}
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
                       src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes?.formats?.small?.url}`}
                       alt="fasfdsafdsa"
                       sizes="(max-width: 768px) 200px, 200px" // 48px on mobile, 24px on larger screens
-                      fill={true}
                     />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                       <h6 className="leading-none text-xxs">
@@ -1244,13 +1243,12 @@ export default function Page(props) {
                 key={`${inspector.id}-${index}`}
                 className="alternate-bg flex gap-4 align-middle border-t py-1"
               >
-                <Image
+                <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
                   src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
                   alt="Inspector Picture"
                   width={48} // Width of the image in pixels
                   height={48} // Height of the image in pixels
-                  quality={100} // Optional: You can specify the quality of the image (1-100)
                   sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
@@ -1293,13 +1291,12 @@ export default function Page(props) {
                 key={index}
                 className="alternate-bg flex gap-4 align-middle py-2"
               >
-                <Image
+                <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
                   src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact.attributes.picture.data.attributes.formats.thumbnail.url}`}
                   alt="fdsfdsfds"
                   width={48} // Width of the image in pixels (w-12 is equivalent to 3rem or 48px)
                   height={48} // Height of the image in pixels (h-12 is equivalent to 3rem or 48px)
-                  quality={100} // Optional: You can specify the quality of the image (1-100)
                   sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
