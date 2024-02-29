@@ -1157,13 +1157,11 @@ export default function Page(props) {
                     key={`${structure.id}-${index}`}
                     className="aspect-square rounded-md overflow-hidden relative border"
                   >
-                    {/* <img
-                      key={`structure-${structure.id}-image-${image.id}`}
+                    <img
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
-                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes?.formats?.small?.url}`}
+                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image?.attributes?.formats?.small?.url}`}
                       alt="fasfdsafdsa"
-                      sizes="(max-width: 768px) 200px, 200px" // 48px on mobile, 24px on larger screens
-                    /> */}
+                    />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                       <h6 className="leading-none text-xxs">
                         {formatFileName(image.attributes.name)}
@@ -1247,9 +1245,6 @@ export default function Page(props) {
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
                   src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
                   alt="Inspector Picture"
-                  width={48} // Width of the image in pixels
-                  height={48} // Height of the image in pixels
-                  sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
@@ -1293,11 +1288,8 @@ export default function Page(props) {
               >
                 <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact.attributes.picture.data.attributes.formats.thumbnail.url}`}
+                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact?.attributes?.picture?.data?.attributes?.formats?.thumbnail?.url}`}
                   alt="fdsfdsfds"
-                  width={48} // Width of the image in pixels (w-12 is equivalent to 3rem or 48px)
-                  height={48} // Height of the image in pixels (h-12 is equivalent to 3rem or 48px)
-                  sizes="(max-width: 768px) 48px, 48px" // 48px on mobile, 24px on larger screens
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
