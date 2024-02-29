@@ -1159,7 +1159,7 @@ export default function Page(props) {
                   >
                     <img
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
-                      src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image?.attributes?.formats?.small?.url}`}
+                      src={`${image?.attributes?.formats?.small?.url}`}
                       alt="fasfdsafdsa"
                     />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
