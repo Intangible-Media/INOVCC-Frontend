@@ -1076,9 +1076,7 @@ export default function Page(props) {
                       >
                         <Dropdown.Item
                           onClick={(e) =>
-                            downloadFileFromUrl(
-                              `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
-                            )
+                            downloadFileFromUrl(image.attributes.url)
                           }
                         >
                           <div className="flex items-center">
@@ -1179,9 +1177,7 @@ export default function Page(props) {
                       >
                         <Dropdown.Item
                           onClick={(e) =>
-                            downloadFileFromUrl(
-                              `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
-                            )
+                            downloadFileFromUrl(`${image.attributes.url}`)
                           }
                         >
                           <div className="flex items-center">
