@@ -551,45 +551,6 @@ export default function Page(props) {
   }, [session, params.id, query]);
 
   useEffect(() => {
-    // Function to fetch data
-    const fetchData = async () => {
-      if (session?.accessToken) {
-        try {
-          const inspectionReportResponse = await axios.get(
-            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${params.id}/report`,
-            {
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`,
-              },
-            }
-          );
-
-          setInspectionReport(
-            inspectionReportResponse.data.choices[0].message.content
-          );
-          // Cache the data
-          localStorage.setItem(
-            `inspectionReport_${params.id}`,
-            JSON.stringify(
-              inspectionReportResponse.data.choices[0].message.content
-            )
-          );
-        } catch (error) {
-          console.error("Error fetching data", error.response || error);
-        }
-      }
-    };
-
-    // Check if the data is already in the cache
-    const cachedData = localStorage.getItem(`inspectionReport_${params.id}`);
-    if (cachedData) {
-      setInspectionReport(JSON.parse(cachedData));
-    } else {
-      fetchData();
-    }
-  }, [session, params.id]);
-
-  useEffect(() => {
     if (!map.current || !selectedStructure) return;
 
     if (
