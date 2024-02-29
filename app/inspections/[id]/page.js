@@ -604,13 +604,23 @@ export default function Page(props) {
    * @returns {Array} The list of unique inspectors.
    */
   const getUniqueInspectors = (structures) => {
+    if (!Array.isArray(structures)) {
+      console.error("Expected an array of structures");
+      return [];
+    }
+
     const seenEmails = new Set();
 
     return structures.reduce((uniqueInspectors, structure) => {
-      const newInspectors = structure.attributes.inspectors?.data?.filter(
+      if (!structure?.attributes?.inspectors?.data) {
+        // Optionally log a warning or handle this case as needed
+        return uniqueInspectors;
+      }
+
+      const newInspectors = structure.attributes.inspectors.data.filter(
         (inspector) => {
-          const email = inspector.attributes.email;
-          if (!seenEmails.has(email)) {
+          const email = inspector?.attributes?.email;
+          if (email && !seenEmails.has(email)) {
             seenEmails.add(email);
             return true;
           }
