@@ -646,7 +646,7 @@ export default function Page(props) {
     const seenEmails = new Set();
 
     return structures.reduce((uniqueInspectors, structure) => {
-      const newInspectors = structure.attributes.inspectors.data.filter(
+      const newInspectors = structure.attributes.inspectors?.data.filter(
         (inspector) => {
           const email = inspector.attributes.email;
           if (!seenEmails.has(email)) {
@@ -1316,7 +1316,7 @@ export default function Page(props) {
             {inspection?.client.data.attributes.name}
           </h6>
 
-          {inspection?.client.data.attributes.contacts.data.map(
+          {inspection?.client.data.attributes.contacts?.data.map(
             (clientContact, index) => (
               <div
                 key={index}
