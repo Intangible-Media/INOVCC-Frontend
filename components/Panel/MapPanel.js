@@ -366,6 +366,7 @@ export default function MapPanel({ structure }) {
 }
 
 function StructureNotes({ notes = [] }) {
+  console.log("notes", notes);
   return (
     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
       {notes.map((note, index) => (
@@ -380,8 +381,8 @@ function StructureNotes({ notes = [] }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                {note.author.data.attributes.firstName}{" "}
-                {note.author.data.attributes.lastName}
+                {note?.author?.data?.attributes?.firstName}{" "}
+                {note?.author?.data?.attributes?.lastName}
               </p>
             </div>
           </div>
