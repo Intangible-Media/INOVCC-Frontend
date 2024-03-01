@@ -53,7 +53,12 @@ export default function RootLayout({ children }) {
   };
 
   useEffect(() => {
-    if (touchStart - touchEnd > 100 || touchEnd - touchStart > 100) {
+    const tollerance = 150;
+
+    if (
+      touchStart - touchEnd > tollerance ||
+      touchEnd - touchStart > tollerance
+    ) {
       if (touchStart < touchEnd) {
         // Handle left to right swipe
         console.log("Swiped left to right");
