@@ -327,7 +327,7 @@ export default function MapPanel({ structure }) {
                     >
                       <img
                         className="w-full h-full object-cover"
-                        src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`}
+                        src={`${image.attributes.url}`}
                         alt=""
                       />
                     </div>
