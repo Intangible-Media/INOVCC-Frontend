@@ -620,7 +620,7 @@ export default function Page(props) {
         return uniqueInspectors;
       }
 
-      const newInspectors = structure.attributes.inspectors.data.filter(
+      const newInspectors = structure?.attributes.inspectors.data.filter(
         (inspector) => {
           const email = inspector?.attributes?.email;
           if (email && !seenEmails.has(email)) {
