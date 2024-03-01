@@ -53,16 +53,19 @@ export default function RootLayout({ children }) {
   };
 
   useEffect(() => {
-    // Check if the swipe is a left-to-right swipe
-    if (touchStart < touchEnd) {
-      // Handle left to right swipe
-      console.log("Swiped left to right");
-      return setOpenMobileMenu(true);
-      // You can add any action you want to perform on left to right swipe here
+    if (touchStart - touchEnd > 100 || touchEnd - touchStart > 100) {
+      if (touchStart < touchEnd) {
+        // Handle left to right swipe
+        console.log("Swiped left to right");
+        return setOpenMobileMenu(true);
+        // You can add any action you want to perform on left to right swipe here
+      }
+
+      console.log("Swiped right to left");
+      return setOpenMobileMenu(false);
     }
 
-    console.log("Swiped right to left");
-    return setOpenMobileMenu(false);
+    // Check if the swipe is a left-to-right swipe
   }, [touchStart, touchEnd]);
 
   const toggleSidebar = () => {
