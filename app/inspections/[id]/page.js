@@ -877,7 +877,7 @@ export default function Page(props) {
             </div>
 
             {activeView === "overview" && (
-              <div className="flex justify-center gap-4 mt-3">
+              <div className="flex justify-center gap-4 mt-3 hidden">
                 <p className="text-sm font-medium">Show Only:</p>
                 <div className="flex items-center gap-2">
                   <Checkbox id="cant-inspect" />
