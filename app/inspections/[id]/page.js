@@ -789,8 +789,8 @@ export default function Page(props) {
 
   return (
     <>
-      <div className="flex justify-between py-6">
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col md:flex-row justify-between py-6">
+        <div className="flex flex-col gap-3 mb-4">
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>

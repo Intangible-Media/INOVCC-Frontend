@@ -82,7 +82,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
     <>
       <Button
         onClick={toggleDrawer}
-        className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
+        className="bg-transparent border-dark-blue-700 text-dark-blue-700 border-1 w-full shrink-0 self-start"
       >
         {btnText ? btnText : "New Inspection"}
       </Button>

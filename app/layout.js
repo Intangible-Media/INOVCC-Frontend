@@ -53,7 +53,7 @@ export default function RootLayout({ children }) {
   };
 
   useEffect(() => {
-    const tollerance = 150;
+    const tollerance = 250;
 
     if (
       touchStart - touchEnd > tollerance ||
@@ -281,7 +281,7 @@ export default function RootLayout({ children }) {
               } mt-16 transition-all	`}
             >
               <DynamicBreadcrumb />
-              <div className="px-6 pb-8">{children}</div>
+              <div className="px-3 md:px-6 pb-8">{children}</div>
             </div>
           </>
         </AuthProvider>
