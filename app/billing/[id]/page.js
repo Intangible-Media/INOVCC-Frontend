@@ -524,7 +524,7 @@ export default function Page({ params }) {
               width={"100%"}
             />
           </div>
-          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg aspect-square">
+          <div className="flex md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg aspect-square">
             <button
               onClick={generatePdf}
               className="bg-cyan-400 text-white font-bold py-2 px-4 rounded"

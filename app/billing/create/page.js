@@ -644,7 +644,7 @@ export default function Page({ params }) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 col-span-2 h-fit-content">
-          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg overflow-auto">
+          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg overflow-auto">
             <div className="flex flex-col mb-4">
               <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
                 Client
@@ -717,7 +717,7 @@ export default function Page({ params }) {
               )}
             </div>
           </div>
-          <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg pt-10">
+          <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg pt-10">
             <ApexChart
               type="donut"
               options={chartOptions}

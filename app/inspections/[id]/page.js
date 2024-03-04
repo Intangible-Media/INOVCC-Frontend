@@ -985,7 +985,7 @@ export default function Page(props) {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between">
             <div>
               <h6 className="text-lg font-semibold">Structure Status</h6>
@@ -1030,7 +1030,7 @@ export default function Page(props) {
           </div>
         </div>
 
-        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex flex-col gap-1">
             <h6 className="text-lg font-semibold">Documents</h6>
             <p className="text-base text-gray-500">Map Name 12344.89</p>
@@ -1116,7 +1116,7 @@ export default function Page(props) {
           </div>
         </div>
 
-        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg">
+        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between">
             <div>
               <h6 className="text-lg font-semibold">Assets</h6>
@@ -1231,7 +1231,7 @@ export default function Page(props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-        <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
+        <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">Inspectors</h6>
 
           <div className="flex flex-col overflow-auto">
@@ -1274,7 +1274,7 @@ export default function Page(props) {
           </div>
         </div>
 
-        <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
+        <div className="inspection-map-box-sm flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg mb-4">
           <h6 className="text-lg font-semibold">
             {inspection?.client.data.attributes.name}
           </h6>

@@ -52,7 +52,7 @@ export default function Page() {
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 h-60 rounded-lg"></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4">
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-8 rounded-lg mb-4">
+        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg mb-4">
           <div className="overflow-x-auto">
             <Table striped hoverable>
               <Table.Head>
