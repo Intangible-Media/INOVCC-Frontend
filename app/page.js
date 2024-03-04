@@ -184,7 +184,7 @@ export default function Home() {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
-        <div className="gap-4 p-4 md:p-8 rounded-lg">
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="h-11">
             <h5 className="text-xl font-bold dark:text-white">
               Current Projects
@@ -237,7 +237,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="gap-4 p-4 md:p-8 rounded-lg">
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between h-11">
             <h3 className="text-3xl font-bold dark:text-white">23</h3>
             <div>
@@ -258,7 +258,7 @@ export default function Home() {
           </div>
           <FooterDateExport />
         </div>
-        <div className="gap-4 p-4 md:p-8 rounded-lg">
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between h-11">
             <h3 className="text-3xl font-bold dark:text-white">$495,999</h3>
             <div>
