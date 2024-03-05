@@ -144,7 +144,7 @@ export default function Page(props) {
    */
   const getArrayOfUrls = (files) => {
     return files.map((file) => ({
-      url: `${process.env.NEXT_PUBLIC_STRAPI_URL}${file.attributes.url}`,
+      url: `${file.attributes.url}`,
       name: file.attributes.name,
     }));
   };
@@ -1043,12 +1043,10 @@ export default function Page(props) {
                     key={index}
                     className="flex aspect-square relative rounded-md overflow-hidden border"
                     style={
-                      isImage(
-                        `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
-                      )
+                      isImage(`${image.attributes.url}`)
                         ? {
                             // If there's a picture, set it as the background
-                            backgroundImage: `url(${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url})`,
+                            backgroundImage: `url(${image.attributes.url})`,
                             backgroundSize: "cover",
                           }
                         : {
@@ -1057,9 +1055,7 @@ export default function Page(props) {
                           }
                     }
                   >
-                    {!isImage(
-                      `${process.env.NEXT_PUBLIC_STRAPI_URL}${image.attributes.url}`
-                    ) && ( // If there's no picture, show the ImageIcon
+                    {!isImage(`${image.attributes.url}`) && ( // If there's no picture, show the ImageIcon
                       <ImageIcon />
                     )}
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
@@ -1242,7 +1238,7 @@ export default function Page(props) {
               >
                 <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
+                  src={`${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
                   alt="Inspector Picture"
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
@@ -1287,7 +1283,7 @@ export default function Page(props) {
               >
                 <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${clientContact?.attributes?.picture?.data?.attributes?.formats?.thumbnail?.url}`}
+                  src={`${clientContact?.attributes?.picture?.data?.attributes?.formats?.thumbnail?.url}`}
                   alt="fdsfdsfds"
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">

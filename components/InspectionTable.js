@@ -143,7 +143,14 @@ export default function InspectionTable({ inspectionData }) {
     <div className="mx-auto max-w-screen-2xl p-6">
       <div className="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
         <div className="border-b dark:border-gray-700">
-          <div className="flex flex-col-reverse md:flex-row justify-between md:space-x-4 pb-3">
+          <div className="flex items-center justify-between space-x-4">
+            <div className="flex-1 flex items-center space-x-3">
+              <h5 className="text-xl font-bold dark:text-white mb-3">
+                All Projects
+              </h5>
+            </div>
+          </div>
+          <div className="flex flex-col-reverse md:flex-row justify-between md:space-x-4 pb-4">
             <div className="w-full lg:w-2/3 flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center">
               <form className="w-full md:max-w-sm flex-1 md:mr-4">
                 <label
@@ -181,7 +188,7 @@ export default function InspectionTable({ inspectionData }) {
                   />
                 </div>
               </form>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 hidden">
                 <div>
                   <Button
                     id="filterDropdownButton"
@@ -356,16 +363,8 @@ export default function InspectionTable({ inspectionData }) {
               </div>
             </div>
           </div>
-
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 flex items-center space-x-3">
-              <h5 className="text-xl font-bold dark:text-white mb-2">
-                All Projects
-              </h5>
-            </div>
-          </div>
         </div>
-        <div className="pb-3 flex flex-wrap">
+        <div className="pb-3 flex flex-wrap hidden">
           <div className="hidden md:flex items-center text-sm font-medium text-gray-900 dark:text-white mr-4 my-3">
             Show only:
           </div>
