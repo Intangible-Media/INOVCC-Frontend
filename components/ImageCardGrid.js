@@ -7,6 +7,8 @@ export default function ImageCardGrid({
   updateFiles,
   identifier,
 }) {
+  console.log("Files:", files);
+  console.log(typeof files);
   const ElipseIcon = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -33,14 +35,10 @@ export default function ImageCardGrid({
   // Function to handle new file uploads
   const handleNewFile = (event) => {
     const newFiles = event.target.files;
-    if (newFiles) {
-      console.log("New files:", newFiles);
-      updateFiles((prevFiles) => {
-        const updatedFiles = [...prevFiles, ...Array.from(newFiles)];
-        console.log("Updated files:", updatedFiles);
-        return updatedFiles;
-      });
-    }
+
+    console.log(newFiles);
+
+    updateFiles([...files, ...newFiles]);
   };
 
   const downloadImage = (file) => {

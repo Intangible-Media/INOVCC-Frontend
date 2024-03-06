@@ -16,15 +16,23 @@ import MapBox from "../MapBox";
 import { MdLocationPin } from "react-icons/md";
 import { HiHome } from "react-icons/hi";
 import Link from "next/link";
+import { inspect } from "util";
 
 const InspectionDrawer = ({ structures = [], btnText }) => {
-  const [inspectionName, setInspectionName] = useState("");
-  const [documents, setDocuments] = useState([]);
-  const [structureDocuments, setStructureDocuments] = useState([]);
-  const [structureAssets, setStructureAssets] = useState([]);
+  const [inspection, setInspection] = useState({
+    name: "",
+    documents: [],
+  });
+
+  const [structure, setStructure] = useState({
+    name: "",
+    type: "",
+    documents: [],
+    assets: [],
+  });
+
   const [switch1, setSwitch1] = useState(false);
   const [formView, setFormView] = useState("inspection");
-  const [structureType, setStructureType] = useState("");
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
@@ -33,6 +41,18 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const updateStructureDocuments = (files) => {
+    setStructure({ ...structure, documents: files });
+  };
+
+  const updateStructureAssets = (files) => {
+    setStructure({ ...structure, assets: files });
+  };
+
+  const updateInspectionDocuments = (files) => {
+    setInspection({ ...inspection, documents: files });
   };
 
   const getInspectionIconColor = (status) => {
@@ -52,8 +72,8 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
   };
 
   useEffect(() => {
-    console.log("structureDocuments updated:", structureDocuments);
-  }, [structureDocuments]);
+    console.log("structure Documents updated:", structure.name);
+  }, [structure]);
 
   const ElipseIcon = () => (
     <svg
@@ -125,7 +145,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
             </Breadcrumb.Item>
             <Breadcrumb.Item href="/">Inspection</Breadcrumb.Item>
             <Breadcrumb.Item href="/">
-              {inspectionName ? inspectionName : "Map Name Here"}
+              {inspection.name ? inspection.name : "Map Name Here"}
             </Breadcrumb.Item>
           </Breadcrumb>
 
@@ -146,10 +166,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspectionName === "" ? (
+                  {inspection.name === "" ? (
                     <span>&quot;Map Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspectionName}&quot;</span>
+                    <span>&quot;{inspection.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -173,8 +193,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   type="text"
                   id="inspectionName"
                   placeholder="Enter Inspection Name"
-                  value={inspectionName}
-                  onChange={(e) => setInspectionName(e.target.value)}
+                  value={inspection.name}
+                  onChange={(e) =>
+                    setInspection({ ...inspection, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -183,7 +205,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   <Label className="text-xs" htmlFor="inspectionName">
                     Map Structures
                   </Label>
-                  <button className="flex align-middle text-xs font-medium text-dark-blue-700">
+                  <button
+                    className="flex align-middle text-xs font-medium text-dark-blue-700"
+                    onClick={() => setFormView("structure")}
+                  >
                     Add Structure{" "}
                     <svg
                       className="m-auto ml-2"
@@ -316,26 +341,9 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                 </div>
               </div>
 
-              {/* <div className="flex flex-col gap-1">
-                <Label className="text-xs" htmlFor="inspectionName">
-                  Inspection Name
-                </Label>
-                <select
-                  id="countries"
-                  value="Canada"
-                  className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
-                  required
-                >
-                  <option>United States</option>
-                  <option>Canada</option>
-                  <option>France</option>
-                  <option>Germany</option>
-                </select>
-              </div> */}
-
               <ImageCardGrid
-                files={documents}
-                updateFiles={setDocuments}
+                files={inspection.documents}
+                updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
               />
@@ -387,10 +395,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspectionName === "" ? (
+                  {inspection.name === "" ? (
                     <span>&quot;Structure Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspectionName}&quot;</span>
+                    <span>&quot;{inspection.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -408,8 +416,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   type="text"
                   id="structureName"
                   placeholder="Enter Structure Name"
-                  value={inspectionName}
-                  onChange={(e) => setInspectionName(e.target.value)}
+                  value={inspection.name}
+                  onChange={(e) =>
+                    setInspection({ ...inspection, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -420,8 +430,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                 <select
                   id="structureType"
                   className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
-                  value={structureType}
-                  onChange={(e) => setStructureType(e.target.value)}
+                  value={structure.type}
+                  onChange={(e) =>
+                    setStructure({ ...structure, type: e.target.value })
+                  }
                 >
                   <option value="Vault">Vault</option>
                   <option value="Behive">Behive</option>
@@ -439,8 +451,10 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   type="text"
                   id="longLatCords"
                   placeholder="Structure Cordinates"
-                  value={inspectionName}
-                  onChange={(e) => setInspectionName(e.target.value)}
+                  value={inspection.name}
+                  onChange={(e) =>
+                    setInspection({ ...inspection, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -451,15 +465,15 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
               />
 
               <ImageCardGrid
-                files={structureDocuments}
-                updateFiles={setStructureDocuments}
+                files={structure.documents}
+                updateFiles={updateStructureDocuments}
                 labelText={"Structure Documents"}
                 identifier={"structure-documents"}
               />
 
               <ImageCardGrid
-                files={structureAssets}
-                updateFiles={setStructureAssets}
+                files={structure.assets}
+                updateFiles={updateStructureAssets}
                 labelText={"Structure Assets"}
                 identifier={"structure-assets"}
               />
