@@ -9,51 +9,235 @@ import {
   Dropdown,
   Breadcrumb,
   ToggleSwitch,
+  Spinner,
 } from "flowbite-react";
 import DirectionsComponent from "../DirectionsComponent";
+import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
 import MapBox from "../MapBox";
 import { MdLocationPin } from "react-icons/md";
 import { HiHome } from "react-icons/hi";
 import Link from "next/link";
-import { inspect } from "util";
+import axios from "axios";
 
-const InspectionDrawer = ({ structures = [], btnText }) => {
-  const [inspection, setInspection] = useState({
-    name: "",
-    documents: [],
-  });
+const InspectionDrawer = ({
+  structures = [],
+  setStructures,
+  inspection = null,
+  btnText,
+}) => {
+  const { data: session, loading } = useSession();
+
+  const [switch1, setSwitch1] = useState(false);
+  const [formView, setFormView] = useState("inspection");
+  const [loadingNewStructure, setLoadingNewStructure] = useState(false);
 
   const [structure, setStructure] = useState({
     name: "",
     type: "",
+    longitude: 0,
+    latitude: 0,
     documents: [],
-    assets: [],
+    images: [],
   });
 
-  const [switch1, setSwitch1] = useState(false);
-  const [formView, setFormView] = useState("inspection");
+  const auth = {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  };
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  /**
+   * Toggles the visibility state of a UI drawer component.
+   */
+
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
   };
+
+  /**
+   * Asynchronously creates a new structure entry in the database. After successful creation,
+   * uploads any associated documents and images to the structure.
+   *
+   * Utilizes the global `structure` state for payload data, including name, type, longitude,
+   * latitude, and an array of inspectors. Requires `auth` headers for API authorization.
+   *
+   * @async
+   * @returns {Promise<Object>} The API response object if the structure is successfully created,
+   *                            or an error object if the creation fails.
+   */
+
+  const createStructure = async () => {
+    const payload = {
+      data: {
+        inspection: inspectionId,
+        mapSection: structure.name,
+        status: "Not Inspected",
+        type: structure.type, // One of the enumeration options
+        longitude: structure.longitude, // Example longitude
+        latitude: structure.latitude, // Example latitude
+      },
+    };
+
+    setLoadingNewStructure(true);
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`,
+        payload,
+        auth
+      );
+
+      console.table("Structure created:", response.data);
+
+      // If there are documents to upload
+      if (
+        (structure.documents && structure.documents.length > 0) ||
+        (structure.images && structure.images.length > 0)
+      ) {
+        await uploadDocumentsAndImages(response.data.data.id);
+      }
+
+      // Reset the structure state after successful creation
+      setStructures((prevStructures) => [
+        ...prevStructures,
+        response.data.data,
+      ]);
+
+      setStructure({
+        name: "",
+        type: "",
+        longitude: 0,
+        latitude: 0,
+        documents: [],
+        images: [],
+      });
+
+      setLoadingNewStructure(false);
+
+      return response;
+    } catch (error) {
+      console.error("Error creating structure:", error);
+      console.error("Error details:", error.response.data); // log the server's response
+      return error;
+    }
+  };
+
+  /**
+   * Asynchronously uploads an array of files to a specified field within a structure entry.
+   * The files are uploaded via a multipart/form-data POST request to a dedicated upload endpoint.
+   *
+   * @async
+   * @param {File[]} files - An array of File objects to be uploaded.
+   * @param {string} structureId - The ID of the structure to which the files are to be associated.
+   * @param {string} fieldName - The name of the field within the structure entry to associate the uploaded files with.
+   * @returns {Promise<void>} A promise that resolves when the upload operation is complete. Logs the outcome of the operation.
+   */
+
+  // Helper function to upload files to a specific field
+  const uploadFiles = async (files, structureId, fieldName) => {
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append("files", file); // Add each file to the form data
+    });
+
+    // Append reference data to link the uploaded files to the structure entry
+    formData.append("ref", "api::structure.structure"); // Adjust according to your API path
+    formData.append("refId", structureId);
+    formData.append("field", fieldName); // Use the field name passed as a parameter
+
+    try {
+      // Make the POST request to upload and associate files with the structure entry
+      const uploadResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log(`${fieldName} uploaded successfully`, uploadResponse.data);
+    } catch (error) {
+      console.error(`Error uploading ${fieldName}:`, error);
+    }
+  };
+
+  /**
+   * Coordinates the uploading of both documents and images for a given structure entry.
+   * Calls the `uploadFiles` function for each file type (documents and images) if files are present.
+   *
+   * @async
+   * @param {string} structureId - The ID of the recently created structure entry.
+   * @returns {Promise<void>} A promise that resolves once all files have been attempted to be uploaded.
+   */
+
+  const uploadDocumentsAndImages = async (structureId) => {
+    if (structure.documents && structure.documents.length > 0) {
+      await uploadFiles(structure.documents, structureId, "documents");
+    }
+
+    if (structure.images && structure.images.length > 0) {
+      await uploadFiles(structure.images, structureId, "images");
+    }
+  };
+
+  /**
+   * Updates the longitude and latitude of a structure within the global `structure` state.
+   *
+   * @param {Object} coordinates - An object containing the new longitude and latitude values.
+   * @param {number} coordinates.longitude - The new longitude value.
+   * @param {number} coordinates.latitude - The new latitude value.
+   */
+
+  const updateStructureMarker = ({ longitude, latitude }) => {
+    setStructure({ ...structure, latitude, longitude });
+  };
+
+  /**
+   * Updates the document files associated with a structure in the global `structure` state.
+   *
+   * @param {File[]} files - An array of new document File objects to be associated with the structure.
+   */
 
   const updateStructureDocuments = (files) => {
     setStructure({ ...structure, documents: files });
   };
 
-  const updateStructureAssets = (files) => {
-    setStructure({ ...structure, assets: files });
+  /**
+   * Updates the image files associated with a structure in the global `structure` state.
+   *
+   * @param {File[]} files - An array of new image File objects to be associated with the structure.
+   */
+
+  const updateStructureImages = (files) => {
+    setStructure({ ...structure, images: files });
   };
+
+  /**
+   * Updates the document files associated with an inspection in the global `inspection` state.
+   *
+   * @param {File[]} files - An array of new document File objects to be associated with the inspection.
+   */
 
   const updateInspectionDocuments = (files) => {
     setInspection({ ...inspection, documents: files });
   };
+
+  /**
+   * Determines the color class for an inspection icon based on the inspection status.
+   *
+   * @param {string} status - The current status of the inspection.
+   * @returns {string} The class name corresponding to the appropriate color for the given status.
+   */
 
   const getInspectionIconColor = (status) => {
     if (status.toLowerCase() == "uploaded") return "text-green-600";
@@ -61,6 +245,13 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
     if (status.toLowerCase() == "not inspected") return "text-yellow-400";
     else return "text-red-600";
   };
+
+  /**
+   * Determines the text and background color classes for an inspection based on the inspection status.
+   *
+   * @param {string} status - The current status of the inspection.
+   * @returns {string} The class names corresponding to the appropriate text and background colors for the given status.
+   */
 
   const getInspectionColor = (status) => {
     if (status.toLowerCase() == "uploaded") return "text-white bg-green-800";
@@ -70,10 +261,6 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
       return "text-yellow-800 bg-yellow-100";
     else return "text-red-800 bg-red-100";
   };
-
-  useEffect(() => {
-    console.log("structure Documents updated:", structure.name);
-  }, [structure]);
 
   const ElipseIcon = () => (
     <svg
@@ -102,7 +289,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
     <>
       <Button
         onClick={toggleDrawer}
-        className="bg-transparent border-dark-blue-700 text-dark-blue-700 border w-full shrink-0 self-start"
+        className="bg-transparent border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 border w-full shrink-0 self-start"
       >
         {btnText ? btnText : "New Inspection"}
       </Button>
@@ -145,7 +332,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
             </Breadcrumb.Item>
             <Breadcrumb.Item href="/">Inspection</Breadcrumb.Item>
             <Breadcrumb.Item href="/">
-              {inspection.name ? inspection.name : "Map Name Here"}
+              {inspection?.name ? inspection?.name : "Map Name Here"}
             </Breadcrumb.Item>
           </Breadcrumb>
 
@@ -159,17 +346,19 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
         <div className="relative overflow-x-clip">
           <div
             className={`absolute inset-0 transition-transform duration-500 transform ${
-              formView === "inspection" ? "translate-x-0" : "-translate-x-full"
+              formView === "inspection"
+                ? "translate-x-0"
+                : "-translate-x-full hidden"
             }`}
           >
             <div id="new-inspection-form" className="flex flex-col gap-7 p-10">
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspection.name === "" ? (
+                  {inspection?.name === "" ? (
                     <span>&quot;Map Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspection.name}&quot;</span>
+                    <span>&quot;{inspection?.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -177,12 +366,6 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   “Save” when you’re done.
                 </p>
               </div>
-
-              <MapBox
-                containerId="mapInspectionContainer"
-                center={[-112.067413, 33.445564]}
-                onStyleLoad={(map) => console.log("Map loaded!", map)}
-              />
 
               <div className="flex flex-col gap-1">
                 <Label className="text-xs" htmlFor="inspectionName">
@@ -193,10 +376,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   type="text"
                   id="inspectionName"
                   placeholder="Enter Inspection Name"
-                  value={inspection.name}
-                  onChange={(e) =>
-                    setInspection({ ...inspection, name: e.target.value })
-                  }
+                  value={inspection?.name}
                 />
               </div>
 
@@ -342,7 +522,7 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
               </div>
 
               <ImageCardGrid
-                files={inspection.documents}
+                files={inspection?.documents || []}
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
@@ -388,17 +568,30 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
 
           <div
             className={`absolute inset-0 transition-transform duration-500 transform ${
-              formView === "structure" ? "translate-x-0" : "translate-x-full"
+              formView === "structure"
+                ? "translate-x-0"
+                : "translate-x-full hidden"
             }`}
           >
-            <div id="new-structure-form" className="flex flex-col gap-7 p-10">
+            <div
+              id="new-structure-form"
+              className="flex flex-col gap-7 p-10 relative"
+            >
+              {loadingNewStructure && (
+                <div className="flex absolute left-0 right-0 bottom-0 top-0 z-50 bg-red-600 justify-center align-middle">
+                  <div className="m-auto">
+                    <p>Creating New Structure</p>
+                    <Spinner />
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspection.name === "" ? (
+                  {inspection?.name === "" ? (
                     <span>&quot;Structure Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspection.name}&quot;</span>
+                    <span>&quot;{inspection?.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -416,9 +609,9 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                   type="text"
                   id="structureName"
                   placeholder="Enter Structure Name"
-                  value={inspection.name}
+                  value={structure.name}
                   onChange={(e) =>
-                    setInspection({ ...inspection, name: e.target.value })
+                    setStructure({ ...structure, name: e.target.value })
                   }
                 />
               </div>
@@ -435,34 +628,61 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
                     setStructure({ ...structure, type: e.target.value })
                   }
                 >
-                  <option value="Vault">Vault</option>
-                  <option value="Behive">Behive</option>
-                  <option value="UG Vault">UG Vault</option>
-                  <option value="Pad">Pad</option>
+                  <option value="Standard Vault">Standard Vault</option>
+                  <option value="Pull Box">Pull Box</option>
+                  <option value="Wood Pole">Wood Pole</option>
+                  <option value="Man Hole">Man Hole</option>
+                  <option value="Street Light">Street Light</option>
+                  <option value="Pad Vault">Pad Vault</option>
+                  <option value="Beehive">Beehive</option>
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs" htmlFor="longLatCords">
-                  Longitude & Latitude
-                </Label>
-                <input
-                  className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                  type="text"
-                  id="longLatCords"
-                  placeholder="Structure Cordinates"
-                  value={inspection.name}
-                  onChange={(e) =>
-                    setInspection({ ...inspection, name: e.target.value })
-                  }
-                />
+              <div className="flex flex-row gap-3">
+                <div className="flex flex-col w-full">
+                  <Label className="text-xs" htmlFor="longCords">
+                    Longitude
+                  </Label>
+                  <input
+                    className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                    type="number"
+                    id="longCords"
+                    placeholder="Longitude Cordinates"
+                    value={structure.longitude}
+                    onChange={(e) =>
+                      setStructure({
+                        ...structure,
+                        longitude: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex flex-col w-full">
+                  <Label className="text-xs" htmlFor="latCords">
+                    Latitude
+                  </Label>
+                  <input
+                    className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                    type="number"
+                    id="latCords"
+                    placeholder="Latitude Cordinates"
+                    value={structure.latitude}
+                    onChange={(e) =>
+                      setStructure({
+                        ...structure,
+                        latitude: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
 
-              <MapBox
-                containerId="mapStructureContainer"
-                center={[2.2945, 48.8584]}
-                onStyleLoad={(map) => console.log("Map loaded!", map)}
-              />
+              <div className="w-full">
+                <MapBox
+                  containerId="mapStructureContainer"
+                  marker={[structure.latitude, structure.longitude]}
+                />
+              </div>
 
               <ImageCardGrid
                 files={structure.documents}
@@ -472,11 +692,26 @@ const InspectionDrawer = ({ structures = [], btnText }) => {
               />
 
               <ImageCardGrid
-                files={structure.assets}
-                updateFiles={updateStructureAssets}
+                files={structure.images}
+                updateFiles={updateStructureImages}
                 labelText={"Structure Assets"}
                 identifier={"structure-assets"}
               />
+
+              <div className="flex bg-100 justify-end">
+                <Button
+                  className="bg-dark-blue-700"
+                  onClick={() => setFormView("inspection")}
+                >
+                  Back
+                </Button>
+                <Button
+                  className="bg-dark-blue-700"
+                  onClick={() => createStructure()}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
           </div>
         </div>

@@ -2,9 +2,9 @@ import React, { useRef, useEffect } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MapBox = ({ containerId, center, onStyleLoad }) => {
-  const mapRef = useRef(null);
+const MapBox = ({ containerId, marker }) => {
   const containerRef = useRef(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return; // Initialize map only once and ensure container is present
@@ -12,31 +12,36 @@ const MapBox = ({ containerId, center, onStyleLoad }) => {
     mapboxgl.accessToken =
       "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
-    const map = new mapboxgl.Map({
+    console.log("marker", marker);
+
+    mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/standard-beta",
-      center: center,
       zoom: 15,
+      center: marker,
       pitch: 50,
     });
 
-    map.on("load", () => {
-      map.setFog({});
-      map.setConfigProperty("basemap", "lightPreset", "day");
+    //new mapboxgl.Marker().setLngLat(marker).addTo(mapRef.current);
 
-      const isPhone = window.matchMedia("(max-width: 550px)").matches;
-
-      if (onStyleLoad) {
-        onStyleLoad(map);
-      }
+    mapRef.current.on("load", () => {
+      mapRef.current.setFog({});
+      mapRef.current.setConfigProperty("basemap", "lightPreset", "day");
     });
-
-    mapRef.current = map;
-
-    // return () => {
-    //   map.remove();
-    // };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setTimeout(() => mapRef.current.resize(), 0);
+    console.log("marker", marker);
+
+    new mapboxgl.Marker().setLngLat(marker).addTo(mapRef.current);
+
+    mapRef.current.easeTo({
+      center: marker,
+      zoom: 15,
+      pitch: 50,
+    });
+  });
 
   return (
     <div

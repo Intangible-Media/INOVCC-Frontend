@@ -38,7 +38,7 @@
 }
 
 @media (max-width: 700px) {
-  
+
   .main-navigation {
     transform: translateX(-100%);
   }
@@ -46,7 +46,7 @@
   .main-navigation.open {
     transform: translateX(0);
   }
-  
+
 }
 
 .status-bar {
@@ -65,6 +65,7 @@
   right: 30px;
   z-index: 999;
 }
+
 .map-container,
 .map-stuctures-container {
   height: 37rem;
@@ -75,6 +76,7 @@
 }
 
 @media (max-width: 550px) {
+
   .map-container,
   .map-stuctures-container {
     height: 45rem;
@@ -87,7 +89,7 @@
 }
 
 @media (max-width: 550px) {
-  
+
   .map-structure-panel {
     height: 350px;
     width: 100%;
@@ -106,8 +108,8 @@
   scroll-snap-type: both mandatory;
 }
 
-.im-snapping > li,
-.im-snapping > div {
+.im-snapping>li,
+.im-snapping>div {
   scroll-snap-align: start;
 }
 
@@ -126,9 +128,12 @@
   cursor: pointer;
   -webkit-mask-size: cover;
   mask-size: cover;
-  width: 35px; /* Adjust width as needed */
-  height: 35px; /* Adjust height as needed */
-  background-color: currentColor; /* This will be the color of your SVG */
+  width: 35px;
+  /* Adjust width as needed */
+  height: 35px;
+  /* Adjust height as needed */
+  background-color: currentColor;
+  /* This will be the color of your SVG */
 }
 
 .downloadable-file-container {
@@ -150,7 +155,7 @@
   height: 100%;
 }
 
-.downloadable-file + p {
+.downloadable-file+p {
   font-size: 13px;
   color: #ffffff;
   opacity: 0;
@@ -160,7 +165,9 @@
   padding-bottom: 8px;
   padding-left: 8px;
   padding-right: 8px;
-  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)); /* Linear gradient */  bottom: 0px;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1));
+  /* Linear gradient */
+  bottom: 0px;
   left: 0px;
   transform-origin: bottom;
   overflow: hidden;
@@ -169,7 +176,7 @@
 
 }
 
-.downloadable-file:hover + p {
+.downloadable-file:hover+p {
   opacity: 1;
 
 }
@@ -184,13 +191,15 @@
   border-radius: 0.5rem;
   background: rgba(0, 0, 0, 0);
   transition: background 0.3s ease;
-  z-index: 1; /* Ensures the overlay is above the image */
+  z-index: 1;
+  /* Ensures the overlay is above the image */
   overflow: hidden;
 }
 
 .hover-overlay:hover::before {
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.25); /* Dark overlay on hover */
+  background: rgba(0, 0, 0, 0.25);
+  /* Dark overlay on hover */
   border-radius: 0.5rem;
 }
 
@@ -201,7 +210,7 @@
   background: #fff;
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
@@ -242,19 +251,22 @@
   scroll-snap-type: both mandatory;
 }
 
-.structures-container > .structure-graph {
+.structures-container>.structure-graph {
   scroll-snap-align: start;
   background: #ffffff;
 }
 
 .structures-container {
   overflow-x: auto;
-  scrollbar-width: none; /* For Firefox */
-  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+  scrollbar-width: none;
+  /* For Firefox */
+  -ms-overflow-style: none;
+  /* For Internet Explorer and Edge */
 }
 
 .structures-container::-webkit-scrollbar {
-  height: 0px; /* For Chrome, Safari, and Opera */
+  height: 0px;
+  /* For Chrome, Safari, and Opera */
 }
 
 .im-drawer {
@@ -270,7 +282,7 @@
 
   .im-drawer {
     width: 720px;
-  }  
+  }
 }
 
 .structure-table-row {
@@ -307,21 +319,22 @@
   color: rgb(0, 36, 72) !important;
 }
 
-input[type="date"]{
+input[type="date"] {
   background-color: #0080ff;
   padding: 15px;
   position: absolute;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   top: 50%;
   left: 50%;
-  font-family: "Roboto Mono",monospace;
+  font-family: "Roboto Mono", monospace;
   color: #ffffff;
   font-size: 18px;
   border: none;
   outline: none;
   border-radius: 5px;
 }
-::-webkit-calendar-picker-indicator{
+
+::-webkit-calendar-picker-indicator {
   background-color: #ffffff;
   padding: 5px;
   cursor: pointer;
@@ -346,23 +359,28 @@ input[type="date"]{
   z-index: 999;
   width: 50%;
   margin: auto;
-  -webkit-box-shadow: 0px 15px 62px 5px rgba(77,77,77,0.45);
-  -moz-box-shadow: 0px 15px 62px 5px rgba(77,77,77,0.45);
-  box-shadow: 0px 15px 62px 5px rgba(77,77,77,0.45);
+  -webkit-box-shadow: 0px 15px 62px 5px rgba(77, 77, 77, 0.45);
+  -moz-box-shadow: 0px 15px 62px 5px rgba(77, 77, 77, 0.45);
+  box-shadow: 0px 15px 62px 5px rgba(77, 77, 77, 0.45);
 
   /* Animation */
-  opacity: 0; /* Start with the element invisible */
-  animation: fadeInUp 0.5s ease-out forwards; /* Animation name, duration, timing function, fill mode */
+  opacity: 0;
+  /* Start with the element invisible */
+  animation: fadeInUp 0.5s ease-out forwards;
+  /* Animation name, duration, timing function, fill mode */
 }
 
 @keyframes fadeInUp {
   0% {
     opacity: 0;
-    transform: translateY(20px); /* Start position - 20px below the final position */
+    transform: translateY(20px);
+    /* Start position - 20px below the final position */
   }
+
   100% {
     opacity: 1;
-    transform: translateY(0); /* End position */
+    transform: translateY(0);
+    /* End position */
   }
 }
 
@@ -390,21 +408,27 @@ input[type="date"]{
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 1.5rem;
-  -webkit-appearance: none; /* For Safari */
-  -moz-appearance: none;    /* For Firefox */
+  -webkit-appearance: none;
+  /* For Safari */
+  -moz-appearance: none;
+  /* For Firefox */
   appearance: none;
   /* Adjust padding as needed to make space for the arrow */
-  padding-right: 2rem; /* Example padding */
+  padding-right: 2rem;
+  /* Example padding */
 }
 
 /* Add this if you're not using Tailwind CSS v2.0+ */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
-.scrollbar-hide::-webkit-scrollbar { 
-  display: none;  /* Safari and Chrome */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Safari and Chrome */
 }
 
 .exit-icon {
@@ -412,7 +436,7 @@ input[type="date"]{
 }
 
 .image-modal {
-  background-color: rgba(31,42,55, 0.8);
+  background-color: rgba(31, 42, 55, 0.8);
 }
 
 .inspection-map-box {
@@ -428,5 +452,37 @@ input[type="date"]{
 }
 
 .alternate-bg:nth-of-type(even) {
-  background-color:#F9FAFB;
+  background-color: #F9FAFB;
+}
+
+@keyframes slideOutAndHide {
+  0% {
+    transform: translateX(0);
+  }
+
+  90% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    display: none;
+  }
+}
+
+@keyframes slideInAndShow {
+  0% {
+    transform: translateX(-100%);
+    display: block;
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.slideInAndShow {
+  animation: slideInAndShow 500ms forwards;
+}
+
+.slideOutAndHide {
+  animation: slideOutAndHide 500ms forwards;
 }

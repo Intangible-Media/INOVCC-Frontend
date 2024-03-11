@@ -7,19 +7,19 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
-import {
-  formatFileName,
-  downloadFileFromUrl,
-  downloadFilesAsZip,
-  isImage,
-} from "../../../utils/strings";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import Link from "next/link";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
-import Image from "next/image";
+import {
+  formatFileName,
+  downloadFileFromUrl,
+  downloadFilesAsZip,
+  isImage,
+  ensureDomain,
+} from "../../../utils/strings";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -535,7 +535,10 @@ export default function Page(props) {
 
           const structuresData = response.data.data.attributes.structures.data;
 
-          setInspection(response.data.data.attributes);
+          setInspection({
+            ...response.data.data.attributes,
+            id: response.data.data.id,
+          });
           console.log(response.data.data.attributes);
           setInspectionDocuments(response.data.data.attributes.documents.data);
           setStructures(structuresData);
@@ -572,6 +575,10 @@ export default function Page(props) {
   useEffect(() => {
     updateProgressBar(structureProgressType);
   }, [structureProgressType, structures]); // Depend on structures as well
+
+  useEffect(() => {
+    console.log(inspection);
+  }, [inspection]);
 
   /**
    * Updates the progress bar based on the percentage of inspected structures.
@@ -801,6 +808,8 @@ export default function Page(props) {
           <InspectionDrawer
             btnText={"Edit Inspection"}
             structures={structures}
+            setStructures={setStructures}
+            inspection={inspection}
             currentDocuments={inspectionDocuments}
           />
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
@@ -1046,7 +1055,9 @@ export default function Page(props) {
                       isImage(`${image.attributes.url}`)
                         ? {
                             // If there's a picture, set it as the background
-                            backgroundImage: `url(${image.attributes.url})`,
+                            backgroundImage: `url(${ensureDomain(
+                              image.attributes.url
+                            )})`,
                             backgroundSize: "cover",
                           }
                         : {
@@ -1156,7 +1167,9 @@ export default function Page(props) {
                   >
                     <img
                       className="object-cover hover:saturate-50" // Step 2: Use the Image component
-                      src={`${image?.attributes?.formats?.small?.url}`}
+                      src={`${ensureDomain(
+                        image?.attributes?.formats?.small?.url
+                      )}`}
                       alt="fasfdsafdsa"
                     />
                     <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
@@ -1238,7 +1251,10 @@ export default function Page(props) {
               >
                 <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
-                  src={`${inspector.attributes.picture.data.attributes.formats.thumbnail.url}`}
+                  src={`${ensureDomain(
+                    inspector.attributes.picture.data.attributes.formats
+                      .thumbnail.url
+                  )}`}
                   alt="Inspector Picture"
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">
@@ -1283,7 +1299,10 @@ export default function Page(props) {
               >
                 <img
                   className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
-                  src={`${clientContact?.attributes?.picture?.data?.attributes?.formats?.thumbnail?.url}`}
+                  src={`${ensureDomain(
+                    clientContact?.attributes?.picture?.data?.attributes
+                      ?.formats?.thumbnail?.url
+                  )}`}
                   alt="fdsfdsfds"
                 />
                 <div className="flex flex-col gap-1 align-middle justify-center">

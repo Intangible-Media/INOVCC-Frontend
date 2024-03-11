@@ -1,5 +1,6 @@
 import { Label, FileInput, Dropdown } from "flowbite-react";
 import { GoPlus } from "react-icons/go";
+import { ensureDomain } from "../utils/strings";
 
 export default function ImageCardGrid({
   files,
@@ -7,37 +8,9 @@ export default function ImageCardGrid({
   updateFiles,
   identifier,
 }) {
-  console.log("Files:", files);
-  console.log(typeof files);
-  const ElipseIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-    >
-      <path
-        d="M9.99992 5.5C10.9204 5.5 11.6666 4.82843 11.6666 4C11.6666 3.17157 10.9204 2.5 9.99992 2.5C9.07944 2.5 8.33325 3.17157 8.33325 4C8.33325 4.82843 9.07944 5.5 9.99992 5.5Z"
-        fill="#1F2A37"
-      />
-      <path
-        d="M9.99992 11.5C10.9204 11.5 11.6666 10.8284 11.6666 10C11.6666 9.17157 10.9204 8.5 9.99992 8.5C9.07944 8.5 8.33325 9.17157 8.33325 10C8.33325 10.8284 9.07944 11.5 9.99992 11.5Z"
-        fill="#1F2A37"
-      />
-      <path
-        d="M9.99992 17.5C10.9204 17.5 11.6666 16.8284 11.6666 16C11.6666 15.1716 10.9204 14.5 9.99992 14.5C9.07944 14.5 8.33325 15.1716 8.33325 16C8.33325 16.8284 9.07944 17.5 9.99992 17.5Z"
-        fill="#1F2A37"
-      />
-    </svg>
-  );
-
   // Function to handle new file uploads
   const handleNewFile = (event) => {
     const newFiles = event.target.files;
-
-    console.log(newFiles);
-
     updateFiles([...files, ...newFiles]);
   };
 
@@ -92,7 +65,10 @@ export default function ImageCardGrid({
 
           // Determine the background style
           const backgroundStyle = isImage(file.name)
-            ? { backgroundImage: `url(${fileUrl})`, backgroundSize: "cover" }
+            ? {
+                backgroundImage: `url(${ensureDomain(fileUrl)})`,
+                backgroundSize: "cover",
+              }
             : {};
 
           return (
