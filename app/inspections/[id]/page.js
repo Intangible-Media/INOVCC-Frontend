@@ -397,20 +397,6 @@ export default function Page(props) {
     }
   }, [structures]);
 
-  // useEffect(() => {
-  //   if (!map.current) return;
-
-  //   const onMarkerClick = (e) => {
-  //     // Handle marker click event
-  //   };
-
-  //   map.current.on("click", "marker-layer", onMarkerClick);
-
-  //   return () => {
-  //     map.current.off("click", "marker-layer", onMarkerClick);
-  //   };
-  // }, [map.current]);
-
   useEffect(() => {
     if (map.current) return; // Initialize map only once
 

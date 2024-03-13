@@ -5,11 +5,12 @@ import axios from "axios";
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
  * @param {string} data.id - The ID of the inspection to retrieve.
+ * @param {Object} data.query - The query parameters for the request.
  * @returns {Promise} - The Axios promise with the response from the API.
  */
 export const getInspection = (data) => {
   return axios.get(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}`,
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}?${data.query}`,
     {
       headers: {
         Authorization: `Bearer ${data.jwt}`,
@@ -22,14 +23,18 @@ export const getInspection = (data) => {
  * Retrieves all inspections.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
+ * @param {Object} data.query - The query parameters for the request.
  * @returns {Promise} - The Axios promise with the response from the API.
  */
 export const getAllInspections = (data) => {
-  return axios.get(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections`, {
-    headers: {
-      Authorization: `Bearer ${data.jwt}`,
-    },
-  });
+  return axios.get(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}`,
+    {
+      headers: {
+        Authorization: `Bearer ${data.jwt}`,
+      },
+    }
+  );
 };
 
 /**
@@ -37,11 +42,12 @@ export const getAllInspections = (data) => {
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
  * @param {Object} data.payload - The payload of the inspection to create.
+ * @param {Object} data.query - The query parameters for the request.
  * @returns {Promise} - The Axios promise with the response from the API.
  */
 export const createInspection = (data) => {
   return axios.post(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections`,
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}`,
     data.payload,
     {
       headers: {
@@ -57,11 +63,12 @@ export const createInspection = (data) => {
  * @param {string} data.jwt - The JWT for authentication.
  * @param {string} data.id - The ID of the inspection to update.
  * @param {Object} data.payload - The payload for the update.
+ * @param {Object} data.query - The query parameters for the request.
  * @returns {Promise} - The Axios promise with the response from the API.
  */
 export const updateInspection = (data) => {
   return axios.put(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}`,
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}?${data.query}`,
     data.payload,
     {
       headers: {
@@ -76,11 +83,12 @@ export const updateInspection = (data) => {
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
  * @param {string} data.id - The ID of the inspection to delete.
+ * @param {Object} data.query - The query parameters for the request.
  * @returns {Promise} - The Axios promise with the response from the API.
  */
 export const deleteInspection = (data) => {
   return axios.delete(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}`,
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}?${data.query}`,
     {
       headers: {
         Authorization: `Bearer ${data.jwt}`,
