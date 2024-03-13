@@ -806,11 +806,8 @@ export default function Page(props) {
 
         <div className="grid grid-cols-2 gap-3 align-middle">
           <InspectionDrawer
-            btnText={"Edit Inspection"}
-            structures={structures}
-            setStructures={setStructures}
             inspection={inspection}
-            currentDocuments={inspectionDocuments}
+            btnText={"Edit Inspection"}
           />
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
             Add to Favorites <FavoriteIcon />

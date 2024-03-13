@@ -20,26 +20,23 @@ import { HiHome } from "react-icons/hi";
 import Link from "next/link";
 import axios from "axios";
 
-const InspectionDrawer = ({
-  structures = [],
-  setStructures,
-  inspection = null,
-  btnText,
-}) => {
+const InspectionDrawer = ({ inspection = null, btnText }) => {
+  console.log("InspectionDrawer", inspection);
   const { data: session, loading } = useSession();
 
   const [switch1, setSwitch1] = useState(false);
   const [formView, setFormView] = useState("inspection");
-  const [loadingNewStructure, setLoadingNewStructure] = useState(false);
-
   const [structure, setStructure] = useState({
-    name: "",
-    type: "",
-    longitude: 0,
-    latitude: 0,
+    inspection: null,
+    mapSection: null,
+    status: null,
+    type: null,
+    longitude: null,
+    latitude: null,
     documents: [],
     images: [],
   });
+  const [loadingNewStructure, setLoadingNewStructure] = useState(false);
 
   const auth = {
     headers: {
@@ -75,7 +72,7 @@ const InspectionDrawer = ({
   const createStructure = async () => {
     const payload = {
       data: {
-        inspection: inspectionId,
+        inspection: inspection?.id,
         mapSection: structure.name,
         status: "Not Inspected",
         type: structure.type, // One of the enumeration options
@@ -102,12 +99,6 @@ const InspectionDrawer = ({
       ) {
         await uploadDocumentsAndImages(response.data.data.id);
       }
-
-      // Reset the structure state after successful creation
-      setStructures((prevStructures) => [
-        ...prevStructures,
-        response.data.data,
-      ]);
 
       setStructure({
         name: "",
@@ -380,149 +371,151 @@ const InspectionDrawer = ({
                 />
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between">
-                  <Label className="text-xs" htmlFor="inspectionName">
-                    Map Structures
-                  </Label>
-                  <button
-                    className="flex align-middle text-xs font-medium text-dark-blue-700"
-                    onClick={() => setFormView("structure")}
-                  >
-                    Add Structure{" "}
-                    <svg
-                      className="m-auto ml-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="10"
-                      height="11"
-                      viewBox="0 0 10 11"
-                      fill="none"
+              {inspection && (
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between">
+                    <Label className="text-xs" htmlFor="inspectionName">
+                      Map Structures
+                    </Label>
+                    <button
+                      className="flex align-middle text-xs font-medium text-dark-blue-700"
+                      onClick={() => setFormView("structure")}
                     >
-                      <path
-                        d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-                        stroke="#4B5563"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
-                  <div className="rounded-md w-full  overflow-auto">
-                    {structures.map((structure, index) => (
-                      <div
-                        key={index}
-                        className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
-                        onClick={() => setFormView("structure")}
-                      >
-                        <div className="flex">
-                          <MdLocationPin
-                            className={`${getInspectionIconColor(
-                              structure.attributes.status
-                            )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                            style={{ width: 40, height: 40 }}
-                          />
-
-                          <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                            <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                              {structure.attributes.mapSection}
-                              <span className="flex items-center font-light ml-1">
-                                / {structure.attributes.type}
-                              </span>
-                            </h5>
-
-                            <DirectionsComponent />
-                          </div>
-                        </div>
-
-                        <div className="flex">
-                          <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                            <span
-                              className={`${getInspectionColor(
-                                structure.attributes.status
-                              )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                            >
-                              {structure.attributes.status}
-                              {structure.attributes.status === "Uploaded" && (
-                                <svg
-                                  className="m-auto"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="10"
-                                  height="7"
-                                  viewBox="0 0 10 7"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M3.6722 6.99999C3.51987 7.00065 3.37336 6.93626 3.26399 6.82059L0.509147 3.90423C0.454238 3.84574 0.410425 3.77604 0.38021 3.69908C0.349996 3.62212 0.33397 3.53943 0.33305 3.45572C0.331191 3.28665 0.390968 3.12371 0.499233 3.00273C0.607497 2.88175 0.755379 2.81264 0.910347 2.81061C1.06532 2.80858 1.21467 2.8738 1.32557 2.99191L3.67453 5.47756L8.67336 0.181164C8.78441 0.0630521 8.93392 -0.00209614 9.089 5.14605e-05C9.24407 0.00219906 9.39202 0.0714667 9.50028 0.192616C9.60855 0.313765 9.66826 0.476873 9.6663 0.646056C9.66433 0.815239 9.60083 0.976641 9.48979 1.09475L4.08041 6.82059C3.97104 6.93626 3.82452 7.00065 3.6722 6.99999Z"
-                                    fill="white"
-                                  />
-                                </svg>
-                              )}
-                            </span>
-                          </p>
-                          <Dropdown
-                            inline
-                            label=""
-                            placement="top"
-                            dismissOnClick={false}
-                            renderTrigger={() => (
-                              <span>
-                                <ElipseIcon />
-                              </span>
-                            )}
-                          >
-                            <Dropdown.Item>
-                              <div className="flex items-center">
-                                <span className="ml-2">
-                                  <Link href={`/inspections`}>View</Link>
-                                </span>{" "}
-                              </div>
-                            </Dropdown.Item>
-                          </Dropdown>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex bg-gray-100 h-60 w-full items-center justify-center rounded-lg overflow-hidden">
-                  <Label
-                    htmlFor="dropzone-file"
-                    className="flex w-full h-full cursor-pointer flex-col items-center justify-center"
-                  >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                      Add Structure{" "}
                       <svg
-                        className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
-                        aria-hidden="true"
+                        className="m-auto ml-2"
                         xmlns="http://www.w3.org/2000/svg"
+                        width="10"
+                        height="11"
+                        viewBox="0 0 10 11"
                         fill="none"
-                        viewBox="0 0 20 16"
                       >
                         <path
-                          stroke="currentColor"
+                          d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
+                          stroke="#4B5563"
+                          strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                         />
                       </svg>
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        SVG, PNG, JPG or GIF (MAX. 800x400px)
-                      </p>
+                    </button>
+                  </div>
+
+                  <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
+                    <div className="rounded-md w-full  overflow-auto">
+                      {inspection?.structures.data.map((structure, index) => (
+                        <div
+                          key={index}
+                          className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
+                          onClick={() => setFormView("structure")}
+                        >
+                          <div className="flex">
+                            <MdLocationPin
+                              className={`${getInspectionIconColor(
+                                structure.attributes.status
+                              )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+                              style={{ width: 40, height: 40 }}
+                            />
+
+                            <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                              <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                                {structure.attributes.mapSection}
+                                <span className="flex items-center font-light ml-1">
+                                  / {structure.attributes.type}
+                                </span>
+                              </h5>
+
+                              <DirectionsComponent />
+                            </div>
+                          </div>
+
+                          <div className="flex">
+                            <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                              <span
+                                className={`${getInspectionColor(
+                                  structure.attributes.status
+                                )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+                              >
+                                {structure.attributes.status}
+                                {structure.attributes.status === "Uploaded" && (
+                                  <svg
+                                    className="m-auto"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="10"
+                                    height="7"
+                                    viewBox="0 0 10 7"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M3.6722 6.99999C3.51987 7.00065 3.37336 6.93626 3.26399 6.82059L0.509147 3.90423C0.454238 3.84574 0.410425 3.77604 0.38021 3.69908C0.349996 3.62212 0.33397 3.53943 0.33305 3.45572C0.331191 3.28665 0.390968 3.12371 0.499233 3.00273C0.607497 2.88175 0.755379 2.81264 0.910347 2.81061C1.06532 2.80858 1.21467 2.8738 1.32557 2.99191L3.67453 5.47756L8.67336 0.181164C8.78441 0.0630521 8.93392 -0.00209614 9.089 5.14605e-05C9.24407 0.00219906 9.39202 0.0714667 9.50028 0.192616C9.60855 0.313765 9.66826 0.476873 9.6663 0.646056C9.66433 0.815239 9.60083 0.976641 9.48979 1.09475L4.08041 6.82059C3.97104 6.93626 3.82452 7.00065 3.6722 6.99999Z"
+                                      fill="white"
+                                    />
+                                  </svg>
+                                )}
+                              </span>
+                            </p>
+                            <Dropdown
+                              inline
+                              label=""
+                              placement="top"
+                              dismissOnClick={false}
+                              renderTrigger={() => (
+                                <span>
+                                  <ElipseIcon />
+                                </span>
+                              )}
+                            >
+                              <Dropdown.Item>
+                                <div className="flex items-center">
+                                  <span className="ml-2">
+                                    <Link href={`/inspections`}>View</Link>
+                                  </span>{" "}
+                                </div>
+                              </Dropdown.Item>
+                            </Dropdown>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <FileInput id="dropzone-file" className="hidden" />
-                  </Label>
+                  </div>
+
+                  <div className="flex bg-gray-100 h-60 w-full items-center justify-center rounded-lg overflow-hidden">
+                    <Label
+                      htmlFor="dropzone-file"
+                      className="flex w-full h-full cursor-pointer flex-col items-center justify-center"
+                    >
+                      <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                        <svg
+                          className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 20 16"
+                        >
+                          <path
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                          />
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          SVG, PNG, JPG or GIF (MAX. 800x400px)
+                        </p>
+                      </div>
+                      <FileInput id="dropzone-file" className="hidden" />
+                    </Label>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <ImageCardGrid
-                files={inspection?.documents || []}
+                files={inspection?.documents.data || []}
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
@@ -566,154 +559,156 @@ const InspectionDrawer = ({
             </div>
           </div>
 
-          <div
-            className={`absolute inset-0 transition-transform duration-500 transform ${
-              formView === "structure"
-                ? "translate-x-0"
-                : "translate-x-full hidden"
-            }`}
-          >
+          {inspection && (
             <div
-              id="new-structure-form"
-              className="flex flex-col gap-7 p-10 relative"
+              className={`absolute inset-0 transition-transform duration-500 transform ${
+                formView === "structure"
+                  ? "translate-x-0"
+                  : "translate-x-full hidden"
+              }`}
             >
-              {loadingNewStructure && (
-                <div className="flex absolute left-0 right-0 bottom-0 top-0 z-50 bg-red-600 justify-center align-middle">
-                  <div className="m-auto">
-                    <p>Creating New Structure</p>
-                    <Spinner />
+              <div
+                id="new-structure-form"
+                className="flex flex-col gap-7 p-10 relative"
+              >
+                {loadingNewStructure && (
+                  <div className="flex absolute left-0 right-0 bottom-0 top-0 z-50 bg-red-600 justify-center align-middle">
+                    <div className="m-auto">
+                      <p>Creating New Structure</p>
+                      <Spinner />
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <h3 className="leading-tight text-2xl font-medium">
+                    Edit{" "}
+                    {inspection?.name === "" ? (
+                      <span>&quot;Structure Name Here&quot;</span>
+                    ) : (
+                      <span>&quot;{inspection?.name}&quot;</span>
+                    )}
+                  </h3>
+                  <p className="text-xs">
+                    Please fill out all of the steps below and be sure click
+                    “Save” when you’re done.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs" htmlFor="structureName">
+                    Structure Name
+                  </Label>
+                  <input
+                    className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                    type="text"
+                    id="structureName"
+                    placeholder="Enter Structure Name"
+                    value={structure.name}
+                    onChange={(e) =>
+                      setStructure({ ...structure, name: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs" htmlFor="structureType">
+                    Structure Type
+                  </Label>
+                  <select
+                    id="structureType"
+                    className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                    value={structure.type}
+                    onChange={(e) =>
+                      setStructure({ ...structure, type: e.target.value })
+                    }
+                  >
+                    <option value="Standard Vault">Standard Vault</option>
+                    <option value="Pull Box">Pull Box</option>
+                    <option value="Wood Pole">Wood Pole</option>
+                    <option value="Man Hole">Man Hole</option>
+                    <option value="Street Light">Street Light</option>
+                    <option value="Pad Vault">Pad Vault</option>
+                    <option value="Beehive">Beehive</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-row gap-3">
+                  <div className="flex flex-col w-full">
+                    <Label className="text-xs" htmlFor="longCords">
+                      Longitude
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="number"
+                      id="longCords"
+                      placeholder="Longitude Cordinates"
+                      value={structure.longitude}
+                      onChange={(e) =>
+                        setStructure({
+                          ...structure,
+                          longitude: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col w-full">
+                    <Label className="text-xs" htmlFor="latCords">
+                      Latitude
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="number"
+                      id="latCords"
+                      placeholder="Latitude Cordinates"
+                      value={structure.latitude}
+                      onChange={(e) =>
+                        setStructure({
+                          ...structure,
+                          latitude: Number(e.target.value),
+                        })
+                      }
+                    />
                   </div>
                 </div>
-              )}
-              <div className="flex flex-col gap-2">
-                <h3 className="leading-tight text-2xl font-medium">
-                  Edit{" "}
-                  {inspection?.name === "" ? (
-                    <span>&quot;Structure Name Here&quot;</span>
-                  ) : (
-                    <span>&quot;{inspection?.name}&quot;</span>
-                  )}
-                </h3>
-                <p className="text-xs">
-                  Please fill out all of the steps below and be sure click
-                  “Save” when you’re done.
-                </p>
-              </div>
 
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs" htmlFor="structureName">
-                  Structure Name
-                </Label>
-                <input
-                  className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                  type="text"
-                  id="structureName"
-                  placeholder="Enter Structure Name"
-                  value={structure.name}
-                  onChange={(e) =>
-                    setStructure({ ...structure, name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs" htmlFor="structureType">
-                  Structure Type
-                </Label>
-                <select
-                  id="structureType"
-                  className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
-                  value={structure.type}
-                  onChange={(e) =>
-                    setStructure({ ...structure, type: e.target.value })
-                  }
-                >
-                  <option value="Standard Vault">Standard Vault</option>
-                  <option value="Pull Box">Pull Box</option>
-                  <option value="Wood Pole">Wood Pole</option>
-                  <option value="Man Hole">Man Hole</option>
-                  <option value="Street Light">Street Light</option>
-                  <option value="Pad Vault">Pad Vault</option>
-                  <option value="Beehive">Beehive</option>
-                </select>
-              </div>
-
-              <div className="flex flex-row gap-3">
-                <div className="flex flex-col w-full">
-                  <Label className="text-xs" htmlFor="longCords">
-                    Longitude
-                  </Label>
-                  <input
-                    className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                    type="number"
-                    id="longCords"
-                    placeholder="Longitude Cordinates"
-                    value={structure.longitude}
-                    onChange={(e) =>
-                      setStructure({
-                        ...structure,
-                        longitude: Number(e.target.value),
-                      })
-                    }
+                <div className="w-full">
+                  <MapBox
+                    containerId="mapStructureContainer"
+                    marker={[structure.latitude, structure.longitude]}
                   />
                 </div>
-                <div className="flex flex-col w-full">
-                  <Label className="text-xs" htmlFor="latCords">
-                    Latitude
-                  </Label>
-                  <input
-                    className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                    type="number"
-                    id="latCords"
-                    placeholder="Latitude Cordinates"
-                    value={structure.latitude}
-                    onChange={(e) =>
-                      setStructure({
-                        ...structure,
-                        latitude: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
 
-              <div className="w-full">
-                <MapBox
-                  containerId="mapStructureContainer"
-                  marker={[structure.latitude, structure.longitude]}
+                <ImageCardGrid
+                  files={structure.documents}
+                  updateFiles={updateStructureDocuments}
+                  labelText={"Structure Documents"}
+                  identifier={"structure-documents"}
                 />
-              </div>
 
-              <ImageCardGrid
-                files={structure.documents}
-                updateFiles={updateStructureDocuments}
-                labelText={"Structure Documents"}
-                identifier={"structure-documents"}
-              />
+                <ImageCardGrid
+                  files={structure.images}
+                  updateFiles={updateStructureImages}
+                  labelText={"Structure Assets"}
+                  identifier={"structure-assets"}
+                />
 
-              <ImageCardGrid
-                files={structure.images}
-                updateFiles={updateStructureImages}
-                labelText={"Structure Assets"}
-                identifier={"structure-assets"}
-              />
-
-              <div className="flex bg-100 justify-end">
-                <Button
-                  className="bg-dark-blue-700"
-                  onClick={() => setFormView("inspection")}
-                >
-                  Back
-                </Button>
-                <Button
-                  className="bg-dark-blue-700"
-                  onClick={() => createStructure()}
-                >
-                  Save
-                </Button>
+                <div className="flex bg-100 justify-end">
+                  <Button
+                    className="bg-dark-blue-700"
+                    onClick={() => setFormView("inspection")}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    className="bg-dark-blue-700"
+                    onClick={() => createStructure()}
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

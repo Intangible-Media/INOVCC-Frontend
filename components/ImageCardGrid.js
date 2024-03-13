@@ -61,7 +61,8 @@ export default function ImageCardGrid({
       <div className="grid grid-cols-3 bg-gray-100 p-4 gap-2">
         {files.map((file, index) => {
           // Create an object URL for the file
-          const fileUrl = URL.createObjectURL(file);
+          console.log(file);
+          const fileUrl = file.attributes?.url || URL.createObjectURL(file);
 
           // Determine the background style
           const backgroundStyle = isImage(file.name)
@@ -105,7 +106,7 @@ export default function ImageCardGrid({
               )}
               <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                 <h6 className="leading-none text-xxs">
-                  {formatFileName(file.name)}
+                  {formatFileName(file.attributes?.name || file.name)}
                 </h6>
                 <Dropdown
                   inline
