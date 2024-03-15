@@ -1,6 +1,8 @@
 import { useState } from "react";
 import ImageCardSlider from "../ImageCardSlider";
+import { Label } from "flowbite-react";
 import { Progress } from "flowbite-react";
+import { ensureDomain } from "../../utils/strings";
 
 export default function MapPanel({ structure }) {
   const [currentPanel, setCurrentPanel] = useState("overview");
@@ -91,7 +93,7 @@ export default function MapPanel({ structure }) {
         <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
             <div id="overview-content">
-              <div className="flex justify-between gap-4 border-b px-8">
+              {/* <div className="flex justify-between gap-4 border-b px-8">
                 <div className="im-icon-container flex flex-col gap-2 py-4">
                   <div className="flex align-middle w-10 h-10 m-auto bg-dark-blue-700 rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
                     <svg
@@ -175,7 +177,7 @@ export default function MapPanel({ structure }) {
                     Share
                   </p>
                 </div>
-              </div>
+              </div> */}
               <div className="flex gap-4 border-b px-8 py-4">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
@@ -263,13 +265,6 @@ export default function MapPanel({ structure }) {
                 </h4>
                 <ImageCardSlider images={structure.attributes.images} />
               </div>
-
-              <div className="flex flex-col border-b px-8 py-6">
-                <h4 className="leading-none font-medium text-sm mb-4">
-                  Assets
-                </h4>
-                <ImageCardSlider images={structure.attributes.images} />
-              </div>
               <div className="flex flex-col border-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
@@ -306,7 +301,7 @@ export default function MapPanel({ structure }) {
                   </a>
                 </div>
               </div>
-              <div className="flex flex-col blorder-b px-8 py-6">
+              <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
                 <StructureNotes notes={structure.attributes.notes} />
               </div>
@@ -316,48 +311,81 @@ export default function MapPanel({ structure }) {
           {currentPanel === "assets" && (
             <div id="assets-content" className="w-full">
               <div className="flex flex-col px-8 py-6">
-                <h4 className="leading-none font-medium text-sm mb-2">
+                <h4 className="leading-none font-medium text-sm mb-4">
                   Assets
                 </h4>
-                <div className="grid grid-cols-2 gap-2 ">
-                  {structure.attributes.images.data?.map((image, key) => (
-                    <div
-                      className="aspect-square rounded-md overflow-hidden"
-                      key={`structure-${structure.id}-image-${image.id}`}
-                    >
-                      <img
-                        className="w-full h-full object-cover"
-                        src={`${image.attributes.url}`}
-                        alt=""
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-between mt-4">
-                  <a className="text-sm leading-none font-medium" href="#">
-                    Download All
-                  </a>
-                  <a
-                    href="#"
-                    className="text-dark-blue-700 text-xs leading-none font-medium"
-                  >
-                    Add Asset
-                  </a>
-                </div>
+                <ImageCardSlider
+                  images={structure.attributes.images}
+                  limit={false}
+                />
               </div>
             </div>
           )}
 
           {currentPanel === "notes" && (
-            <div id="inspectors-content" className="w-full">
-              <div className="flex flex-col px-8 py-6">
+            <div id="inspectors-content" className="w-full bg-gray-50">
+              <div className="flex flex-col px-8 pt-6 mb-2">
+                <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
+              </div>
+              <div className="flex flex-col px-8 pb-6">
                 <StructureNotes notes={structure.attributes.notes} />
               </div>
             </div>
           )}
 
           {currentPanel === "edit" && (
-            <div id="notes-content" className="w-full"></div>
+            <div id="notes-content" className="w-full">
+              <div className="flex flex-col px-8 py-6">
+                <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
+
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col">
+                    <Label className="text-xs" htmlFor="inspectionName">
+                      Name
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="text"
+                      id="inspectionName"
+                      placeholder="Enter Inspection Name"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <Label className="text-xs" htmlFor="inspectionName">
+                      Type
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="text"
+                      id="inspectionName"
+                      placeholder="Enter Inspection Name"
+                    />
+                  </div>
+                  <div className="flex flex-col w-full">
+                    <Label className="text-xs" htmlFor="inspectionName">
+                      Longitude
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="text"
+                      id="inspectionName"
+                      placeholder="Enter Inspection Name"
+                    />
+                  </div>
+                  <div className="flex flex-col w-full">
+                    <Label className="text-xs" htmlFor="inspectionName">
+                      Latitude
+                    </Label>
+                    <input
+                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                      type="text"
+                      id="inspectionName"
+                      placeholder="Enter Inspection Name"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -368,28 +396,33 @@ export default function MapPanel({ structure }) {
 function StructureNotes({ notes = [] }) {
   console.log("notes", notes);
   return (
-    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+    <ul className="flex flex-col gap-4">
       {notes.map((note, index) => (
-        <li key={index} className="py-3 first-of-type:pt-0 sm:pb-4">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="flex-shrink-0">
-              <img
-                className="w-8 h-8 rounded-full"
-                src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                alt="Neil image"
-              />
+        <li key={index} className="bg-white rounded-md border">
+          <div className="p-3">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="flex-shrink-0">
+                <img
+                  className="w-8 h-8 rounded-full"
+                  src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                  alt="Neil image"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                  {note?.author?.data?.attributes?.firstName}{" "}
+                  {note?.author?.data?.attributes?.lastName}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                {note?.author?.data?.attributes?.firstName}{" "}
-                {note?.author?.data?.attributes?.lastName}
+            <div className="mt-2">
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                {note.text}
               </p>
             </div>
           </div>
-          <div className="mt-2">
-            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-              {note.text}
-            </p>
+          <div className="py-2 px-3 text-right border-t">
+            <a href="#">Reply</a>
           </div>
         </li>
       ))}

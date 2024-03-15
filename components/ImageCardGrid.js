@@ -61,7 +61,6 @@ export default function ImageCardGrid({
       <div className="grid grid-cols-3 bg-gray-100 p-4 gap-2">
         {files.map((file, index) => {
           // Create an object URL for the file
-          console.log(file);
           const fileUrl = file.attributes?.url || URL.createObjectURL(file);
 
           // Determine the background style

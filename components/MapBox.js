@@ -32,7 +32,6 @@ const MapBox = ({ containerId, marker }) => {
 
   useEffect(() => {
     setTimeout(() => mapRef.current.resize(), 0);
-    console.log("marker", marker);
 
     new mapboxgl.Marker().setLngLat(marker).addTo(mapRef.current);
 

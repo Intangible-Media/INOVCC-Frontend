@@ -13,6 +13,7 @@ import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
+import { getInspection } from "../../../utils/api/inspections";
 import {
   formatFileName,
   downloadFileFromUrl,
@@ -37,13 +38,11 @@ export default function Page(props) {
   const [inspectionDocuments, setInspectionDocuments] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
-  const [inspectionReport, setInspectionReport] = useState("");
   const [activeView, setActiveView] = useState("overview");
   const [activeCompletion, setActiveCompletion] = useState(0);
   const [structureProgressType, setStructureProgressType] = useState("all");
   const [structureAssetType, setStructureAssetType] = useState("all");
   const [inspection, setInspection] = useState(null);
-
   const [options, setOptions] = useState({
     series: [70],
     chart: {
@@ -510,23 +509,22 @@ export default function Page(props) {
     const fetchData = async () => {
       if (session?.accessToken) {
         try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${params.id}?${query}`,
-            {
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`,
-              },
-            }
-          );
+          // Ensure getInspection is imported or defined in your component/module
+          const response = await getInspection({
+            jwt: session.accessToken,
+            id: params.id,
+            query: query,
+          });
 
-          const structuresData = response.data.data.attributes.structures.data;
+          const inspectionData = response.data.data;
+          const structuresData = inspectionData.attributes.structures.data;
 
           setInspection({
-            ...response.data.data.attributes,
-            id: response.data.data.id,
+            ...inspectionData.attributes,
+            id: inspectionData.id,
           });
-          console.log(response.data.data.attributes);
-          setInspectionDocuments(response.data.data.attributes.documents.data);
+          console.log(inspectionData.attributes);
+          setInspectionDocuments(inspectionData.attributes.documents.data);
           setStructures(structuresData);
 
           if (structuresData.length > 0) {
@@ -540,7 +538,7 @@ export default function Page(props) {
     };
 
     fetchData();
-  }, [session, params.id, query]);
+  }, [session, params.id, query]); // Assuming `query` here is a dependency that might change and is suitable for useEffect's dependency array
 
   useEffect(() => {
     if (!map.current || !selectedStructure) return;
@@ -561,10 +559,6 @@ export default function Page(props) {
   useEffect(() => {
     updateProgressBar(structureProgressType);
   }, [structureProgressType, structures]); // Depend on structures as well
-
-  useEffect(() => {
-    console.log(inspection);
-  }, [inspection]);
 
   /**
    * Updates the progress bar based on the percentage of inspected structures.
@@ -793,6 +787,7 @@ export default function Page(props) {
         <div className="grid grid-cols-2 gap-3 align-middle">
           <InspectionDrawer
             inspection={inspection}
+            setInspection={setInspection}
             btnText={"Edit Inspection"}
           />
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
@@ -949,25 +944,6 @@ export default function Page(props) {
                         )}
                       </span>
                     </p>
-                    <Dropdown
-                      inline
-                      label=""
-                      placement="top"
-                      dismissOnClick={false}
-                      renderTrigger={() => (
-                        <span>
-                          <ElipseIcon />
-                        </span>
-                      )}
-                    >
-                      <Dropdown.Item>
-                        <div className="flex items-center">
-                          <span className="ml-2">
-                            <Link href={`/inspections`}>View</Link>
-                          </span>{" "}
-                        </div>
-                      </Dropdown.Item>
-                    </Dropdown>
                   </div>
                 </div>
               ))}

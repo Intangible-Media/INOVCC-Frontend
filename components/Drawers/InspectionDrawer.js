@@ -1,7 +1,24 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createStructure } from "../../utils/api/structures";
+import DirectionsComponent from "../DirectionsComponent";
+import { getAllClients } from "../../utils/api/clients";
+import { MdLocationPin } from "react-icons/md";
+import { useSession } from "next-auth/react";
+import ImageCardGrid from "../ImageCardGrid";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { HiHome } from "react-icons/hi";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
+import MapBox from "../MapBox";
+import Link from "next/link";
+import axios from "axios";
+import {
+  createInspection,
+  updateInspection,
+  deleteInspection,
+} from "../../utils/api/inspections";
 import {
   Button,
   FileInput,
@@ -9,23 +26,25 @@ import {
   Dropdown,
   Breadcrumb,
   ToggleSwitch,
+  Select,
   Spinner,
 } from "flowbite-react";
-import DirectionsComponent from "../DirectionsComponent";
-import { useSession } from "next-auth/react";
-import ImageCardGrid from "../ImageCardGrid";
-import MapBox from "../MapBox";
-import { MdLocationPin } from "react-icons/md";
-import { HiHome } from "react-icons/hi";
-import Link from "next/link";
-import axios from "axios";
 
-const InspectionDrawer = ({ inspection = null, btnText }) => {
-  console.log("InspectionDrawer", inspection);
+const InspectionDrawer = ({
+  inspection = null,
+  setInspection = null,
+  btnText,
+}) => {
   const { data: session, loading } = useSession();
+  const router = useRouter();
+  const params = useParams();
 
-  const [switch1, setSwitch1] = useState(false);
+  const [loadingNewStructure, setLoadingNewStructure] = useState(false);
+  const [isLoadingInspection, setIsLoadingInspection] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [formView, setFormView] = useState("inspection");
+  const [switch1, setSwitch1] = useState(false);
+  const [clients, setClients] = useState([]);
   const [structure, setStructure] = useState({
     inspection: null,
     mapSection: null,
@@ -36,18 +55,46 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
     documents: [],
     images: [],
   });
-  const [loadingNewStructure, setLoadingNewStructure] = useState(false);
 
-  const auth = {
-    headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  };
+  const [newInspection, setNewInspection] = useState({
+    name: "",
+    structures: [],
+    client: null,
+  });
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  useEffect(() => {
+    if (inspection) {
+      setNewInspection({
+        name: inspection.name || "",
+        structures: inspection.structures || [],
+        documents: inspection.documents || [],
+        client: inspection.client || 1,
+      });
+    }
+  }, [inspection]);
+
+  useEffect(() => {
+    const fetchAllClients = async () => {
+      if (session) {
+        const apiParams = {
+          jwt: session.accessToken, // Removed optional chaining as we already check session exists
+          query: "",
+        };
+
+        try {
+          const response = await getAllClients(apiParams);
+          setClients(response.data.data);
+        } catch (error) {
+          console.error("Error fetching clients:", error);
+        }
+      }
+    };
+
+    fetchAllClients();
+  }, [session]); // This useEffect depends on session
 
   /**
    * Toggles the visibility state of a UI drawer component.
@@ -55,6 +102,45 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const submitInspection = async () => {
+    setIsLoadingInspection(true); // Assume you have a state to manage loading
+
+    const payload = {
+      data: {
+        name: newInspection.name,
+        structures: newInspection.structures,
+        client: 1,
+      },
+    };
+
+    const apiParams = {
+      jwt: session.accessToken,
+      payload: payload,
+      id: params.id,
+      query: "",
+    };
+
+    try {
+      if (inspection && inspection.id) {
+        // Update logic here
+        const response = await updateInspection(apiParams);
+        console.log("Inspection updated:", response.data.data.id);
+        router.push(`/inspections/${response.data.data.id}`);
+      } else {
+        // Creation logic here
+        const response = await createInspection(apiParams);
+        console.log("Inspection updated:", response.data.data.id);
+        router.push(`/inspections/${response.data.data.id}`);
+      }
+
+      setIsLoadingInspection(false);
+    } catch (error) {
+      console.error("Error submitting inspection:", error);
+    } finally {
+      setIsLoadingInspection(false);
+    }
   };
 
   /**
@@ -69,7 +155,7 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
    *                            or an error object if the creation fails.
    */
 
-  const createStructure = async () => {
+  const createAndUploadStructure = async () => {
     const payload = {
       data: {
         inspection: inspection?.id,
@@ -84,11 +170,11 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
     setLoadingNewStructure(true);
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`,
-        payload,
-        auth
-      );
+      // Assume createStructure is imported or defined similar to createInspection
+      const response = await createStructure({
+        jwt: session.accessToken, // Assuming you're using session.accessToken for JWT
+        payload: payload,
+      });
 
       console.table("Structure created:", response.data);
 
@@ -98,6 +184,15 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
         (structure.images && structure.images.length > 0)
       ) {
         await uploadDocumentsAndImages(response.data.data.id);
+      }
+
+      if (setInspection) {
+        setInspection({
+          ...inspection,
+          structures: {
+            data: [...inspection.structures.data, response.data.data],
+          },
+        });
       }
 
       setStructure({
@@ -114,7 +209,11 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
       return response;
     } catch (error) {
       console.error("Error creating structure:", error);
-      console.error("Error details:", error.response.data); // log the server's response
+      // Adjust error handling as necessary
+      if (error.response) {
+        console.error("Error details:", error.response.data); // log the server's response
+      }
+      setLoadingNewStructure(false);
       return error;
     }
   };
@@ -367,8 +466,36 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
                   type="text"
                   id="inspectionName"
                   placeholder="Enter Inspection Name"
-                  value={inspection?.name}
+                  value={newInspection.name}
+                  onChange={(e) => {
+                    setNewInspection({
+                      ...newInspection,
+                      name: e.target.value,
+                    });
+                  }}
                 />
+              </div>
+
+              <div className="flex flex-col">
+                <div className="mb-2 block">
+                  <Label htmlFor="countries" value="Select your country" />
+                </div>
+                <Select
+                  id="countries"
+                  required
+                  onChange={(e) =>
+                    setNewInspection({
+                      ...newInspection,
+                      client: e.target.value,
+                    })
+                  }
+                >
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.attributes.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               {inspection && (
@@ -407,7 +534,6 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
                         <div
                           key={index}
                           className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
-                          onClick={() => setFormView("structure")}
                         >
                           <div className="flex">
                             <MdLocationPin
@@ -454,25 +580,6 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
                                 )}
                               </span>
                             </p>
-                            <Dropdown
-                              inline
-                              label=""
-                              placement="top"
-                              dismissOnClick={false}
-                              renderTrigger={() => (
-                                <span>
-                                  <ElipseIcon />
-                                </span>
-                              )}
-                            >
-                              <Dropdown.Item>
-                                <div className="flex items-center">
-                                  <span className="ml-2">
-                                    <Link href={`/inspections`}>View</Link>
-                                  </span>{" "}
-                                </div>
-                              </Dropdown.Item>
-                            </Dropdown>
                           </div>
                         </div>
                       ))}
@@ -554,6 +661,15 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
                   <div className="flex max-w-md flex-col gap-4">
                     <ToggleSwitch checked={switch1} onChange={setSwitch1} />
                   </div>
+                </div>
+                <div className="flex bg-100 justify-end">
+                  {isLoadingInspection && <Spinner />}
+                  <Button
+                    className="bg-dark-blue-700"
+                    onClick={() => submitInspection()}
+                  >
+                    Save Inspection
+                  </Button>
                 </div>
               </div>
             </div>
@@ -701,7 +817,7 @@ const InspectionDrawer = ({ inspection = null, btnText }) => {
                   </Button>
                   <Button
                     className="bg-dark-blue-700"
-                    onClick={() => createStructure()}
+                    onClick={() => createAndUploadStructure()}
                   >
                     Save
                   </Button>
