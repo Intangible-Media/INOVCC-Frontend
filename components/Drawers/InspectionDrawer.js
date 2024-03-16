@@ -466,7 +466,7 @@ const InspectionDrawer = ({
                   type="text"
                   id="inspectionName"
                   placeholder="Enter Inspection Name"
-                  value={newInspection.name}
+                  value={newInspection.name || ""}
                   onChange={(e) => {
                     setNewInspection({
                       ...newInspection,
@@ -719,7 +719,7 @@ const InspectionDrawer = ({
                     type="text"
                     id="structureName"
                     placeholder="Enter Structure Name"
-                    value={structure.name}
+                    value={structure.name || ""}
                     onChange={(e) =>
                       setStructure({ ...structure, name: e.target.value })
                     }
@@ -733,7 +733,7 @@ const InspectionDrawer = ({
                   <select
                     id="structureType"
                     className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
-                    value={structure.type}
+                    value={structure?.type || "Standard Vault"}
                     onChange={(e) =>
                       setStructure({ ...structure, type: e.target.value })
                     }
@@ -758,7 +758,7 @@ const InspectionDrawer = ({
                       type="number"
                       id="longCords"
                       placeholder="Longitude Cordinates"
-                      value={structure.longitude}
+                      value={structure?.longitude || ""}
                       onChange={(e) =>
                         setStructure({
                           ...structure,
@@ -776,7 +776,7 @@ const InspectionDrawer = ({
                       type="number"
                       id="latCords"
                       placeholder="Latitude Cordinates"
-                      value={structure.latitude}
+                      value={structure.latitude || ""}
                       onChange={(e) =>
                         setStructure({
                           ...structure,
