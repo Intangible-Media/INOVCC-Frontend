@@ -486,3 +486,37 @@ input[type="date"] {
 .slideOutAndHide {
   animation: slideOutAndHide 500ms forwards;
 }
+
+.force-w-full {
+  width: 100% !important;
+}
+
+.force-w-full > button {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.force-w-full button,
+.force-w-full span {
+  background-color: #ffffff;
+  width: 100% !important;
+  color: #4f545d;
+  border: none !important;
+  padding-right: 0 !important;
+}
+
+html body .force-w-full button:hover,
+html body .force-w-full span:hover,
+html body .force-w-full button:focus,
+html body .force-w-full span:focus{
+  border: none !important;
+  background-color: #ffffff !important;
+  color: rgb(0, 2, 37);
+  box-shadow: none !important;
+}
+
+.force-w-full button span {
+  justify-content: space-between;
+  padding-left: 0;
+  padding-right: 0;
+} 

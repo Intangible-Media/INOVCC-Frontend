@@ -1,8 +1,11 @@
-import { useState } from "react";
 import ImageCardSlider from "../ImageCardSlider";
 import { Label } from "flowbite-react";
-import { Progress } from "flowbite-react";
+import { useEffect, useState } from "react";
+import { Dropdown, TextInput, Avatar, Button, Popover } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
+import { getAllUsers } from "../../utils/api/users";
+import { useSession } from "next-auth/react";
+import qs from "qs";
 
 export default function MapPanel({ structure }) {
   const [currentPanel, setCurrentPanel] = useState("overview");
@@ -93,91 +96,6 @@ export default function MapPanel({ structure }) {
         <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
             <div id="overview-content">
-              {/* <div className="flex justify-between gap-4 border-b px-8">
-                <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <div className="flex align-middle w-10 h-10 m-auto bg-dark-blue-700 rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
-                    <svg
-                      className="m-auto"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="16"
-                      viewBox="0 0 17 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M2.68602 13.3334C1.91553 10.8719 3.45652 5.12829 8.84997 5.12829V3.48726C8.84997 3.33488 8.88982 3.18551 8.96504 3.05589C9.04027 2.92627 9.14791 2.82152 9.27589 2.75337C9.40387 2.68523 9.54715 2.65638 9.68966 2.67006C9.83217 2.68375 9.96829 2.73942 10.0828 2.83085L14.1918 6.1129C14.2875 6.18933 14.3652 6.28844 14.4187 6.40237C14.4722 6.5163 14.5 6.64193 14.5 6.76931C14.5 6.89669 14.4722 7.02232 14.4187 7.13626C14.3652 7.25019 14.2875 7.34929 14.1918 7.42572L10.0828 10.7078C9.96829 10.7992 9.83217 10.8549 9.68966 10.8686C9.54715 10.8822 9.40387 10.8534 9.27589 10.7853C9.14791 10.7171 9.04027 10.6124 8.96504 10.4827C8.88982 10.3531 8.84997 10.2037 8.84997 10.0514V8.41034C3.45652 9.23085 2.68602 13.3334 2.68602 13.3334Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </div>
-                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
-                    Favorite Map
-                  </p>
-                </div>
-                <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
-                    <svg
-                      className="m-auto"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="13"
-                      height="12"
-                      viewBox="0 0 13 12"
-                      fill="none"
-                    >
-                      <path
-                        d="M3.02697 12C2.89303 11.9996 2.76078 11.9688 2.63942 11.9097C2.51805 11.8506 2.41049 11.7646 2.3242 11.6577C2.23792 11.5508 2.17498 11.4257 2.13978 11.2909C2.10457 11.156 2.09793 11.0149 2.12033 10.8771L2.63815 7.72813L0.444451 5.49925C0.321599 5.37407 0.234743 5.21555 0.193692 5.0416C0.152642 4.86765 0.159031 4.68519 0.212139 4.51483C0.265246 4.34446 0.362957 4.19298 0.494238 4.07749C0.625518 3.96199 0.785138 3.88709 0.955075 3.86123L3.98581 3.4018L5.34128 0.535739C5.41724 0.374946 5.53483 0.239544 5.68075 0.144863C5.82666 0.050181 5.99507 0 6.16692 0C6.33876 0 6.50717 0.050181 6.65309 0.144863C6.799 0.239544 6.91659 0.374946 6.99255 0.535739L8.34802 3.40055L11.3788 3.85997C11.5487 3.8857 11.7083 3.96051 11.8397 4.07594C11.971 4.19136 12.0687 4.34281 12.1218 4.51315C12.175 4.68349 12.1813 4.86594 12.1403 5.03987C12.0992 5.21379 12.0123 5.37226 11.8894 5.49737L9.69568 7.72813L10.2135 10.8765C10.2425 11.0531 10.2236 11.2346 10.1589 11.4006C10.0942 11.5666 9.98624 11.7103 9.84727 11.8156C9.7083 11.9209 9.54386 11.9836 9.37254 11.9965C9.20122 12.0094 9.02986 11.972 8.87784 11.8886L6.16692 10.402L3.45599 11.8886C3.32379 11.9616 3.17653 11.9998 3.02697 12V12ZM1.68831 5.01353L3.5808 6.93885C3.68779 7.04744 3.7678 7.18159 3.81391 7.3297C3.86001 7.4778 3.87083 7.6354 3.84541 7.78884L3.39899 10.5066L5.7391 9.22281C5.87118 9.15096 6.01795 9.11344 6.16692 9.11344C6.31588 9.11344 6.46265 9.15096 6.59474 9.22281L8.93484 10.5059L8.48782 7.78884C8.46261 7.6353 8.47363 7.47765 8.51995 7.32955C8.56626 7.18145 8.64647 7.04735 8.75364 6.93885L10.6455 5.01416L8.03 4.61796C7.88242 4.59554 7.74226 4.5361 7.62155 4.44475C7.50084 4.35339 7.40318 4.23284 7.33697 4.09344L6.16692 1.61857L4.99746 4.09094C4.93135 4.23053 4.83375 4.35131 4.71304 4.44289C4.59233 4.53446 4.45211 4.59411 4.30443 4.6167L1.68831 5.01353Z"
-                        fill="#312E8E"
-                      />
-                    </svg>
-                  </div>
-                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
-                    Favorite Map
-                  </p>
-                </div>
-                <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
-                    <svg
-                      className="m-auto"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="16"
-                      viewBox="0 0 17 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M8.83268 3.33325V7.99992M8.83268 7.99992V12.6666M8.83268 7.99992H13.4993M8.83268 7.99992H4.16602"
-                        stroke="#312E8E"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
-                    Add Assets
-                  </p>
-                </div>
-                <div className="im-icon-container flex flex-col gap-2 py-4">
-                  <div className="flex align-middle w-10 h-10 m-auto bg-white rounded-full border border-dark-blue-700 hover:bg-dark-blue-700">
-                    <svg
-                      className="m-auto"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
-                      fill="none"
-                    >
-                      <path
-                        d="M9.59971 7.05893C9.27977 7.05922 8.96314 7.12566 8.66862 7.25431C8.3741 7.38296 8.1077 7.5712 7.88522 7.80785L4.7525 6.11942C4.78301 5.96396 4.79863 5.80579 4.79913 5.64719C4.79522 5.55379 4.78606 5.46069 4.7717 5.36838L7.76726 4.04699C8.13055 4.48706 8.63286 4.78132 9.18598 4.8781C9.7391 4.97488 10.3077 4.86799 10.7918 4.57621C11.276 4.28442 11.6448 3.8264 11.8335 3.28256C12.0222 2.73872 12.0187 2.14385 11.8236 1.6024C11.6286 1.06095 11.2544 0.607543 10.7669 0.3218C10.2793 0.0360567 9.70953 -0.0637533 9.15759 0.0398971C8.60564 0.143547 8.10683 0.444031 7.74872 0.888582C7.39062 1.33313 7.19614 1.89333 7.19942 2.47079C7.20326 2.56537 7.21242 2.65965 7.22685 2.75314L4.23198 4.07099C3.92134 3.68863 3.50539 3.41217 3.03898 3.2781C2.57257 3.14403 2.07764 3.15864 1.61947 3.32001C1.16129 3.48138 0.761418 3.78192 0.472591 4.18199C0.183765 4.58205 0.0195599 5.06285 0.0016407 5.56093C-0.0162785 6.05901 0.11293 6.55099 0.372219 6.97194C0.631509 7.3929 1.0087 7.72306 1.45402 7.91886C1.89934 8.11467 2.39187 8.16691 2.86663 8.06871C3.34139 7.97051 3.77608 7.72648 4.11333 7.3688L7.24468 9.05724C7.21463 9.21274 7.19947 9.37091 7.19942 9.52946C7.19942 10.0181 7.34019 10.4957 7.60394 10.902C7.86769 11.3083 8.24256 11.625 8.68116 11.8119C9.11975 11.9989 9.60237 12.0479 10.068 11.9525C10.5336 11.8572 10.9613 11.6219 11.297 11.2764C11.6327 10.9309 11.8613 10.4907 11.9539 10.0114C12.0465 9.5322 11.999 9.03546 11.8173 8.58403C11.6356 8.1326 11.328 7.74675 10.9332 7.47529C10.5385 7.20382 10.0744 7.05893 9.59971 7.05893V7.05893ZM9.59971 1.41199C9.80317 1.41199 10.0021 1.47409 10.1712 1.59043C10.3404 1.70677 10.4722 1.87214 10.5501 2.06561C10.628 2.25908 10.6483 2.47197 10.6086 2.67735C10.5689 2.88274 10.471 3.0714 10.3271 3.21948C10.1832 3.36755 9.99994 3.46839 9.8004 3.50925C9.60085 3.5501 9.39401 3.52913 9.20604 3.449C9.01807 3.36886 8.85741 3.23315 8.74438 3.05903C8.63135 2.88491 8.57101 2.6802 8.57101 2.47079C8.57101 2.18998 8.67939 1.92067 8.87231 1.72211C9.06523 1.52354 9.32688 1.41199 9.59971 1.41199V1.41199ZM2.39884 6.70599C2.19538 6.70599 1.9965 6.6439 1.82733 6.52755C1.65816 6.41121 1.52631 6.24585 1.44845 6.05238C1.37059 5.85891 1.35022 5.64602 1.38991 5.44063C1.4296 5.23524 1.52758 5.04658 1.67144 4.89851C1.81531 4.75043 1.99861 4.64959 2.19815 4.60874C2.3977 4.56788 2.60454 4.58885 2.79251 4.66899C2.98048 4.74913 3.14114 4.88484 3.25417 5.05896C3.3672 5.23307 3.42754 5.43778 3.42754 5.64719C3.42633 5.8137 3.3866 5.97751 3.31164 6.12507C3.31164 6.1293 3.30546 6.13142 3.30341 6.13495V6.14624C3.21582 6.31494 3.08546 6.45607 2.92619 6.55463C2.76692 6.65318 2.58468 6.70549 2.39884 6.70599V6.70599ZM9.59971 10.5883C9.32688 10.5883 9.06523 10.4767 8.87231 10.2781C8.67939 10.0796 8.57101 9.81027 8.57101 9.52946C8.57203 9.36507 8.61081 9.20326 8.68417 9.05724C8.68417 9.05159 8.69171 9.04736 8.69514 9.04171V9.03041C8.78098 8.86509 8.90792 8.72619 9.063 8.6279C9.21807 8.52961 9.39571 8.47546 9.57778 8.47097C9.75985 8.46648 9.93981 8.51183 10.0993 8.60236C10.2587 8.6929 10.392 8.82539 10.4854 8.98629C10.5788 9.1472 10.6291 9.33074 10.631 9.51818C10.633 9.70562 10.5865 9.89023 10.4965 10.0531C10.4064 10.2161 10.2759 10.3514 10.1184 10.4455C9.96081 10.5395 9.78183 10.5888 9.59971 10.5883Z"
-                        fill="#312E8E"
-                      />
-                    </svg>
-                  </div>
-                  <p className="leading-none font-medium text-xxs text-center text-dark-blue-700">
-                    Share
-                  </p>
-                </div>
-              </div> */}
               <div className="flex gap-4 border-b px-8 py-4">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
@@ -269,37 +187,10 @@ export default function MapPanel({ structure }) {
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
                 </h4>
-                <div className="flex -space-x-4 rtl:space-x-reverse">
-                  <img
-                    className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                    src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                    alt=""
-                  />
-                  <img
-                    className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                    src="https://flowbite.com/docs/images/people/profile-picture-2.jpg"
-                    alt=""
-                  />
-                  <img
-                    className="w-10 h-10 border-2 border-white rounded-full dark:border-gray-800"
-                    src="https://flowbite.com/docs/images/people/profile-picture-3.jpg"
-                    alt=""
-                  />
-                  <a
-                    className="flex items-center justify-center w-10 h-10 text-xs font-medium text-white bg-gray-700 border-2 border-white rounded-full hover:bg-gray-600 dark:border-gray-800"
-                    href="#"
-                  >
-                    +99
-                  </a>
-                </div>
-                <div className="flex justify-end">
-                  <a
-                    href="#"
-                    className="leading-none text-xs font-medium text-dark-blue-700"
-                  >
-                    Email Team
-                  </a>
-                </div>
+                <AddInspectorForm
+                  currentInspectors={structure.attributes.inspectors.data}
+                  addForm={false}
+                />
               </div>
               <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
@@ -316,6 +207,7 @@ export default function MapPanel({ structure }) {
                 </h4>
                 <ImageCardSlider
                   images={structure.attributes.images}
+                  structureId={structure.id}
                   limit={false}
                 />
               </div>
@@ -335,54 +227,74 @@ export default function MapPanel({ structure }) {
 
           {currentPanel === "edit" && (
             <div id="notes-content" className="w-full">
-              <div className="flex flex-col px-8 py-6">
+              <div className="flex flex-col px-8 pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
 
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col">
-                    <Label className="text-xs" htmlFor="inspectionName">
-                      Name
-                    </Label>
+                    <label className="text-xs" htmlFor="structureName">
+                      Map Section
+                    </label>
                     <input
                       className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
                       type="text"
-                      id="inspectionName"
-                      placeholder="Enter Inspection Name"
+                      id="structureName"
+                      placeholder="Enter Structure Name"
+                      value={structure.attributes?.mapSection}
                     />
                   </div>
-                  <div className="flex flex-col">
-                    <Label className="text-xs" htmlFor="inspectionName">
-                      Type
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs" htmlFor="structureType">
+                      Structure Type
                     </Label>
-                    <input
-                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                      type="text"
-                      id="inspectionName"
-                      placeholder="Enter Inspection Name"
-                    />
+                    <select
+                      id="structureType"
+                      className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                    >
+                      <option value="Standard Vault">Standard Vault</option>
+                      <option value="Pull Box">Pull Box</option>
+                      <option value="Wood Pole">Wood Pole</option>
+                      <option value="Man Hole">Man Hole</option>
+                      <option value="Street Light">Street Light</option>
+                      <option value="Pad Vault">Pad Vault</option>
+                      <option value="Beehive">Beehive</option>
+                    </select>
                   </div>
                   <div className="flex flex-col w-full">
-                    <Label className="text-xs" htmlFor="inspectionName">
+                    <label className="text-xs" htmlFor="structureLongitude">
                       Longitude
-                    </Label>
+                    </label>
                     <input
                       className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
                       type="text"
-                      id="inspectionName"
-                      placeholder="Enter Inspection Name"
+                      id="structureLongitude"
+                      placeholder="Enter Longitude"
+                      value={structure.attributes?.longitude}
                     />
                   </div>
                   <div className="flex flex-col w-full">
-                    <Label className="text-xs" htmlFor="inspectionName">
+                    <label className="text-xs" htmlFor="structureLatitude">
                       Latitude
-                    </Label>
+                    </label>
                     <input
                       className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
                       type="text"
-                      id="inspectionName"
-                      placeholder="Enter Inspection Name"
+                      id="structureLatitude"
+                      placeholder="Enter Latitude"
+                      value={structure.attributes?.latitude}
                     />
                   </div>
+                  <div className="flex flex-col w-full">
+                    <AddInspectorForm
+                      currentInspectors={structure.attributes.inspectors.data}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button className="bg-dark-blue-700 text-white mt-5">
+                    Save
+                  </Button>
                 </div>
               </div>
             </div>
@@ -393,8 +305,7 @@ export default function MapPanel({ structure }) {
   );
 }
 
-function StructureNotes({ notes = [] }) {
-  console.log("notes", notes);
+const StructureNotes = ({ notes = [] }) => {
   return (
     <ul className="flex flex-col gap-4">
       {notes.map((note, index) => (
@@ -428,4 +339,142 @@ function StructureNotes({ notes = [] }) {
       ))}
     </ul>
   );
-}
+};
+
+const AddInspectorForm = ({ currentInspectors, addForm = true }) => {
+  const { data: session } = useSession();
+  const [availableInspectors, setAvailableInspectors] = useState([]);
+  const [assignedInspectors, setAssignedInspectors] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+
+  // Mock function to simulate fetching users
+  // Replace this with your actual getAllUsers function
+  const fetchUsers = async () => {
+    const query = qs.stringify(
+      {
+        populate: "*",
+      },
+      {
+        encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+      }
+    );
+
+    const apiParams = {
+      jwt: session?.accessToken,
+      query: query,
+    };
+
+    try {
+      const response = await getAllUsers(apiParams);
+
+      const filteredUsers = response.data.filter((user) => {
+        return !currentInspectors.some((inspector) => inspector.id === user.id);
+      });
+
+      setAvailableInspectors(filteredUsers);
+    } catch (error) {
+      console.error("Error fetching users", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    setAssignedInspectors([...currentInspectors]);
+  }, []);
+
+  return (
+    <>
+      {addForm ? (
+        <>
+          <div className="flex flex-col force-w-full border-b-2 text-gray-700 hover:border-x-0 hover:border-t-0">
+            <label className="text-xs">Add Inspectors</label>
+            <Dropdown
+              label="Add Inspectors"
+              className="force-w-full bg-white border-none hover:border-none hover:outline-none"
+            >
+              {availableInspectors.map((user) => (
+                <Dropdown.Item
+                  key={user.id}
+                  onClick={() => {
+                    setAssignedInspectors([...assignedInspectors, user]);
+                    setAvailableInspectors(
+                      availableInspectors.filter(
+                        (inspector) => inspector.id !== user.id
+                      )
+                    );
+                  }}
+                  className="w-full"
+                >
+                  {user.username || user.attributes.username}
+                </Dropdown.Item>
+              ))}
+            </Dropdown>
+          </div>
+
+          <div className="flex gap-1 items-center mt-4 -space-x-4 rtl:space-x-reverse">
+            {assignedInspectors.map((inspector, index) => {
+              const inspectorImage =
+                inspector.attributes?.picture.data.attributes.formats.thumbnail
+                  .url || inspector.picture.formats.thumbnail.url;
+              return (
+                <div className="relative group">
+                  <button
+                    className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100"
+                    onClick={() => {
+                      setAssignedInspectors(
+                        assignedInspectors.filter(
+                          (user) => inspector.id !== user.id
+                        )
+                      );
+                      setAvailableInspectors([
+                        ...availableInspectors,
+                        inspector,
+                      ]);
+                    }}
+                  >
+                    <img
+                      src="/icons/x-icon.png"
+                      alt=""
+                      srcset=""
+                      className="w-1.5 h-1.5"
+                    />
+                  </button>
+                  <img
+                    class="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
+                    src={ensureDomain(inspectorImage)}
+                    alt=""
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex -space-x-4 rtl:space-x-reverse">
+            {assignedInspectors.map((inspector, index) => {
+              const inspectorImage =
+                inspector.attributes?.picture.data.attributes.formats.thumbnail
+                  .url || inspector.picture.formats.thumbnail.url;
+              return (
+                <img
+                  class="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
+                  src={ensureDomain(inspectorImage)}
+                  alt=""
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-end">
+            <a
+              href="#"
+              className="leading-none text-xs font-medium text-dark-blue-700"
+            >
+              Email Team
+            </a>
+          </div>
+        </>
+      )}
+    </>
+  );
+};
