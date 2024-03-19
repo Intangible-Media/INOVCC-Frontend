@@ -417,7 +417,7 @@ const AddInspectorForm = ({ currentInspectors, addForm = true }) => {
                 inspector.attributes?.picture.data.attributes.formats.thumbnail
                   .url || inspector.picture.formats.thumbnail.url;
               return (
-                <div className="relative group">
+                <div key={index} className="relative group">
                   <button
                     className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100"
                     onClick={() => {
@@ -440,7 +440,7 @@ const AddInspectorForm = ({ currentInspectors, addForm = true }) => {
                     />
                   </button>
                   <img
-                    class="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
+                    className="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
                     src={ensureDomain(inspectorImage)}
                     alt=""
                   />
@@ -458,7 +458,8 @@ const AddInspectorForm = ({ currentInspectors, addForm = true }) => {
                   .url || inspector.picture.formats.thumbnail.url;
               return (
                 <img
-                  class="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
+                  key={index}
+                  className="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
                   src={ensureDomain(inspectorImage)}
                   alt=""
                 />

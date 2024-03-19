@@ -8,6 +8,17 @@ module.exports = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        // Add more custom animations here
+      },
+      animation: {
+        fadeIn: "fadeIn 1s ease-in-out",
+        // Reference more custom animations here
+      },
       colors: {
         cyan: {
           50: "#F9FAFB", // Very light cyan

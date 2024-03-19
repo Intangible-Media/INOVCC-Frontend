@@ -140,16 +140,15 @@ export const isImage = (fileName) => {
  * @returns {string} The original URL if it starts with a protocol, or the URL with 'http://localhost:1337' prepended if it does not.
  */
 export const ensureDomain = (url) => {
-  // Regular expression to match the beginning of the URL
-  // This regex checks for http://, https://, ftp://, or ftps:// at the start of the string
-  const protocolRegex = /^(http:\/\/|https:\/\/|ftp:\/\/|ftps:\/\/)/;
+  // Extend the regex to include "blob:" URLs
+  const protocolRegex = /^(http:\/\/|https:\/\/|ftp:\/\/|ftps:\/\/|blob:)/;
 
-  // Check if the URL starts with a protocol using the regex
+  // Check if the URL starts with a recognized protocol
   if (protocolRegex.test(url)) {
-    // If the URL starts with a protocol, return it as is
+    // If the URL starts with a recognized protocol, return it unchanged
     return url;
   } else {
-    // If the URL does not start with a protocol, prepend 'http://localhost:1337'
+    // If the URL does not start with a recognized protocol, prepend 'http://localhost:1337'
     return "http://localhost:1337" + url;
   }
 };

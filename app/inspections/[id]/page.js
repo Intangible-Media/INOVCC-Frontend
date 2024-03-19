@@ -14,6 +14,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import { getInspection } from "../../../utils/api/inspections";
+import ImageCardGrid from "../../../components/ImageCardGrid";
 import {
   CheckMark,
   ElipseIcon,
@@ -36,10 +37,9 @@ const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 export default function Page(props) {
   const { params } = props;
   const pathname = usePathname();
-  const { inspection: testingInspection, setInspection: setTestingInspection } =
-    useInspection();
-
   const { data: session, loading } = useSession();
+  const { inspection, setInspection } = useInspection();
+
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(0);
@@ -53,7 +53,8 @@ export default function Page(props) {
   const [activeCompletion, setActiveCompletion] = useState(0);
   const [structureProgressType, setStructureProgressType] = useState("all");
   const [structureAssetType, setStructureAssetType] = useState("all");
-  const [inspection, setInspection] = useState(null);
+  // this is being replaced by the useInspection hook
+  // const [inspection, setInspection] = useState(null);
   const [options, setOptions] = useState({
     series: [70],
     chart: {
@@ -378,7 +379,7 @@ export default function Page(props) {
     };
 
     if (!map.current.getSource("markers")) {
-      map.current.addSource("markers", {
+      map.current?.addSource("markers", {
         type: "geojson",
         data: geojsonData,
       });
@@ -636,6 +637,18 @@ export default function Page(props) {
     .map((inspector) => inspector.attributes.email)
     .join(", ");
 
+  const allStructuresImages =
+    inspection?.structures.data
+      .map((structure) => structure.attributes.images.data)
+      .flat()
+      .filter(Boolean) || [];
+
+  console.log(allStructuresImages);
+
+  // const allStructuresImages = inspection?.structures.data.map((structure) =>
+  //   structure.attributes.images.data?.map()
+  // );
+
   return (
     <>
       <div className="flex flex-col md:flex-row justify-between py-6">
@@ -866,65 +879,15 @@ export default function Page(props) {
             <p className="text-base text-gray-500">Map Name 12344.89</p>
           </div>
           <div className="overflow-auto">
-            <div className="grid grid-cols-2 gap-3">
-              {inspectionDocuments?.map((image, index) => {
-                return (
-                  <div
-                    key={index}
-                    className="flex aspect-square relative rounded-md overflow-hidden border"
-                    style={
-                      isImage(`${image.attributes.url}`)
-                        ? {
-                            // If there's a picture, set it as the background
-                            backgroundImage: `url(${ensureDomain(
-                              image.attributes.url
-                            )})`,
-                            backgroundSize: "cover",
-                          }
-                        : {
-                            // Otherwise, set a default background
-                            backgroundColor: "bg-gray-100",
-                          }
-                    }
-                  >
-                    {!isImage(`${image.attributes.url}`) && ( // If there's no picture, show the ImageIcon
-                      <ImageIcon />
-                    )}
-                    <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
-                      <h6 className="leading-none text-xxs">
-                        {formatFileName(image.attributes.name)}
-                      </h6>
-                      <Dropdown
-                        inline
-                        label=""
-                        placement="top"
-                        dismissOnClick={false}
-                        renderTrigger={() => (
-                          <span className="flex">
-                            <ElipseIconAlt />
-                          </span>
-                        )}
-                      >
-                        <Dropdown.Item
-                          onClick={(e) =>
-                            downloadFileFromUrl(image.attributes.url)
-                          }
-                        >
-                          <div className="flex items-center">
-                            <span className="">Download</span>
-                          </div>
-                        </Dropdown.Item>
-                        <Dropdown.Item>
-                          <div className="flex items-center">
-                            <span className="">Remove</span>
-                          </div>
-                        </Dropdown.Item>
-                      </Dropdown>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {inspection && (
+              <ImageCardGrid
+                files={inspection?.documents.data}
+                background={"bg-white"}
+                editMode={false}
+                columns={2}
+                padded={false}
+              />
+            )}
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button
@@ -979,8 +942,14 @@ export default function Page(props) {
             </div>
           </div>
           <div className="overflow-auto">
-            <div className="grid grid-cols-2 gap-3">
-              {structures.map((structure) =>
+            <ImageCardGrid
+              files={allStructuresImages}
+              background={"bg-white"}
+              editMode={false}
+              columns={2}
+              padded={false}
+            />
+            {/* {inspection?.structures?.map((structure) =>
                 structure.attributes.images.data?.map((image, index) => (
                   <div
                     key={`${structure.id}-${index}`}
@@ -1026,8 +995,7 @@ export default function Page(props) {
                     </div>
                   </div>
                 ))
-              )}
-            </div>
+              )} */}
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button

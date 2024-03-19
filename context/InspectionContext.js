@@ -14,7 +14,7 @@ export const useInspection = () => useContext(InspectionContext);
 export const InspectionProvider = ({ children }) => {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const [inspection, setInspection] = useState({ name: "Inspection Steven" });
+  const [inspection, setInspection] = useState(null);
   const inspectionId = pathname.split("/");
 
   const fetchInspection = async () => {

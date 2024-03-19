@@ -7,6 +7,11 @@ export default function ImageCardGrid({
   labelText,
   updateFiles,
   identifier,
+  background = "bg-gray-100",
+  imageBackground = "bg-white",
+  columns = 3,
+  padded = true,
+  editMode = false,
 }) {
   // Function to handle new file uploads
   const handleNewFile = (event) => {
@@ -52,19 +57,27 @@ export default function ImageCardGrid({
     return /\.(jpe?g|png)$/i.test(fileName);
   };
 
+  const columnsNumber = `grid-cols-${columns}`;
+  const paddedStyle = padded ? "p-4" : "";
+
   return (
     <div className="flex flex-col gap-4">
-      <Label className="text-xs" htmlFor="inspectionName">
-        {labelText}
-      </Label>
+      {labelText && (
+        <Label className="text-xs" htmlFor="inspectionName">
+          {labelText}
+        </Label>
+      )}
 
-      <div className="grid grid-cols-3 bg-gray-100 p-4 gap-2">
+      <div
+        className={`grid ${columnsNumber} ${paddedStyle} ${background} gap-2`}
+      >
         {files.map((file, index) => {
           // Create an object URL for the file
           const fileUrl = file.attributes?.url || URL.createObjectURL(file);
+          const fileName = file.attributes?.name || file.name;
 
           // Determine the background style
-          const backgroundStyle = isImage(file.name)
+          const backgroundStyle = isImage(fileName)
             ? {
                 backgroundImage: `url(${ensureDomain(fileUrl)})`,
                 backgroundSize: "cover",
@@ -75,11 +88,11 @@ export default function ImageCardGrid({
             <div
               key={index}
               className={`flex aspect-square relative rounded-md overflow-hidden border border-gray-300 hover:bg-gray-200 ${
-                !isImage(file.name) ? "bg-white" : ""
+                !isImage(file.name) ? imageBackground : ""
               }`}
               style={backgroundStyle}
             >
-              {!isImage(file.name) && (
+              {!isImage(fileName) && (
                 // Show the SVG icon if the file is not an image
                 <svg
                   className="m-auto"
@@ -154,49 +167,53 @@ export default function ImageCardGrid({
           );
         })}
 
-        <div className="flex w-full items-center justify-center">
-          <Label
-            htmlFor={identifier}
-            className="dark:hover:bg-bray-800 flex h-full w-full cursor-pointer flex-col items-center justify-center  aspect-square relative rounded-md overflow-hidden bg-gray-100 border border-gray-300 hover:bg-gray-200"
-          >
-            <div className="flex flex-col items-center justify-center gap-2">
-              <GoPlus className="text-center mx-auto" />
-              <p className="leading-none text-xs font-medium">Add New</p>
-            </div>
-            <FileInput
-              id={identifier}
-              className="hidden"
-              multiple
-              onChange={handleNewFile}
-            />
-          </Label>
-        </div>
+        {editMode && (
+          <div className="flex w-full items-center justify-center">
+            <Label
+              htmlFor={identifier}
+              className="dark:hover:bg-bray-800 flex h-full w-full cursor-pointer flex-col items-center justify-center  aspect-square relative rounded-md overflow-hidden bg-gray-100 border border-gray-300 hover:bg-gray-200"
+            >
+              <div className="flex flex-col items-center justify-center gap-2">
+                <GoPlus className="text-center mx-auto" />
+                <p className="leading-none text-xs font-medium">Add New</p>
+              </div>
+              <FileInput
+                id={identifier}
+                className="hidden"
+                multiple
+                onChange={handleNewFile}
+              />
+            </Label>
+          </div>
+        )}
       </div>
 
-      <div className="flex justify-between pb-4 border-b-2 border-gray-200">
-        <Label className="text-xs" htmlFor="inspectionName">
-          Download All
-        </Label>
-        <button className="flex align-middle text-xs font-medium text-dark-blue-700">
-          Add Structure{" "}
-          <svg
-            className="m-auto ml-2"
-            xmlns="http://www.w3.org/2000/svg"
-            width="10"
-            height="11"
-            viewBox="0 0 10 11"
-            fill="none"
-          >
-            <path
-              d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
-              stroke="#4B5563"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
+      {editMode && (
+        <div className="flex justify-between pb-4 border-b-2 border-gray-200">
+          <Label className="text-xs" htmlFor="inspectionName">
+            Download All
+          </Label>
+          <button className="flex align-middle text-xs font-medium text-dark-blue-700">
+            Add Structure{" "}
+            <svg
+              className="m-auto ml-2"
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="11"
+              viewBox="0 0 10 11"
+              fill="none"
+            >
+              <path
+                d="M4.99967 2.58337V5.50004M4.99967 5.50004V8.41671M4.99967 5.50004H7.91634M4.99967 5.50004H2.08301"
+                stroke="#4B5563"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

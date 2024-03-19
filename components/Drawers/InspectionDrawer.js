@@ -7,12 +7,10 @@ import { getAllClients } from "../../utils/api/clients";
 import { MdLocationPin } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
-import { useParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { HiHome } from "react-icons/hi";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
-import MapBox from "../MapBox";
-import Link from "next/link";
+import qs from "qs";
 import axios from "axios";
 import {
   createInspection,
@@ -29,12 +27,10 @@ import {
   Select,
   Spinner,
 } from "flowbite-react";
+import { useInspection } from "../../context/InspectionContext";
 
-const InspectionDrawer = ({
-  inspection = null,
-  setInspection = null,
-  btnText,
-}) => {
+const InspectionDrawer = ({ btnText }) => {
+  const { inspection, setInspection } = useInspection();
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -78,15 +74,40 @@ const InspectionDrawer = ({
 
   useEffect(() => {
     const fetchAllClients = async () => {
+      const query = qs.stringify(
+        {
+          populate: {
+            contacts: {
+              populate: {
+                picture: "*", // Populate the 'picture' relation
+              },
+              fields: [
+                // Specify fields you want from 'contacts'
+                "firstName",
+                "lastName",
+                "email",
+                "phone",
+                "jobTitle",
+                "picture", // Include 'picture' in the fields if you want its ID
+              ],
+            },
+          },
+        },
+        {
+          encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+        }
+      );
+
       if (session) {
         const apiParams = {
           jwt: session.accessToken, // Removed optional chaining as we already check session exists
-          query: "",
+          query: query,
         };
 
         try {
           const response = await getAllClients(apiParams);
           setClients(response.data.data);
+          console.log("Clients", response.data.data);
         } catch (error) {
           console.error("Error fetching clients:", error);
         }
@@ -107,11 +128,12 @@ const InspectionDrawer = ({
   const submitInspection = async () => {
     setIsLoadingInspection(true); // Assume you have a state to manage loading
 
+    console.log("Submitting inspection", newInspection);
+
     const payload = {
       data: {
         name: newInspection.name,
-        structures: newInspection.structures,
-        client: 1,
+        client: newInspection.client.data.id,
       },
     };
 
@@ -126,12 +148,20 @@ const InspectionDrawer = ({
       if (inspection && inspection.id) {
         // Update logic here
         const response = await updateInspection(apiParams);
-        console.log("Inspection updated:", response.data.data.id);
-        router.push(`/inspections/${response.data.data.id}`);
+
+        console.log("BEFORE UPDATE", newInspection.client);
+        const updatedInspection = {
+          ...inspection,
+          ...response.data.data.attributes,
+          client: newInspection.client,
+        };
+
+        console.log("Updated Inspection", updatedInspection);
+
+        setInspection(updatedInspection);
       } else {
         // Creation logic here
         const response = await createInspection(apiParams);
-        console.log("Inspection updated:", response.data.data.id);
         router.push(`/inspections/${response.data.data.id}`);
       }
 
@@ -186,14 +216,12 @@ const InspectionDrawer = ({
         await uploadDocumentsAndImages(response.data.data.id);
       }
 
-      if (setInspection) {
-        setInspection({
-          ...inspection,
-          structures: {
-            data: [...inspection.structures.data, response.data.data],
-          },
-        });
-      }
+      setInspection({
+        ...inspection,
+        structures: {
+          data: [...inspection.structures.data, response.data.data],
+        },
+      });
 
       setStructure({
         name: "",
@@ -255,7 +283,7 @@ const InspectionDrawer = ({
         }
       );
 
-      console.log(`${fieldName} uploaded successfully`, uploadResponse.data);
+      //console.log(`${fieldName} uploaded successfully`, uploadResponse.data);
     } catch (error) {
       console.error(`Error uploading ${fieldName}:`, error);
     }
@@ -319,7 +347,7 @@ const InspectionDrawer = ({
    */
 
   const updateInspectionDocuments = (files) => {
-    setInspection({ ...inspection, documents: files });
+    setInspection({ ...inspection, documents: { data: files } });
   };
 
   /**
@@ -352,6 +380,30 @@ const InspectionDrawer = ({
     else return "text-red-800 bg-red-100";
   };
 
+  /**
+   * Searches for a client object within an array of client objects by a given id.
+   *
+   * @param {Object[]} clientArray - The array of client objects to search through. Each client object must have an 'id' property.
+   * @param {number} id - The unique identifier of the client object to find.
+   * @returns {Object|undefined} Returns the client object with the matching id. If no client object matches the id, returns undefined.
+   *
+   * @example
+   * const clients = [
+   *   { id: 1, attributes: { name: 'Glendale Gas & Power' } },
+   *   { id: 2, attributes: { name: 'Phoenix Gas & Power' } },
+   *   // more clients...
+   * ];
+   *
+   * const client = findClientById(clients, 2);
+   * console.log(client);
+   * // Output: { id: 2, attributes: { name: 'Phoenix Gas & Power' } }
+   */
+  const findClientById = (clientArray, id) => {
+    const result = clientArray.find((client) => client.id == id);
+    console.log("Client Result", result);
+    return result;
+  };
+
   const ElipseIcon = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -381,7 +433,7 @@ const InspectionDrawer = ({
         onClick={toggleDrawer}
         className="bg-transparent border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 border w-full shrink-0 self-start"
       >
-        {btnText ? btnText : "New Inspection"}
+        {btnText || "New Inspection"}
       </Button>
 
       {isDrawerOpen && (
@@ -478,17 +530,19 @@ const InspectionDrawer = ({
 
               <div className="flex flex-col">
                 <div className="mb-2 block">
-                  <Label htmlFor="countries" value="Select your country" />
+                  <Label htmlFor="client" value="Select Client" />
                 </div>
                 <Select
-                  id="countries"
+                  id="client"
                   required
-                  onChange={(e) =>
+                  defaultValue={inspection?.client.data.id || ""}
+                  onChange={(e) => {
+                    console.log(e.target.value);
                     setNewInspection({
                       ...newInspection,
-                      client: e.target.value,
-                    })
-                  }
+                      client: { data: findClientById(clients, e.target.value) },
+                    });
+                  }}
                 >
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
@@ -626,6 +680,7 @@ const InspectionDrawer = ({
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
+                editMode={true}
               />
 
               <div className="flex flex-col gap-4">
@@ -787,18 +842,12 @@ const InspectionDrawer = ({
                   </div>
                 </div>
 
-                <div className="w-full">
-                  <MapBox
-                    containerId="mapStructureContainer"
-                    marker={[structure.latitude, structure.longitude]}
-                  />
-                </div>
-
                 <ImageCardGrid
                   files={structure.documents}
                   updateFiles={updateStructureDocuments}
                   labelText={"Structure Documents"}
                   identifier={"structure-documents"}
+                  editMode={true}
                 />
 
                 <ImageCardGrid
@@ -806,6 +855,7 @@ const InspectionDrawer = ({
                   updateFiles={updateStructureImages}
                   labelText={"Structure Assets"}
                   identifier={"structure-assets"}
+                  editMode={true}
                 />
 
                 <div className="flex bg-100 justify-end">
