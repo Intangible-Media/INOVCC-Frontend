@@ -1,14 +1,20 @@
 import ImageCardSlider from "../ImageCardSlider";
-import { Label } from "flowbite-react";
 import { useEffect, useState } from "react";
-import { Dropdown, TextInput, Avatar, Button, Popover } from "flowbite-react";
+import { Label, Dropdown, Button, FileInput } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
+import { updateStructure } from "../../utils/api/structures";
+import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
+import { PlusIcon } from "../../public/icons/intangible-icons";
 import qs from "qs";
 
 export default function MapPanel({ structure }) {
+  const { data: session, loading } = useSession();
+  const { inspection, setInspection } = useInspection();
+  const [isLoading, setIsLoading] = useState(false);
   const [currentPanel, setCurrentPanel] = useState("overview");
+  const [updatedStrcture, setUpdatedStrcture] = useState(structure);
 
   const activePanelClasses = (panelTab) => {
     if (panelTab === currentPanel)
@@ -24,24 +30,89 @@ export default function MapPanel({ structure }) {
     else return "text-red-800 bg-red-100";
   };
 
+  const submitStructure = async () => {
+    setIsLoading(true);
+
+    const { images, ...updatedStrctureWithoutImages } =
+      updatedStrcture.attributes;
+
+    const payload = {
+      data: {
+        ...updatedStrctureWithoutImages,
+      },
+    };
+
+    const apiParams = {
+      jwt: session.accessToken,
+      payload: payload,
+      id: updatedStrcture.id,
+      query: "",
+    };
+
+    try {
+      const response = await updateStructure(apiParams);
+
+      // Assuming response.data.data is the updated structure object
+      const updatedStructure = response.data.data;
+
+      // Update the list of structures within the current inspection
+      const updatedStructuresList = inspection.structures.data.map(
+        (currentStructure) => {
+          if (currentStructure.id === updatedStructure.id) {
+            // Exclude 'images' from both current and updated structure attributes before merging
+            // Merge attributes, prioritizing values from the updated structure
+            return {
+              ...currentStructure,
+              attributes: {
+                ...currentStructure.attributes,
+                ...updatedStructure.attributes,
+              },
+            };
+          }
+          // For structures that don't match the ID, return them unchanged
+          return currentStructure;
+        }
+      );
+
+      // Update inspection state with the new list of structures
+
+      console.log("updatedStructuresList", updatedStructuresList);
+
+      setInspection({
+        ...inspection,
+        structures: { data: updatedStructuresList },
+      });
+
+      setIsLoading(false);
+      return updatedStructure;
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false); // Ensure loading state is reset even if the request fails
+    }
+  };
+
   return (
     <>
       <div className="flex justify-between px-8 pt-5 pb-2 w-full">
         <div className="flex flex-col gap-2">
           <h4 className="leading-none text-xs font-medium text-gray-500">
-            Map Name 12344.89
+            {inspection?.name || ""}
           </h4>
           <h3 className="text-base leading-none font-medium">
-            Structure Name 1 <span className="text-gray-500"> / Man Hole</span>
+            {structure?.attributes.mapSection || ""}{" "}
+            <span className="text-gray-500">
+              {" "}
+              / {structure?.attributes.type || ""}
+            </span>
           </h3>
         </div>
         <span
           className={`${getInspectionColor(
-            structure.attributes.status
+            updatedStrcture.attributes.status
           )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full`}
         >
-          {structure.attributes.status}
-          {structure.attributes.status === "Uploaded" && (
+          {updatedStrcture.attributes.status}
+          {updatedStrcture.attributes.status === "Uploaded" && (
             <svg
               className="m-auto"
               xmlns="http://www.w3.org/2000/svg"
@@ -181,20 +252,20 @@ export default function MapPanel({ structure }) {
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Assets
                 </h4>
-                <ImageCardSlider images={structure.attributes.images} />
+                <ImageCardSlider images={updatedStrcture.attributes.images} />
               </div>
               <div className="flex flex-col border-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
                 </h4>
                 <AddInspectorForm
-                  currentInspectors={structure.attributes.inspectors.data}
+                  currentInspectors={updatedStrcture.attributes.inspectors.data}
                   addForm={false}
                 />
               </div>
               <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
-                <StructureNotes notes={structure.attributes.notes} />
+                <StructureNotes notes={updatedStrcture.attributes.notes} />
               </div>
             </div>
           )}
@@ -206,8 +277,10 @@ export default function MapPanel({ structure }) {
                   Assets
                 </h4>
                 <ImageCardSlider
-                  images={structure.attributes.images}
-                  structureId={structure.id}
+                  images={updatedStrcture.attributes.images}
+                  structureId={updatedStrcture.id}
+                  longitude={updatedStrcture.attributes.longitude}
+                  latitude={updatedStrcture.attributes.latitude}
                   limit={false}
                 />
               </div>
@@ -220,7 +293,10 @@ export default function MapPanel({ structure }) {
                 <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
               </div>
               <div className="flex flex-col px-8 pb-6">
-                <StructureNotes notes={structure.attributes.notes} />
+                <StructureNotes
+                  notes={updatedStrcture.attributes.notes}
+                  editable={true}
+                />
               </div>
             </div>
           )}
@@ -240,7 +316,16 @@ export default function MapPanel({ structure }) {
                       type="text"
                       id="structureName"
                       placeholder="Enter Structure Name"
-                      value={structure.attributes?.mapSection}
+                      value={updatedStrcture.attributes?.mapSection || ""} // Providing a fallback empty string for controlled input
+                      onChange={(e) =>
+                        setUpdatedStrcture({
+                          ...updatedStrcture,
+                          attributes: {
+                            ...updatedStrcture.attributes,
+                            mapSection: e.target.value,
+                          },
+                        })
+                      }
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -250,6 +335,16 @@ export default function MapPanel({ structure }) {
                     <select
                       id="structureType"
                       className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                      defaultValue={updatedStrcture.attributes?.type || ""}
+                      onChange={(e) => {
+                        setUpdatedStrcture({
+                          ...updatedStrcture,
+                          attributes: {
+                            ...updatedStrcture.attributes,
+                            type: e.target.value,
+                          },
+                        });
+                      }}
                     >
                       <option value="Standard Vault">Standard Vault</option>
                       <option value="Pull Box">Pull Box</option>
@@ -269,7 +364,16 @@ export default function MapPanel({ structure }) {
                       type="text"
                       id="structureLongitude"
                       placeholder="Enter Longitude"
-                      value={structure.attributes?.longitude}
+                      value={updatedStrcture.attributes?.longitude}
+                      onChange={(e) => {
+                        setUpdatedStrcture({
+                          ...updatedStrcture,
+                          attributes: {
+                            ...updatedStrcture.attributes,
+                            longitude: e.target.value,
+                          },
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex flex-col w-full">
@@ -281,18 +385,33 @@ export default function MapPanel({ structure }) {
                       type="text"
                       id="structureLatitude"
                       placeholder="Enter Latitude"
-                      value={structure.attributes?.latitude}
+                      value={updatedStrcture.attributes?.latitude}
+                      onChange={(e) => {
+                        setUpdatedStrcture({
+                          ...updatedStrcture,
+                          attributes: {
+                            ...updatedStrcture.attributes,
+                            latitude: e.target.value,
+                          },
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
-                      currentInspectors={structure.attributes.inspectors.data}
+                      currentInspectors={
+                        updatedStrcture.attributes.inspectors.data
+                      }
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button className="bg-dark-blue-700 text-white mt-5">
+                  {isLoading && <h1>Loading</h1>}
+                  <Button
+                    className="bg-dark-blue-700 text-white mt-5"
+                    onClick={() => submitStructure()}
+                  >
                     Save
                   </Button>
                 </div>
@@ -305,39 +424,97 @@ export default function MapPanel({ structure }) {
   );
 }
 
-const StructureNotes = ({ notes = [] }) => {
+const StructureNotes = ({ notes = [], editable = false }) => {
+  const [newNote, setNewNote] = useState("");
+  const [addComment, setAddComment] = useState(false);
+
+  const handleNoteChange = (event) => {
+    setNewNote(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!newNote.trim()) return; // Prevent submitting empty notes
+
+    onNoteSubmit(newNote); // Assume this function sends the note to the server or updates state
+    setNewNote(""); // Clear the input after submission
+  };
+
   return (
-    <ul className="flex flex-col gap-4">
-      {notes.map((note, index) => (
-        <li key={index} className="bg-white rounded-md border">
-          <div className="p-3">
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <div className="flex-shrink-0">
-                <img
-                  className="w-8 h-8 rounded-full"
-                  src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                  alt="Neil image"
-                />
+    <>
+      <ul className="flex flex-col gap-4">
+        {notes.map((note, index) => (
+          <li key={index} className="bg-white rounded-md border">
+            <div className="p-3">
+              <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                <div className="flex-shrink-0">
+                  <img
+                    className="w-8 h-8 rounded-full"
+                    src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                    alt="Neil image"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                    {note?.author?.data?.attributes?.firstName}{" "}
+                    {note?.author?.data?.attributes?.lastName}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                  {note?.author?.data?.attributes?.firstName}{" "}
-                  {note?.author?.data?.attributes?.lastName}
+              <div className="mt-2">
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                  {note.text}
                 </p>
               </div>
             </div>
-            <div className="mt-2">
-              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                {note.text}
-              </p>
+            <div className="py-2 px-3 text-right border-t">
+              <a href="#">Reply</a>
             </div>
-          </div>
-          <div className="py-2 px-3 text-right border-t">
-            <a href="#">Reply</a>
-          </div>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+      {editable && (
+        <>
+          {!addComment && (
+            <p
+              className="flex align-middle gap-1 cursor-pointer leading-none text-xs font-medium text-dark-blue-700 text-right ml-auto mt-4"
+              onClick={() => setAddComment(true)}
+            >
+              Add Commnet{" "}
+              <svg
+                width="8"
+                height="7"
+                viewBox="0 0 8 7"
+                className="m-auto"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3.99967 0.583496V3.50016M3.99967 3.50016V6.41683M3.99967 3.50016H6.91634M3.99967 3.50016H1.08301"
+                  stroke="#312E8E"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </p>
+          )}
+          {addComment && (
+            <form onSubmit={handleSubmit} className="mt-4">
+              <textarea
+                value={newNote}
+                onChange={handleNoteChange}
+                className="w-full p-2 text-sm text-gray-900 bg-white border rounded-md"
+                placeholder="Write a note..."
+                rows="3"
+              ></textarea>
+              <Button className="w-full bg-dark-blue-700 hover:bg-dark-blue-800">
+                Submit Note
+              </Button>
+            </form>
+          )}
+        </>
+      )}
+    </>
   );
 };
 
@@ -435,7 +612,6 @@ const AddInspectorForm = ({ currentInspectors, addForm = true }) => {
                     <img
                       src="/icons/x-icon.png"
                       alt=""
-                      srcset=""
                       className="w-1.5 h-1.5"
                     />
                   </button>

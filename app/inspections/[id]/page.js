@@ -208,13 +208,15 @@ export default function Page(props) {
    */
   const filterStructures = (searchTerm) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const filteredStructuresList =
+      inspection?.structures.data.filter((structure) => {
+        const attributes = structure.attributes;
+        return ["status", "mapSection", "type"].some((field) =>
+          attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
+        );
+      }) || [];
 
-    return structures.filter((structure) => {
-      const attributes = structure.attributes;
-      return ["status", "mapSection", "type"].some((field) =>
-        attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
-      );
-    });
+    return filteredStructuresList;
   };
 
   /**
@@ -639,15 +641,9 @@ export default function Page(props) {
 
   const allStructuresImages =
     inspection?.structures.data
-      .map((structure) => structure.attributes.images.data)
+      .map((structure) => structure.attributes.images?.data)
       .flat()
       .filter(Boolean) || [];
-
-  console.log(allStructuresImages);
-
-  // const allStructuresImages = inspection?.structures.data.map((structure) =>
-  //   structure.attributes.images.data?.map()
-  // );
 
   return (
     <>
@@ -876,7 +872,9 @@ export default function Page(props) {
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex flex-col gap-1">
             <h6 className="text-lg font-semibold">Documents</h6>
-            <p className="text-base text-gray-500">Map Name 12344.89</p>
+            <p className="text-base text-gray-500">
+              {selectedStructure?.attributes.mapSection || ""}
+            </p>
           </div>
           <div className="overflow-auto">
             {inspection && (

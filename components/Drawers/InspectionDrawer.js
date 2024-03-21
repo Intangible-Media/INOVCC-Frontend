@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
 import { createStructure } from "../../utils/api/structures";
+import React, { useState, useRef, useEffect } from "react";
 import DirectionsComponent from "../DirectionsComponent";
 import { getAllClients } from "../../utils/api/clients";
+import { useParams, useRouter } from "next/navigation";
 import { MdLocationPin } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
-import { useParams, useRouter } from "next/navigation";
 import { HiHome } from "react-icons/hi";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
@@ -21,7 +21,6 @@ import {
   Button,
   FileInput,
   Label,
-  Dropdown,
   Breadcrumb,
   ToggleSwitch,
   Select,
