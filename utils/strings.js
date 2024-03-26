@@ -166,3 +166,61 @@ export const formatFileName = (fileName) => {
 
   return fileName; // Return original name if it's short enough
 };
+
+/**
+ * Converts an ISO date string to a more readable date and time format.
+ *
+ * @param {string} dateString - The ISO date string to be formatted.
+ * @returns {string} A string representing the formatted date and time in the form "Month Day, Year Hours:Minutes AM/PM".
+ */
+export const formatReadableDate = (dateString) => {
+  const date = new Date(dateString);
+
+  // Specify options for date and time format
+  const dateOptions = { year: "numeric", month: "long", day: "numeric" };
+  const timeOptions = { hour: "2-digit", minute: "2-digit", hour12: true };
+
+  // Generate formatted date and time
+  const formattedDate = date.toLocaleDateString("en-US", dateOptions);
+  const formattedTime = date.toLocaleTimeString("en-US", timeOptions);
+
+  // Combine date and time for full display
+  return `${formattedDate} ${formattedTime}`;
+};
+
+/**
+ * Converts an ISO date string to a relative time string indicating how long ago it was,
+ * in terms of years, months, weeks, days, hours, and minutes.
+ *
+ * @param {string} dateString - The ISO date string to be converted.
+ * @returns {string} A string representing how long ago the date was, with the most significant non-zero time unit.
+ */
+export const timeAgo = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  let delta = Math.floor((now - date) / 1000); // difference in seconds
+
+  const minutes = Math.floor(delta / 60);
+  const hours = Math.floor(delta / 3600);
+  const days = Math.floor(delta / 86400);
+  const weeks = Math.floor(delta / (86400 * 7));
+  const months = Math.floor(delta / (86400 * 30));
+  const years = Math.floor(delta / (86400 * 365));
+
+  if (years > 0) {
+    return `${years} year${years === 1 ? "" : "s"} ago`;
+  } else if (months > 0) {
+    return `${months} month${months === 1 ? "" : "s"} ago`;
+  } else if (weeks > 0) {
+    return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+  } else if (days > 0) {
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  } else if (minutes > 0) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  } else {
+    return "just now";
+  }
+};

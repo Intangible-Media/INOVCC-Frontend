@@ -10,7 +10,7 @@ import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo } from "../../utils/strings";
 import qs from "qs";
 
-export default function MapPanel({ structure }) {
+export default function SingleStructure({ structure }) {
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
   const [isLoading, setIsLoading] = useState(false);
@@ -274,10 +274,7 @@ export default function MapPanel({ structure }) {
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Assets
                 </h4>
-                <ImageCardSlider
-                  images={updatedStructure.attributes.images}
-                  editable={false}
-                />
+                <ImageCardSlider images={updatedStructure.attributes.images} />
               </div>
               <div className="flex flex-col border-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">

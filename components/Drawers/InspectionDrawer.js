@@ -9,6 +9,7 @@ import { MdLocationPin } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
 import { HiHome } from "react-icons/hi";
+import { useAlert } from "../../context/AlertContext";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
 import axios from "axios";
@@ -29,6 +30,7 @@ import {
 import { useInspection } from "../../context/InspectionContext";
 
 const InspectionDrawer = ({ btnText }) => {
+  const { showAlert } = useAlert();
   const { inspection, setInspection } = useInspection();
   const { data: session, loading } = useSession();
   const router = useRouter();
@@ -147,16 +149,13 @@ const InspectionDrawer = ({ btnText }) => {
       if (inspection && inspection.id) {
         // Update logic here
         const response = await updateInspection(apiParams);
-
-        console.log("BEFORE UPDATE", newInspection.client);
         const updatedInspection = {
           ...inspection,
           ...response.data.data.attributes,
           client: newInspection.client,
         };
 
-        console.log("Updated Inspection", updatedInspection);
-
+        showAlert("API call successful!", "success", 5000);
         setInspection(updatedInspection);
       } else {
         // Creation logic here
@@ -166,6 +165,8 @@ const InspectionDrawer = ({ btnText }) => {
 
       setIsLoadingInspection(false);
     } catch (error) {
+      showAlert("Error submitting inspection:", "failed");
+
       console.error("Error submitting inspection:", error);
     } finally {
       setIsLoadingInspection(false);
@@ -218,7 +219,7 @@ const InspectionDrawer = ({ btnText }) => {
       setInspection({
         ...inspection,
         structures: {
-          data: [...inspection.structures.data, response.data.data],
+          data: [...inspection?.structures.data, response.data.data],
         },
       });
 
@@ -430,7 +431,7 @@ const InspectionDrawer = ({ btnText }) => {
     <>
       <Button
         onClick={toggleDrawer}
-        className="bg-transparent border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 border w-full shrink-0 self-start"
+        className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
       >
         {btnText || "New Inspection"}
       </Button>
@@ -799,6 +800,25 @@ const InspectionDrawer = ({ btnText }) => {
                     <option value="Street Light">Street Light</option>
                     <option value="Pad Vault">Pad Vault</option>
                     <option value="Beehive">Beehive</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs" htmlFor="structureStatus">
+                    Structure Status
+                  </Label>
+                  <select
+                    id="structureStatus"
+                    className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                    defaultValue={structure?.status || ""}
+                    onChange={(e) => {
+                      setStructure({ ...structure, status: e.target.value });
+                    }}
+                  >
+                    <option value="Not Inspected">Not Inspected</option>
+                    <option value="Uploaded">Uploaded</option>
+                    <option value="Inspected">Inspected</option>
+                    <option value="Cannot Locate">Cannot Locate</option>
                   </select>
                 </div>
 

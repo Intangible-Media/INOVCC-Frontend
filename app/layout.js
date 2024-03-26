@@ -1,30 +1,14 @@
 "use client";
 
-import {
-  Badge,
-  Sidebar,
-  Dropdown,
-  Avatar,
-  Navbar,
-  TextInput,
-} from "flowbite-react";
+import { Dropdown, Avatar, Navbar, TextInput, Alert } from "flowbite-react";
 import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
-import {
-  HiArrowSmRight,
-  HiChartPie,
-  HiInbox,
-  HiShoppingBag,
-  HiTable,
-  HiUser,
-} from "react-icons/hi";
 import { signOut } from "next-auth/react";
-import Image from "next/image";
 import Link from "next/link";
-
 import DynamicBreadcrumb from "../components/DynamicBreadcrumb";
-
 import { useEffect, useState } from "react";
+import { AlertProvider } from "../context/AlertContext";
+import { HiInformationCircle } from "react-icons/hi";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -86,10 +70,10 @@ export default function RootLayout({ children }) {
         onTouchEnd={onTouchEnd}
       >
         <AuthProvider>
-          <>
+          <AlertProvider>
             <Navbar
               fluid
-              className="fixed top-0 z-50 w-full bg-gray-800	 border-b border-blue-950 text-white dark:bg-gray-800 dark:border-gray-700"
+              className="fixed top-0 z-40 w-full bg-gray-800	 border-b border-blue-950 text-white dark:bg-gray-800 dark:border-gray-700"
             >
               <Navbar.Brand href="https://flowbite-react.com">
                 <img
@@ -151,7 +135,7 @@ export default function RootLayout({ children }) {
             </Navbar>
 
             <div
-              className={`main-navigation fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300 px-3 py-4 transform" ${
+              className={`main-navigation fixed top-0 left-0 z-30 h-screen pt-20 transition-all duration-300 px-3 py-4 transform" ${
                 isCollapsed ? "w-auto" : "w-64"
               } bg-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-all ${
                 openMobileMenu ? "open" : "fdfds"
@@ -283,7 +267,7 @@ export default function RootLayout({ children }) {
               <DynamicBreadcrumb />
               <div className="px-3 md:px-6 pb-8">{children}</div>
             </div>
-          </>
+          </AlertProvider>
         </AuthProvider>
       </body>
     </html>

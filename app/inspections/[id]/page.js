@@ -4,28 +4,22 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import dynamic from "next/dynamic";
 import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
-import Link from "next/link";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
+import { getLocationDetails } from "../../../utils/api/mapbox";
 import {
   CheckMark,
-  ElipseIcon,
-  ElipseIconAlt,
   FavoriteIcon,
-  ImageIcon,
   PlusIcon,
 } from "../../../public/icons/intangible-icons";
 import {
-  formatFileName,
-  downloadFileFromUrl,
   downloadFilesAsZip,
   isImage,
   ensureDomain,
@@ -53,8 +47,6 @@ export default function Page(props) {
   const [activeCompletion, setActiveCompletion] = useState(0);
   const [structureProgressType, setStructureProgressType] = useState("all");
   const [structureAssetType, setStructureAssetType] = useState("all");
-  // this is being replaced by the useInspection hook
-  // const [inspection, setInspection] = useState(null);
   const [options, setOptions] = useState({
     series: [70],
     chart: {
@@ -158,47 +150,6 @@ export default function Page(props) {
       url: `${file.attributes.url}`,
       name: file.attributes.name,
     }));
-  };
-
-  /**
-   * This async function gets the location details for a given longitude and latitude.
-   * @param {number} longitude - The longitude of the location.
-   * @param {number} latitude - The latitude of the location.
-   * @returns {Promise} A promise that resolves to the location details.
-   */
-  const getLocationDetails = async (longitude, latitude) => {
-    const endpoint = "mapbox.places";
-    const accessToken =
-      "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q"; // Replace with your Mapbox access token
-    const url = `https://api.mapbox.com/geocoding/v5/${endpoint}/${longitude},${latitude}.json?access_token=${accessToken}`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      const findFeature = (type) =>
-        data.features.find((feature) => feature.place_type.includes(type));
-
-      const place = findFeature("place");
-      const region = findFeature("region");
-      const address = findFeature("address");
-      const postcode = findFeature("postcode");
-
-      return {
-        State: region ? region.text : "Not found",
-        city: place ? place.text : "Not found",
-        address: address ? `${address.address} ${address.text}` : "Not found",
-        zipCode: postcode ? postcode.text : "Not found",
-      };
-    } catch (error) {
-      console.error("Error in reverse geocoding:", error);
-      return {
-        State: "Error",
-        city: "Error",
-        address: "Error",
-        zipCode: "Error",
-      };
-    }
   };
 
   /**
@@ -330,76 +281,92 @@ export default function Page(props) {
     }));
   }, [structureProgressType]);
 
-  // Separate useEffect for the marker layer
   useEffect(() => {
     if (!map.current || structures.length === 0) return;
 
-    // Load the specific PNG files based on the status
-
-    structures.forEach((structure) => {
-      const color = getColorBasedOnStatus(structure.attributes.status);
-      const iconName = `profile-icon-${color}`;
-
-      // Only load the image if it's not already on the map
-      if (!map.current.hasImage(iconName)) {
-        const url = loadIcon(color);
-        map.current.loadImage(url, (error, image) => {
-          if (error) {
-            console.error(`Error loading ${color} icon:`, error);
-            return;
-          }
-
-          // Check if the image already exists before adding it
-          if (!map.current.hasImage(iconName)) {
-            map.current.addImage(iconName, image);
-          }
-        });
-      }
-    });
-
-    const geojsonData = {
-      type: "FeatureCollection",
-      features: structures.map((structure) => {
+    // Function to execute map operations
+    const executeMapOperations = () => {
+      structures.forEach((structure) => {
         const color = getColorBasedOnStatus(structure.attributes.status);
         const iconName = `profile-icon-${color}`;
 
-        return {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [
-              structure.attributes.longitude,
-              structure.attributes.latitude,
-            ],
+        // Only load the image if it's not already on the map
+        if (!map.current.hasImage(iconName)) {
+          const url = loadIcon(color);
+          map.current.loadImage(url, (error, image) => {
+            if (error) {
+              console.error(`Error loading ${color} icon:`, error);
+              return;
+            }
+
+            // Check if the image already exists before adding it
+            if (!map.current.hasImage(iconName)) {
+              map.current.addImage(iconName, image);
+            }
+          });
+        }
+      });
+
+      const geojsonData = {
+        type: "FeatureCollection",
+        features: structures.map((structure) => {
+          const color = getColorBasedOnStatus(structure.attributes.status);
+          const iconName = `profile-icon-${color}`;
+
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [
+                structure.attributes.longitude,
+                structure.attributes.latitude,
+              ],
+            },
+            properties: {
+              id: structure.id,
+              icon: iconName,
+            },
+          };
+        }),
+      };
+
+      // Ensure the "markers" source is added or updated
+      if (!map.current.getSource("markers")) {
+        map.current.addSource("markers", {
+          type: "geojson",
+          data: geojsonData,
+        });
+      } else {
+        map.current.getSource("markers").setData(geojsonData);
+      }
+
+      // Ensure the "marker-layer" is added
+      if (!map.current.getLayer("marker-layer")) {
+        map.current.addLayer({
+          id: "marker-layer",
+          type: "symbol",
+          source: "markers",
+          layout: {
+            "icon-image": ["get", "icon"],
+            "icon-size": 0.6, // Adjust icon size as needed
           },
-          properties: {
-            id: structure.id,
-            icon: iconName,
-          },
-        };
-      }),
+        });
+      }
     };
 
-    if (!map.current.getSource("markers")) {
-      map.current?.addSource("markers", {
-        type: "geojson",
-        data: geojsonData,
-      });
+    // Check if the map is already loaded, if not, listen for the load event
+    if (map.current.isStyleLoaded()) {
+      executeMapOperations();
     } else {
-      map.current.getSource("markers").setData(geojsonData);
+      map.current.on("load", executeMapOperations);
     }
 
-    if (!map.current.getLayer("marker-layer")) {
-      map.current.addLayer({
-        id: "marker-layer",
-        type: "symbol",
-        source: "markers",
-        layout: {
-          "icon-image": ["get", "icon"],
-          "icon-size": 0.6, // Adjust icon size as needed
-        },
-      });
-    }
+    // Clean up the event listener
+    return () => {
+      if (map.current) {
+        map.current.off("load", executeMapOperations);
+      }
+    };
   }, [structures]);
 
   useEffect(() => {
@@ -733,30 +700,6 @@ export default function Page(props) {
                 </div>
               ) : null}
             </div>
-
-            {activeView === "overview" && (
-              <div className="justify-center gap-4 mt-3 hidden">
-                <p className="text-sm font-medium">Show Only:</p>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="cant-inspect" />
-                  <Label className="text-sm font-medium" htmlFor="cant-inspect">
-                    {"Can't Inspect"}
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="inspected" />
-                  <Label className="text-sm font-medium" htmlFor="inspected">
-                    Inspected
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="uploaded" />
-                  <Label className="text-sm font-medium" htmlFor="uploaded">
-                    Uploaded
-                  </Label>
-                </div>
-              </div>
-            )}
           </div>
 
           {activeView === "singleView" && (
@@ -947,53 +890,6 @@ export default function Page(props) {
               columns={2}
               padded={false}
             />
-            {/* {inspection?.structures?.map((structure) =>
-                structure.attributes.images.data?.map((image, index) => (
-                  <div
-                    key={`${structure.id}-${index}`}
-                    className="aspect-square rounded-md overflow-hidden relative border"
-                  >
-                    <img
-                      className="object-cover hover:saturate-50" // Step 2: Use the Image component
-                      src={`${ensureDomain(
-                        image?.attributes?.formats?.small?.url
-                      )}`}
-                      alt="fasfdsafdsa"
-                    />
-                    <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
-                      <h6 className="leading-none text-xxs">
-                        {formatFileName(image.attributes.name)}
-                      </h6>
-                      <Dropdown
-                        inline
-                        label=""
-                        placement="top"
-                        dismissOnClick={false}
-                        renderTrigger={() => (
-                          <span className="flex">
-                            <ElipseIconAlt />
-                          </span>
-                        )}
-                      >
-                        <Dropdown.Item
-                          onClick={(e) =>
-                            downloadFileFromUrl(`${image.attributes.url}`)
-                          }
-                        >
-                          <div className="flex items-center">
-                            <span className="">Download</span>
-                          </div>
-                        </Dropdown.Item>
-                        <Dropdown.Item>
-                          <div className="flex items-center">
-                            <span className="">Remove</span>
-                          </div>
-                        </Dropdown.Item>
-                      </Dropdown>
-                    </div>
-                  </div>
-                ))
-              )} */}
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button
