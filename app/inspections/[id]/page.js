@@ -13,6 +13,7 @@ import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
+import ActivityLog from "../../../components/ActivityLog";
 import { getLocationDetails } from "../../../utils/api/mapbox";
 import {
   CheckMark,
@@ -1017,6 +1018,12 @@ export default function Page(props) {
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4">
+        {inspection && (
+          <ActivityLog id={inspection?.id} collection="inspections" />
+        )}
       </div>
     </>
   );
