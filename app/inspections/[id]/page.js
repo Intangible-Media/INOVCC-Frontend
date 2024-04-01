@@ -816,9 +816,7 @@ export default function Page(props) {
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex flex-col gap-1">
             <h6 className="text-lg font-semibold">Documents</h6>
-            <p className="text-base text-gray-500">
-              {selectedStructure?.attributes.mapSection || ""}
-            </p>
+            <p className="text-base text-gray-500">{inspection?.name || ""}</p>
           </div>
           <div className="overflow-auto">
             {inspection && (

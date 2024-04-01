@@ -458,8 +458,6 @@ export default function Page({ params }) {
                       </td>
                     </tr>
                   ))}
-
-                  {/* End of Repeat */}
                 </tbody>
               </table>
             </section>

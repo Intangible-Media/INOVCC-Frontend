@@ -8,7 +8,9 @@ import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo } from "../../utils/strings";
+import ActivityLog from "../ActivityLog";
 import qs from "qs";
+import axios from "axios";
 
 export default function MapPanel({ structure }) {
   const { data: session, loading } = useSession();
@@ -59,6 +61,9 @@ export default function MapPanel({ structure }) {
     const payload = {
       data: {
         ...updatedStructureWithoutImages,
+        inspectors: updatedStructure.attributes.inspectors.data.map(
+          (inspector) => inspector.id
+        ),
       },
     };
 
@@ -168,11 +173,11 @@ export default function MapPanel({ structure }) {
         </div>
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "notes"
+            "comments"
           )}`}
-          onClick={(e) => setCurrentPanel("notes")}
+          onClick={(e) => setCurrentPanel("comments")}
         >
-          <h3 className="text-xs font-medium">Notes</h3>
+          <h3 className="text-xs font-medium">Comments</h3>
         </div>
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
@@ -188,7 +193,7 @@ export default function MapPanel({ structure }) {
         <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
             <div id="overview-content">
-              <div className="flex gap-4 border-b px-8 py-4">
+              <div className="flex gap-4 border-b px-8 py-8">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400 w-full">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg
@@ -251,23 +256,6 @@ export default function MapPanel({ structure }) {
                       Updated {timeAgo(structure.attributes?.updatedAt)}
                     </span>
                   </li>
-                  <li className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M13.333 2.66675H2.66634C2.31272 2.66675 1.97358 2.81659 1.72353 3.08331C1.47348 3.35003 1.33301 3.71177 1.33301 4.08897V11.9112C1.33301 12.2884 1.47348 12.6501 1.72353 12.9169C1.97358 13.1836 2.31272 13.3334 2.66634 13.3334H13.333C13.6866 13.3334 14.0258 13.1836 14.2758 12.9169C14.5259 12.6501 14.6663 12.2884 14.6663 11.9112V4.08897C14.6663 3.71177 14.5259 3.35003 14.2758 3.08331C14.0258 2.81659 13.6866 2.66675 13.333 2.66675ZM12.9683 4.08897L8.02834 8.55759L3.03701 4.08897H12.9683ZM2.66634 11.9112V5.6143L7.19967 9.66764C7.42777 9.85063 7.7056 9.94925 7.99101 9.94853C8.29398 9.94725 8.58826 9.84037 8.82901 9.64417L13.333 5.6143V11.9112H2.66634Z"
-                        fill="#312E8E"
-                      />
-                    </svg>
-                    <span className="leading-none font-medium text-xs text-gray-900">
-                      No setup, or hidden fees
-                    </span>
-                  </li>
                 </ul>
               </div>
               <div className="flex flex-col border-b px-8 py-6">
@@ -278,6 +266,12 @@ export default function MapPanel({ structure }) {
                   images={updatedStructure.attributes.images}
                   editable={false}
                 />
+              </div>
+              <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
+                <h4 className="leading-none font-medium text-sm mb-2">
+                  Comments
+                </h4>
+                <StructureComments />
               </div>
               <div className="flex flex-col border-b px-8 py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
@@ -292,9 +286,16 @@ export default function MapPanel({ structure }) {
                   addForm={false}
                 />
               </div>
+
               <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
-                <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
-                <StructureNotes notes={updatedStructure.attributes.notes} />
+                <h4 className="leading-none font-medium text-sm mb-2">
+                  Activity
+                </h4>
+                <ActivityLog
+                  id={structure.id}
+                  collection="structures"
+                  showDate={false}
+                />
               </div>
             </div>
           )}
@@ -316,22 +317,21 @@ export default function MapPanel({ structure }) {
             </div>
           )}
 
-          {currentPanel === "notes" && (
+          {currentPanel === "comments" && (
             <div id="inspectors-content" className="w-full bg-gray-50">
               <div className="flex flex-col px-8 pt-6 mb-2">
-                <h4 className="leading-none font-medium text-sm mb-2">Notes</h4>
+                <h4 className="leading-none font-medium text-sm mb-2">
+                  Comments
+                </h4>
               </div>
               <div className="flex flex-col px-8 pb-6">
-                <StructureNotes
-                  notes={updatedStructure.attributes.notes}
-                  editable={true}
-                />
+                <StructureComments editable={true} />
               </div>
             </div>
           )}
 
           {currentPanel === "edit" && (
-            <div id="notes-content" className="w-full">
+            <div id="comments-content" className="w-full">
               <div className="flex flex-col px-8 pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
 
@@ -479,46 +479,93 @@ export default function MapPanel({ structure }) {
   );
 }
 
-const StructureNotes = ({ notes = [], editable = false }) => {
-  const [newNote, setNewNote] = useState("");
+const StructureComments = ({ comments = [], editable = false }) => {
+  const { data: session } = useSession();
+  const [newComment, setNewComment] = useState("");
   const [addComment, setAddComment] = useState(false);
+  const [allStructureComments, setAllStructureComments] = useState(comments);
 
-  const handleNoteChange = (event) => {
-    setNewNote(event.target.value);
+  const handleCommentChange = (event) => {
+    setNewComment(event.target.value);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!newNote.trim()) return; // Prevent submitting empty notes
+    if (!newComment.trim()) return; // Prevent submitting empty comments
 
-    onNoteSubmit(newNote); // Assume this function sends the note to the server or updates state
-    setNewNote(""); // Clear the input after submission
+    onCommentSubmit(newComment); // Assume this function sends the comments to the server or updates state
+    setNewComment(""); // Clear the input after submission
   };
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      const query = qs.stringify(
+        {
+          sort: ["createdAt:desc"],
+          populate: {
+            author: {
+              populate: {
+                picture: "*", // Populate the 'picture' relation
+              },
+              fields: ["firstName", "lastName"],
+            },
+          },
+        },
+        {
+          encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+        }
+      );
+
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/comments?${query}`,
+          {
+            headers: { Authorization: `Bearer ${session?.accessToken}` },
+          }
+        );
+
+        console.log(response.data.data);
+        setAllStructureComments(response.data.data);
+      } catch (error) {
+        console.error("Error fetching comments", error);
+      }
+    };
+
+    fetchComments();
+  }, []);
 
   return (
     <>
       <ul className="flex flex-col gap-4">
-        {notes.map((note, index) => (
+        {allStructureComments.length === 0 && (
+          <div className="col-span-3 flex justify-center items-center h-full mb-4">
+            <p className="text-gray-500">No comments have been made.</p>
+          </div>
+        )}
+        {allStructureComments.map((comment, index) => (
           <li key={index} className="bg-white rounded-md border">
             <div className="p-3">
               <div className="flex items-center space-x-4 rtl:space-x-reverse">
                 <div className="flex-shrink-0">
                   <img
-                    className="w-8 h-8 rounded-full"
-                    src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                    alt="Neil image"
+                    className="w-10 h-10 rounded-full object-cover"
+                    src={ensureDomain(
+                      comment.attributes.author.data.attributes.picture.data
+                        .attributes.formats.thumbnail.url
+                    )}
+                    alt="something"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                    {note?.author?.data?.attributes?.firstName}{" "}
-                    {note?.author?.data?.attributes?.lastName}
+                    {comment.attributes.author.data.attributes.firstName}{" "}
+                    {comment.attributes.author.data.attributes.lastName}
                   </p>
                 </div>
               </div>
               <div className="mt-2">
                 <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                  {note.text}
+                  {comment.attributes.message}
                 </p>
               </div>
             </div>
@@ -556,14 +603,14 @@ const StructureNotes = ({ notes = [], editable = false }) => {
           {addComment && (
             <form onSubmit={handleSubmit} className="mt-4">
               <textarea
-                value={newNote}
-                onChange={handleNoteChange}
+                value={newComment}
+                onChange={handleCommentChange}
                 className="w-full p-2 text-sm text-gray-900 bg-white border rounded-md"
-                placeholder="Write a note..."
+                placeholder="Write a comment..."
                 rows="3"
               ></textarea>
               <Button className="w-full bg-dark-blue-700 hover:bg-dark-blue-800">
-                Submit Note
+                Submit Comment
               </Button>
             </form>
           )}
@@ -611,6 +658,29 @@ const AddInspectorForm = ({
       setAvailableInspectors(filteredUsers);
     } catch (error) {
       console.error("Error fetching users", error);
+    }
+  };
+
+  const updateStructureInspectors = async () => {
+    const payload = {
+      data: {
+        inspectors: assignedInspectors.map((inspector) => inspector.id),
+      },
+    };
+
+    const apiParams = {
+      jwt: session.accessToken,
+      payload: payload,
+      id: updatedStructure.id,
+      query: "",
+    };
+
+    try {
+      const response = await updateStructure(apiParams);
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
     }
   };
 

@@ -317,7 +317,7 @@ const ImageSlider = ({
               );
             })
           ) : (
-            <div className="col-span-3 flex justify-center items-center h-full">
+            <div className="col-span-3 flex justify-center items-center h-full mb-6">
               <p className="text-gray-500">No images available.</p>
             </div>
           )}

@@ -85,7 +85,7 @@
 
 .map-structure-panel {
   height: auto;
-  width: 450px;
+  width: 500px;
 }
 
 @media (max-width: 550px) {
@@ -520,3 +520,11 @@ html body .force-w-full span:focus{
   padding-left: 0;
   padding-right: 0;
 } 
+
+.activity-group-date.sticky {
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  top: 0; /* Adjust as needed */
+  z-index: 10; /* Ensure it stays on top of other content */
+  background-color: inherit; /* Match the background to ensure text readability */
+}
