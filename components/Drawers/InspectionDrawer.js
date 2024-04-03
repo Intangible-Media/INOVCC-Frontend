@@ -428,7 +428,7 @@ const InspectionDrawer = ({ btnText }) => {
   );
 
   return (
-    <>
+    <div>
       <Button
         onClick={toggleDrawer}
         className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
@@ -896,7 +896,7 @@ const InspectionDrawer = ({ btnText }) => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

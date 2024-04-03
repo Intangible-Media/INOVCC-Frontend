@@ -224,3 +224,122 @@ export const timeAgo = (dateString) => {
     return "just now";
   }
 };
+
+/**
+ * Formats a date string into an object containing an abbreviated month, day of the month, and formatted time.
+ *
+ * @param {string} dateString - The date string to format, compatible with the Date constructor.
+ * @returns {Object} An object containing the day of the month (`day`), abbreviated month name (`month`), and formatted time in hh:mm(am/pm) format (`time`).
+ */
+export const formatAbbreviatedDate = (dateString) => {
+  const monthAbbreviations = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const date = new Date(dateString);
+
+  // Extract the day of the month
+  const day = date.getDate();
+
+  // Abbreviate the month
+  const month = monthAbbreviations[date.getMonth()];
+
+  // Format the time
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "pm" : "am";
+
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+  const time = `${hours}:${minutesStr}${ampm}`;
+
+  return { day, month, time };
+};
+
+/**
+ * Formats a date string into a human-readable string, with an option to include the time.
+ *
+ * @param {string} dateString - The date string to format, compatible with the Date constructor.
+ * @param {boolean} [includeTime=true] - A boolean indicating whether to include the time in the formatted string. Defaults to true.
+ * @returns {string} A string formatted as "Month day, year" or "Month day, year / hh:mm(am/pm)" if `includeTime` is true.
+ */
+export const formatDateToString = (dateString, includeTime = true) => {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const date = new Date(dateString);
+
+  // Full month name
+  const month = months[date.getMonth()];
+
+  // Day of the month
+  const day = date.getDate();
+
+  // Year
+  const year = date.getFullYear();
+
+  let dateStringFormatted = `${month} ${day}, ${year}`;
+
+  if (includeTime) {
+    // Formatting time
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? "pm" : "am";
+
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert '0' hours to '12'
+    const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+    const time = `${hours}:${minutesStr}${ampm}`;
+    dateStringFormatted += ` / ${time}`;
+  }
+
+  return dateStringFormatted;
+};
+
+/**
+ * Converts a camelCase or kebab-case string into Title Case.
+ * Title Case means the first letter of each word is capitalized and words are separated by a space.
+ * This function identifies transitions from lowercase to uppercase letters and hyphens as word boundaries.
+ *
+ * @param {string} input The camelCase or kebab-case string to be converted.
+ * @return {string} The converted string in Title Case.
+ */
+export const camelCaseToTitleCase = (input) => {
+  // Replace hyphens with spaces and insert a space before all caps, then trim
+  let result = input
+    .replace(/-/g, " ")
+    .replace(/([A-Z])/g, " $1")
+    .trim();
+  // Capitalize the first letter of each word
+  result = result
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+  return result;
+};

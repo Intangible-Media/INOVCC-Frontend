@@ -71,7 +71,7 @@ export default function ImageCardGrid({
       <div
         className={`grid ${columnsNumber} ${paddedStyle} ${background} gap-2`}
       >
-        {files.map((file, index) => {
+        {files?.map((file, index) => {
           // Create an object URL for the file
           const fileUrl = file.attributes?.url || URL.createObjectURL(file);
           const fileName = file.attributes?.name || file.name;

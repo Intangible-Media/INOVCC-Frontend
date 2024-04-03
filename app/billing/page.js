@@ -41,9 +41,11 @@ export default function Page() {
 
   return (
     <>
-      <div className="flex mb-4">
-        <Link href="/billing/create">
-          <Button className="bg-cyan-400">New Invoice</Button>
+      <div className="flex my-6">
+        <Link href="/billing/create" className="w-full">
+          <Button className="bg-dark-blue-700 text-white w-full">
+            New Invoice
+          </Button>
         </Link>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-4 mb-4">

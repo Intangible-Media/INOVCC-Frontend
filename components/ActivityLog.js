@@ -1,27 +1,39 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Label, TextInput } from "flowbite-react";
 import { useSession } from "next-auth/react";
 
 import axios from "axios";
 import qs from "qs";
-import { ensureDomain } from "../utils/strings";
+import {
+  ensureDomain,
+  formatAbbreviatedDate,
+  formatDateToString,
+} from "../utils/strings";
 
-export default function ActivityLog({ id, collection, showDate = true }) {
+export default function ActivityLog({
+  id,
+  collection,
+  showDate = true,
+  defaultExpanded = false,
+}) {
   const [activityGroups, setActivityGroups] = useState([]);
   const { data: session } = useSession();
-  const [isExpanded, setIsExpanded] = useState(false);
-  const activityLogRef = useRef(null); // Added ref here
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [page, setPage] = useState(1); // Keep track of the current page
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true); // State to track if there are more activities to load
 
   useEffect(() => {
     const fetchActivities = async () => {
-      if (loading) return;
+      if (loading || !hasMore) return; // Prevent fetching if already loading or no more activities
       setLoading(true);
 
       const query = qs.stringify(
         {
           sort: ["createdAt:desc"],
           pagination: {
-            pageSize: 5,
+            page,
+            pageSize: 5, // Adjust pageSize as needed
           },
           populate: {
             user: {
@@ -49,8 +61,16 @@ export default function ActivityLog({ id, collection, showDate = true }) {
           }
         );
 
-        const newData = groupByCreationDate(response.data.data);
-        setActivityGroups(newData);
+        const newData = response.data.data;
+        console.log("activityGroups", activityGroups);
+        console.log("new activity group", [
+          ...activityGroups,
+          ...groupByCreationDate(newData),
+        ]);
+        setActivityGroups(
+          flattenActivityGroups(activityGroups, groupByCreationDate(newData))
+        );
+        setHasMore(newData.length === 5); // Assume there are more to load if exactly 5 activities were returned
       } catch (error) {
         console.error("Failed to fetch activities", error);
       } finally {
@@ -58,40 +78,22 @@ export default function ActivityLog({ id, collection, showDate = true }) {
       }
     };
 
-    fetchActivities();
-  }, [session?.accessToken, id, collection]);
-
-  useEffect(() => {
-    if (!isExpanded) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            console.log("Scrolled to the bottom of the activity log");
-            // Optionally: Check if there's more content to load and load it here
-          }
-        });
-      },
-      {
-        root: null, // observing for viewport
-        rootMargin: "0px",
-        threshold: 1.0, // Trigger when 100% of the observed element is in the viewport
-      }
-    );
-
-    const div = activityLogRef.current;
-    if (div) {
-      // Observe the last element in your activity log for intersection
-      observer.observe(div.lastElementChild);
+    if (isExpanded) {
+      fetchActivities();
     }
+  }, [session?.accessToken, id, collection, page, isExpanded]); // Add `page` and `isExpanded` to the dependency array
 
-    return () => {
-      if (div) {
-        observer.disconnect();
-      }
-    };
-  }, [isExpanded]);
+  // Define the function for the "Load More" button click
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage((prevPage) => prevPage + 1); // This will trigger the useEffect to load the next page of activities
+    }
+  };
+
+  function flattenActivityGroups(array1, array2) {
+    const combinedData = [...array1.flat(2), ...array2.flat(2)];
+    return groupByCreationDate(combinedData);
+  }
 
   function groupByCreationDate(data) {
     const groups = {};
@@ -131,90 +133,6 @@ export default function ActivityLog({ id, collection, showDate = true }) {
     return Object.values(groups);
   }
 
-  function formatAbbreviatedDate(dateString) {
-    const monthAbbreviations = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    const date = new Date(dateString);
-
-    // Extract the day of the month
-    const day = date.getDate();
-
-    // Abbreviate the month
-    const month = monthAbbreviations[date.getMonth()];
-
-    // Format the time
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "pm" : "am";
-
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const minutesStr = minutes < 10 ? "0" + minutes : minutes;
-
-    const time = `${hours}:${minutesStr}${ampm}`;
-
-    return { day, month, time };
-  }
-
-  function formatDateToString(dateString, includeTime = true) {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    const date = new Date(dateString);
-
-    // Full month name
-    const month = months[date.getMonth()];
-
-    // Day of the month
-    const day = date.getDate();
-
-    // Year
-    const year = date.getFullYear();
-
-    let dateStringFormatted = `${month} ${day}, ${year}`;
-
-    if (includeTime) {
-      // Formatting time
-      let hours = date.getHours();
-      const minutes = date.getMinutes();
-      const ampm = hours >= 12 ? "pm" : "am";
-
-      hours = hours % 12;
-      hours = hours ? hours : 12; // Convert '0' hours to '12'
-      const minutesStr = minutes < 10 ? "0" + minutes : minutes;
-
-      const time = `${hours}:${minutesStr}${ampm}`;
-      dateStringFormatted += ` / ${time}`;
-    }
-
-    return dateStringFormatted;
-  }
-
   function BoldQuotesMessage({ message }) {
     // This regex matches segments inside quotes and outside quotes
     const regex = /"([^"]*)"|([^"]+)/g;
@@ -241,32 +159,50 @@ export default function ActivityLog({ id, collection, showDate = true }) {
   }
 
   return (
-    <div>
-      {isExpanded ? (
-        <p
-          className="text-gray-500 text-xs py-4"
-          onClick={() => setIsExpanded(false)}
-        >
-          Close Activity Log
-        </p>
-      ) : (
-        <p
-          className="text-gray-500 text-xs py-4"
-          onClick={() => setIsExpanded(true)}
-        >
-          Open Activity Log
-        </p>
+    <>
+      {!defaultExpanded && (
+        <div className="flex justify-between">
+          {isExpanded && (
+            <p
+              className="text-gray-500 text-sm"
+              onClick={() => setIsExpanded(false)}
+            >
+              Close Activity Log
+            </p>
+          )}
+
+          {!isExpanded && (
+            <p
+              className="text-gray-500 text-sm"
+              onClick={() => setIsExpanded(true)}
+            >
+              Open Activity Log
+            </p>
+          )}
+
+          {isExpanded && (
+            <div className="flex max-w-md gap-4">
+              <Label className="hidden" htmlFor="activitySearch">
+                Search Activities
+              </Label>
+              <TextInput
+                type="text"
+                id="activitySearch"
+                placeholder="Search Activities"
+                className="bg-white"
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {isExpanded && (
-        <div
-          ref={activityLogRef}
-          className="flex flex-col bg-transparent gap-4 rounded-lg mb-4 border-t pt-4 h-auto max-h-96 overflow-auto"
-        >
+        <div className="activity-log-container flex flex-col h-auto max-h-96 overflow-auto gap-5">
+          {/* Render activity groups here */}
           {activityGroups.map((activityGroup, index) => (
             <div key={index} className="flex gap-5">
               {showDate && (
-                <div className="activity-group-date flex flex-col text-center gap-1 sticky h-fit">
+                <div className="activity-group-date flex flex-col text-center gap-1 sticky h-fit w-7">
                   <p className="leading-none text-xl font-semibold text-dark-blue-600">
                     {
                       formatAbbreviatedDate(
@@ -285,7 +221,7 @@ export default function ActivityLog({ id, collection, showDate = true }) {
               )}
               <div className="flex flex-col gap-2 w-full">
                 {!showDate && (
-                  <time className="text-xs font-medium text-gray-500 dark:text-white">
+                  <time className="text-xs font-medium text-gray-500 dark:text-white h-fit">
                     {`${formatDateToString(
                       activityGroup[0].attributes.createdAt,
                       false
@@ -328,9 +264,12 @@ export default function ActivityLog({ id, collection, showDate = true }) {
               </div>
             </div>
           ))}
-          {loading && <p>Loading more activities...</p>}
+          {hasMore && !loading && (
+            <button onClick={handleLoadMore}>Load More</button> // Button to load more activities
+          )}
+          {loading && <p>Loading...</p>}
         </div>
       )}
-    </div>
+    </>
   );
 }

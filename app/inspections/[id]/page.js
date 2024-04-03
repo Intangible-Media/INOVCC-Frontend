@@ -14,6 +14,7 @@ import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
+import ProtectedContent from "../../../components/ProtectedContent";
 import { getLocationDetails } from "../../../utils/api/mapbox";
 import {
   CheckMark,
@@ -623,12 +624,14 @@ export default function Page(props) {
           {/* <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3> */}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 align-middle">
-          <InspectionDrawer
-            inspection={inspection}
-            setInspection={setInspection}
-            btnText={"Edit Inspection"}
-          />
+        <div className="flex gap-3 align-middle">
+          <ProtectedContent requiredRoles={["Admin"]}>
+            <InspectionDrawer
+              inspection={inspection}
+              setInspection={setInspection}
+              btnText={"Edit Inspection"}
+            />
+          </ProtectedContent>
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
             Add to Favorites <FavoriteIcon />
           </Button>
@@ -803,13 +806,15 @@ export default function Page(props) {
             </div>
           </div>
           <div className="w-full mt-auto">
-            <ApexChart
-              type="radialBar"
-              options={options}
-              series={[activeCompletion]}
-              height={450}
-              width={"100%"}
-            />
+            <ProtectedContent requiredRoles={["Admin"]}>
+              <ApexChart
+                type="radialBar"
+                options={options}
+                series={[activeCompletion]}
+                height={450}
+                width={"100%"}
+              />
+            </ProtectedContent>
           </div>
         </div>
 
@@ -956,8 +961,8 @@ export default function Page(props) {
             ))}
           </div>
 
-          <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">Edit</button>
+          <div className="flex justify-end pt-5 border-t mt-auto">
+            {/* <button className="text-sm text-gray-500 font-medium">Edit</button> */}
             <a
               target="_blank"
               href={`mailto:${inspectorsEmails}?subject=Inspection | ${inspection?.name}&body=${process.env.NEXT_PUBLIC_STRAPI_URL}${pathname}, this is a message from the site!`}
@@ -973,44 +978,46 @@ export default function Page(props) {
             {inspection?.client.data.attributes.name}
           </h6>
 
-          {inspection?.client.data.attributes.contacts?.data.map(
-            (clientContact, index) => (
-              <div
-                key={index}
-                className="alternate-bg flex gap-4 align-middle py-2"
-              >
-                <img
-                  className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
-                  src={`${ensureDomain(
-                    clientContact?.attributes?.picture?.data?.attributes
-                      ?.formats?.thumbnail?.url
-                  )}`}
-                  alt="fdsfdsfds"
-                />
-                <div className="flex flex-col gap-1 align-middle justify-center">
-                  <p className="leading-none text-sm font-medium">
-                    {`${clientContact.attributes.firstName} ${clientContact.attributes.lastName}`}
-                  </p>
-                  <p className="leading-none text-xs mb-3">
-                    {clientContact.attributes.jobTitle}
-                  </p>
-                  <p className="leading-none text-xs">
-                    <a href={`mailto:${clientContact.attributes.email}`}>
-                      E: {clientContact.attributes.email}
-                    </a>
-                  </p>
-                  <p className="leading-none text-xs">
-                    <a href={`tel:${clientContact.attributes.phone}`}>
-                      P: +{clientContact.attributes.phone}
-                    </a>
-                  </p>
+          <div className="h-full">
+            {inspection?.client.data.attributes.contacts?.data.map(
+              (clientContact, index) => (
+                <div
+                  key={index}
+                  className="alternate-bg flex gap-4 align-middle py-2"
+                >
+                  <img
+                    className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
+                    src={`${ensureDomain(
+                      clientContact?.attributes?.picture?.data?.attributes
+                        ?.formats?.thumbnail?.url
+                    )}`}
+                    alt="fdsfdsfds"
+                  />
+                  <div className="flex flex-col gap-1 align-middle justify-center">
+                    <p className="leading-none text-sm font-medium">
+                      {`${clientContact.attributes.firstName} ${clientContact.attributes.lastName}`}
+                    </p>
+                    <p className="leading-none text-xs mb-3">
+                      {clientContact.attributes.jobTitle}
+                    </p>
+                    <p className="leading-none text-xs">
+                      <a href={`mailto:${clientContact.attributes.email}`}>
+                        E: {clientContact.attributes.email}
+                      </a>
+                    </p>
+                    <p className="leading-none text-xs">
+                      <a href={`tel:${clientContact.attributes.phone}`}>
+                        P: +{clientContact.attributes.phone}
+                      </a>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )
-          )}
+              )
+            )}
+          </div>
 
-          <div className="flex justify-between pt-5 border-t mt-auto">
-            <button className="text-sm text-gray-500 font-medium">Edit</button>
+          <div className="flex justify-end pt-5 border-t mt-auto">
+            {/* <button className="text-sm text-gray-500 font-medium">Edit</button> */}
             <button className="flex align-middle text-sm font-semibold">
               Email Client <PlusIcon />
             </button>
@@ -1018,7 +1025,7 @@ export default function Page(props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4 mt-4">
         {inspection && (
           <ActivityLog id={inspection?.id} collection="inspections" />
         )}

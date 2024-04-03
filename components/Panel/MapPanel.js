@@ -61,7 +61,7 @@ export default function MapPanel({ structure }) {
     const payload = {
       data: {
         ...updatedStructureWithoutImages,
-        inspectors: updatedStructure.attributes.inspectors.data.map(
+        inspectors: updatedStructure.attributes.inspectors.data?.map(
           (inspector) => inspector.id
         ),
       },
@@ -279,7 +279,7 @@ export default function MapPanel({ structure }) {
                 </h4>
                 <AddInspectorForm
                   currentInspectors={
-                    updatedStructure.attributes.inspectors.data
+                    updatedStructure.attributes.inspectors?.data
                   }
                   setUpdatedStructure={setUpdatedStructure}
                   updatedStructure={updatedStructure}
@@ -295,6 +295,7 @@ export default function MapPanel({ structure }) {
                   id={structure.id}
                   collection="structures"
                   showDate={false}
+                  defaultExpanded={true}
                 />
               </div>
             </div>
@@ -453,7 +454,7 @@ export default function MapPanel({ structure }) {
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
                       currentInspectors={
-                        updatedStructure.attributes.inspectors.data
+                        updatedStructure.attributes.inspectors?.data
                       }
                       setUpdatedStructure={setUpdatedStructure}
                       updatedStructure={updatedStructure}

@@ -2,6 +2,7 @@ import NextAuth, { Session, User as NextAuthUser } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+import qs from "qs";
 
 interface User {
   id: string;
@@ -40,16 +41,39 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         try {
-          const res = await axios.post(
+          // Step 1: Authenticate the user and get the user ID
+          const loginResponse = await axios.post(
             `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/auth/local`,
             {
               identifier: credentials.username,
               password: credentials.password,
             }
           );
-
-          if (res.data) {
-            return res.data;
+      
+          const userId = loginResponse.data.user.id;
+      
+          if (userId) {
+            // Step 2: Fetch detailed user information, including role
+            const userDetailsResponse = await axios.get(
+              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/${userId}?populate=role`,
+              {
+                headers: {
+                  Authorization: `Bearer ${loginResponse.data.jwt}`,
+                },
+              }
+            );
+      
+            // Combine login response and detailed user information as needed
+            const userWithRole = {
+              ...loginResponse.data,
+              user: {
+                ...loginResponse.data.user,
+                role: userDetailsResponse.data.role, // Assuming Strapi v4 structure
+              },
+            };
+      
+            console.log("response", userWithRole);
+            return userWithRole;
           } else {
             return null;
           }
@@ -60,6 +84,7 @@ const handler = NextAuth({
           throw new Error(errorMessage);
         }
       },
+      
     }),
   ],
   callbacks: {
@@ -71,11 +96,16 @@ const handler = NextAuth({
       const user = rawUser as ExtendedUser;
       const extendedToken = token as ExtendedToken; // Use the ExtendedToken type
       if (account && user) {
+        console.log("account", account);
+        console.log("user", user);
         if (user.jwt) {
           extendedToken.accessToken = user.jwt;
         }
         if (user.user) {
           extendedToken.user = user.user;
+        }
+        if (user.user.role) {
+          extendedToken.role = user.user.role.name;
         }
       }
       return extendedToken;

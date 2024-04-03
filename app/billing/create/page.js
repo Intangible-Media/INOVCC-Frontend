@@ -5,14 +5,19 @@ import { Table, Button, TextInput, Select, Alert } from "flowbite-react";
 import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import qs from "qs";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import dynamic from "next/dynamic";
+import { BsCurrencyDollar } from "react-icons/bs";
+import ActivityLog from "../../../components/ActivityLog";
+import { CiCalendarDate } from "react-icons/ci";
 import { MdFileDownload } from "react-icons/md";
+import { FaCalendarDays } from "react-icons/fa6";
+
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -127,11 +132,29 @@ export default function Page({ params }) {
   const [clients, setClients] = useState([]);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showPublishButton, setShowPublishButton] = useState(false);
-  const [clientPricing, setClientPricing] = useState();
+  const [invoicePricing, setInvoicePricing] = useState({});
   const [client, setClient] = useState({
     name: "",
     address: "",
   });
+  const [inputValues, setInputValues] = useState({});
+
+  const handleInputChange = (type, value) => {
+    console.log(type.toLowerCase().replace(" ", "-"));
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [type.toLowerCase().replace(" ", "-")]: value,
+    }));
+  };
+
+  const redBackground = "bg-red-400 text-white";
+  // Initialize state with an object
+
+  useEffect(() => {
+    console.log(inputValues);
+    // Assuming invoicePricing is available in this scope
+    // Initialize inputValues with pricing data if necessary
+  }, [inputValues]);
 
   const chartOptions = {
     chart: {
@@ -222,17 +245,48 @@ export default function Page({ params }) {
             },
           }
         );
+
+        console.log(structuresResponse);
         setStructures(structuresResponse.data.data);
-        setClientPricing(clientResponse.data.data.attributes.structurePricing);
         setClient(clientResponse.data.data.attributes);
+
+        Object.keys(groupedStructures).map((type) => {
+          setInputValues((prevValues) => ({
+            ...prevValues,
+            [type.toLowerCase().replace(" ", "-")]: 0,
+          }));
+        });
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
     }
   };
 
+  const checkIfValueExistOrIsZero = (price) => {
+    if (
+      price === 0 ||
+      price === "0" ||
+      price === "" ||
+      price === null ||
+      price === undefined
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  const allValuesGreaterThanZero = Object.values(inputValues).every((value) => {
+    console.log(value);
+    return checkIfValueExistOrIsZero(value);
+  });
+
   const createInvoice = async () => {
     if (session?.accessToken) {
+      if (!allValuesGreaterThanZero) {
+        console.log("Please fill out all the fields");
+        return;
+      }
+
       try {
         const invoiceData = {
           data: {
@@ -240,7 +294,7 @@ export default function Page({ params }) {
             client: selectedClientId,
             structures: structures.map((structure) => structure.id),
             paid: false,
-            structurePricing: clientPricing,
+            pricing: inputValues,
           },
         };
 
@@ -315,7 +369,7 @@ export default function Page({ params }) {
                 headerRows: 1,
                 paddingLeft: 8,
                 paddingRight: 8,
-                widths: [40, "auto", 100, "*", "*"],
+                widths: [40, "auto", 50, "*", "*"],
                 body: [
                   // This is the header row
                   [
@@ -436,70 +490,26 @@ export default function Page({ params }) {
   }, [session]);
 
   useEffect(() => {
-    console.log(clientPricing);
-
-    function areAllPricesGreaterThanZero(clientPricing) {
-      if (!clientPricing || typeof clientPricing !== "object") {
-        return false; // Return false if clientPricing is null, undefined, or not an object
+    function areAllPricesGreaterThanZero(invoicePricing) {
+      if (!invoicePricing || typeof invoicePricing !== "object") {
+        return false; // Return false if invoicePricing is null, undefined, or not an object
       }
-      return Object.values(clientPricing).every(
+      return Object.values(invoicePricing).every(
         (value) => value && value.price > 0
       );
     }
 
-    console.log(areAllPricesGreaterThanZero(clientPricing));
+    setShowPublishButton(areAllPricesGreaterThanZero(invoicePricing));
+  }, [invoicePricing]);
 
-    setShowPublishButton(areAllPricesGreaterThanZero(clientPricing));
-  }, [clientPricing]);
-
-  const StructuresPricingTable = () => {
-    const redBackground = "bg-red-400 text-white";
-
-    const checkIfValueExistOrIsZero = (type) => {
-      const pricing =
-        clientPricing[type.toLowerCase().replace(" ", "-")]?.price;
-
-      if (pricing && pricing > 0) return "";
-
-      return redBackground;
-    };
-
-    return (
-      <>
-        {Object.keys(groupedStructures).map((type, index) => (
-          <Table.Row
-            className={`bg-white dark:border-gray-700 dark:bg-gray-800 structure-table-row ${checkIfValueExistOrIsZero(
-              type
-            )}`}
-            key={`${type}-${index}`}
-          >
-            <Table.Cell className="text-black">{type}</Table.Cell>
-            <Table.Cell>
-              <TextInput
-                className="w-20 border-none border-0"
-                placeholder="999"
-                value={
-                  clientPricing[type.toLowerCase().replace(" ", "-")]
-                    ? clientPricing[type.toLowerCase().replace(" ", "-")].price
-                    : 0
-                }
-                onChange={(e) =>
-                  setClientPricing({
-                    ...clientPricing,
-                    [type.toLowerCase().replace(" ", "-")]: {
-                      ...clientPricing[type.toLowerCase().replace(" ", "-")],
-                      price: e.target.value,
-                    },
-                  })
-                }
-                required
-              />
-            </Table.Cell>
-          </Table.Row>
-        ))}
-      </>
+  const invoiceTotal = Object.keys(groupedStructures).reduce((acc, type) => {
+    const pricePerUnit = parseFloat(
+      inputValues[type.toLowerCase().replace(" ", "-")] || 0
     );
-  };
+    const quantity = groupedStructures[type].length;
+    const lineTotal = pricePerUnit * quantity;
+    return acc + lineTotal;
+  }, 0);
 
   return (
     <>
@@ -513,8 +523,8 @@ export default function Page({ params }) {
           things up and try submitting again.
         </Alert>
       )}
-      <div className="grid grid-cols-5 gap-4 mb-4">
-        <div className="flex flex-col col-span-3 border-gray-300 dark:border-gray-600 bg-white gap-4">
+      <div className="grid grid-cols-6 gap-4 my-6">
+        <div className="flex flex-col col-span-4 border-gray-300 dark:border-gray-600 bg-white gap-4">
           <div className="invoice-viewer overflow-x-auto shadow-md">
             <header className="mb-4">
               <div className="flex justify-between items-center">
@@ -580,17 +590,18 @@ export default function Page({ params }) {
                       <td className="text-right py-3">
                         $
                         {
-                          /* {clientPricing ? clientPricing[type].price : ""} */
-                          clientPricing[type.toLowerCase().replace(" ", "-")] &&
-                            clientPricing[type.toLowerCase().replace(" ", "-")]
-                              .price
+                          /* {invoicePricing ? invoicePricing[type].price : ""} */
+                          inputValues[type.toLowerCase().replace(" ", "-")] || 0
                         }
                       </td>
                       <td className="text-right py-3">
                         $
-                        {clientPricing[type.toLowerCase().replace(" ", "-")] &&
-                          clientPricing[type.toLowerCase().replace(" ", "-")]
-                            .price * groupedStructures[type].length}
+                        {(
+                          parseFloat(
+                            inputValues[type.toLowerCase().replace(" ", "-")] ||
+                              0
+                          ) * groupedStructures[type].length
+                        ).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -602,7 +613,7 @@ export default function Page({ params }) {
 
             <section className="p-0 text-right mb-20">
               <p className="text-sm">Subtotal: $100.00</p>
-              <p className="text-sm">Total: $110.00</p>
+              <p className="text-sm">Total: ${invoiceTotal.toFixed(2)}</p>
             </section>
 
             {Object.keys(groupedStructures).map((type, index) => {
@@ -644,14 +655,23 @@ export default function Page({ params }) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 col-span-2 h-fit-content">
-          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg overflow-auto">
+          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-200 dark:border-gray-600 bg-white gap-4 p-4 md:px-8 md:py-10 rounded-lg overflow-auto">
+            <div className="flex flex-col gap-3">
+              <h2 className="leading-tight text-2xl font-medium">
+                New Invoice
+              </h2>
+              <p className="text-xs text-gray-400 mb-8">
+                Please fill out all of the steps below and be sure click “Load
+                Data” before you click “Publish”
+              </p>
+            </div>
             <div className="flex flex-col mb-4">
-              <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
+              <p className="pl-0 border-x-0 border-t-0 border-b-gray-200 text-xs text-gray-800 font-regular mb-1">
                 Client
               </p>
-              <Select
+              <select
                 id="clients"
-                className="w-full"
+                className="w-full pl-0 border-x-0 border-t-0 border-gray-200 text-gray-400 font-normal"
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)} // Update the state when an option is selected
                 required
@@ -662,59 +682,126 @@ export default function Page({ params }) {
                     {client.attributes.name}
                   </option>
                 ))}
-              </Select>
+              </select>
             </div>
-            <div className="flex flex-row gap-4 mb-4">
-              <div>
-                <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
+            <div className="flex flex-row gap-4 mb-2">
+              <div className="w-full flex flex-col gap-2">
+                <p className="pl-0 border-x-0 border-t-0 text-xs text-gray-800 font-regular">
                   Start Date
                 </p>
-                <DatePicker
-                  className="w-full rounded-lg border border-1 border-gray-400"
-                  selected={startDate}
-                  onChange={(date) => setStartDate(date)}
-                />
+                {/* <TextInput icon={CiCalendarDate} type="date" /> */}
+                <div className="relative">
+                  <span className="absolute z-30 top-3 left-4">
+                    <FaCalendarDays className=" text-gray-500" />
+                  </span>
+                  <DatePicker
+                    className="w-full rounded-lg border border-1 border-gray-200 leading-tight text-sm text-gray-500 p-3 bg-gray-50 pl-10"
+                    selected={startDate}
+                    onChange={(date) => setStartDate(date)}
+                  />
+                </div>
               </div>
-              <div>
-                <p className="flex items-center gap-2 text-md font-semibold mb-2 mr-auto">
+              <div className="w-full flex flex-col gap-2">
+                <p className="pl-0 border-x-0 border-t-0 text-xs text-gray-800 font-regular">
                   End Date
                 </p>
-                <DatePicker
-                  className="w-full rounded-lg border border-1 border-gray-400"
-                  selected={endDate}
-                  onChange={(date) => setEndDate(date)}
-                />
-              </div>{" "}
+                {/* <TextInput icon={CiCalendarDate} type="date" /> */}
+                <div className="relative">
+                  <span className="absolute z-30 top-3 left-3">
+                    <FaCalendarDays className=" text-gray-500" />
+                  </span>
+                  <DatePicker
+                    className="w-full rounded-lg border border-1 border-gray-200 leading-tight text-sm text-gray-500 p-3 bg-gray-50 pl-10"
+                    selected={endDate}
+                    onChange={(date) => setEndDate(date)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="structure-table-container mb-4">
-              <Table>
-                <Table.Head className="sticky top-0 z-40">
-                  <Table.HeadCell className="text-black">
+            <div className="structure-table-container border border-gray-200 rounded-md mb-3">
+              <Table striped>
+                <Table.Head className="sticky top-0 z-10">
+                  <Table.HeadCell className="text-xs font-semibold p-4">
                     Structure Type
                   </Table.HeadCell>
-                  <Table.HeadCell className="text-black">Price</Table.HeadCell>
+                  <Table.HeadCell className="text-xs font-semibold p-4">
+                    Price
+                  </Table.HeadCell>
                 </Table.Head>
                 <Table.Body>
-                  <StructuresPricingTable />
+                  <>
+                    {Object.keys(groupedStructures).map((type, index) => (
+                      <Table.Row
+                        className={`structure-table-row`}
+                        key={`${type}-${index}`}
+                      >
+                        <Table.Cell className="text-black py-2 px-3 w-1/2">
+                          {type}
+                        </Table.Cell>
+                        <Table.Cell className="py-2 px-3">
+                          <div className="flex relative">
+                            <TextInput
+                              className={`invoice-line-item-input w-full border-none border-0 text-gray-500 ${
+                                !checkIfValueExistOrIsZero(
+                                  inputValues[
+                                    type.toLowerCase().replace(" ", "-")
+                                  ] || null // Use null as the fallback
+                                )
+                                  ? "required" // Apply "required" class if condition is false
+                                  : ""
+                              }`}
+                              type="number"
+                              required
+                              placeholder="0"
+                              value={
+                                inputValues[
+                                  type.toLowerCase().replace(" ", "-")
+                                ] || ""
+                              } // Use empty string for uncontrolled input default
+                              onChange={(e) =>
+                                handleInputChange(type, e.target.value)
+                              }
+                            />
+
+                            <span
+                              className={`invoice-line-item-input-span ${
+                                !checkIfValueExistOrIsZero(
+                                  inputValues[
+                                    type.toLowerCase().replace(" ", "-")
+                                  ]
+                                )
+                                  ? "required" // Apply "required" class if condition is false
+                                  : ""
+                              }`}
+                            >
+                              $
+                            </span>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </>
                 </Table.Body>
               </Table>
             </div>
 
             <div className="flex gap-4">
+              <Button className="w-full text-dark-blue-700 border-2 border-dark-blue-700 bg-transparent hover:text-white hover:bg-dark-blue-700">
+                Save Draft
+              </Button>
               <Button
-                className="bg-transparent border-cyan-400 border-2 text-black hover:bg-cyan-400"
+                className="bg-transparent border-cyan-400 text-cyan-400 border-2 w-full hover:text-white"
                 onClick={() => getInvoicehData()}
               >
-                Load Data
+                Update
               </Button>
-              {showPublishButton && (
-                <Button
-                  className="bg-cyan-400"
-                  onClick={(e) => createInvoice()}
-                >
-                  Publish
-                </Button>
-              )}
+              <Button
+                className="w-full border-2 border-dark-blue-700 text-white bg-dark-blue-700"
+                onClick={(e) => createInvoice()}
+                disabled={!allValuesGreaterThanZero}
+              >
+                Publish
+              </Button>
             </div>
           </div>
           <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg pt-10">
@@ -729,6 +816,9 @@ export default function Page({ params }) {
             />
           </div>
         </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4 mt-4">
+        <ActivityLog id={11} collection={"inspections"} />
       </div>
     </>
   );

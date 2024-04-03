@@ -127,9 +127,9 @@ export default function RootLayout({ children }) {
               <Navbar.Collapse>
                 <TextInput
                   type="text"
-                  placeholder="Search Anything"
+                  placeholder="Search..."
                   id="search-bar"
-                  className="bg-gray-700 rounded-md"
+                  className="bg-gray-700 rounded-md text-center"
                 />
               </Navbar.Collapse>
             </Navbar>
@@ -163,7 +163,7 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group bg-blue-100"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
