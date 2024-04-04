@@ -16,10 +16,15 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { HiHome } from "react-icons/hi";
 import dynamic from "next/dynamic";
-import { formatDateToString } from "../../../utils/strings";
 import ActivityLog from "../../../components/ActivityLog";
 import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
-import { camelCaseToTitleCase } from "../../../utils/strings";
+import {
+  camelCaseToTitleCase,
+  formatDateToString,
+} from "../../../utils/strings";
+import Link from "next/link";
+import InvoiceDrawer from "../../../components/Drawers/InvoiceDrawer";
+import InvoiceHeading from "../../../components/Invoice/Heading";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -178,6 +183,7 @@ export default function Page({ params }) {
   const [groupedStructures, setGroupedStructures] = useState({});
   const [clientPricing, setClientPricing] = useState();
   const [viewedPage, setViewedPage] = useState(false);
+  const [visibleTables, setVisibleTables] = useState({});
   const [client, setClient] = useState({
     name: "",
     address: "",
@@ -214,7 +220,11 @@ export default function Page({ params }) {
         colors: ["#fff"],
       },
       formatter: function (val, opt) {
-        return opt.w.globals.labels[opt.dataPointIndex] + ":  " + val;
+        return (
+          camelCaseToTitleCase(opt.w.globals.labels[opt.dataPointIndex]) +
+          ":  " +
+          val
+        );
       },
       offsetX: 10,
     },
@@ -224,7 +234,7 @@ export default function Page({ params }) {
     },
     xaxis: {
       categories: Object.keys(groupedStructures).map((type) => {
-        return type;
+        return camelCaseToTitleCase(type);
       }),
     },
     yaxis: {
@@ -248,8 +258,123 @@ export default function Page({ params }) {
     },
   };
 
+  const donutChartOptions = {
+    chart: {
+      type: "donut", // Specify the chart type as 'donut'.
+      offsetY: 0, // Adjust vertically if needed
+      offsetX: -25, // Pulls the chart closer to the left edge of the container
+    },
+    labels: Object.keys(groupedStructures).map((type) =>
+      camelCaseToTitleCase(type)
+    ), // Labels for each slice of the donut
+    dataLabels: {
+      enabled: false,
+      style: {
+        colors: ["#fff"],
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "0%", // Adjust the size of the donut hole if needed
+          labels: {
+            show: false,
+            name: {
+              show: true,
+              fontSize: "22px",
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontWeight: 600,
+              color: undefined,
+              offsetY: -10,
+            },
+            value: {
+              show: true,
+              fontSize: "16px",
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontWeight: 400,
+              color: undefined,
+              offsetY: 16,
+              formatter: function (val) {
+                return val; // Format the value as needed
+              },
+            },
+            total: {
+              show: true,
+              showAlways: true,
+              label: "Total",
+              formatter: function (w) {
+                return w.globals.seriesTotals.reduce((a, b) => {
+                  return a + b;
+                }, 0);
+              },
+            },
+          },
+        },
+      },
+    },
+    stroke: {
+      width: 1,
+      colors: ["#fff"],
+    },
+    tooltip: {
+      theme: "dark",
+      // Adjustments to tooltip formatting can go here
+    },
+  };
+
+  const circularChartOptions = {
+    chart: {
+      type: "pie", // Specify the chart type as 'pie'. Change to 'donut' for a donut chart.
+      offsetY: 0, // Adjust vertically if needed
+    },
+    labels: Object.keys(groupedStructures).map((type) =>
+      camelCaseToTitleCase(type)
+    ), // Labels for each slice
+    dataLabels: {
+      enabled: true,
+      style: {
+        colors: ["#fff"],
+      },
+      formatter: function (val, opt) {
+        // The formatter is used to format data labels.
+        // You might need to adjust based on how you want to display labels and values.
+        return opt.w.config.labels[opt.seriesIndex] + ": " + val;
+      },
+    },
+    plotOptions: {
+      pie: {
+        // Additional customization options for pie charts
+        donut: {
+          labels: {
+            show: true,
+            // Further customization for donut labels can go here
+          },
+        },
+      },
+    },
+    stroke: {
+      width: 1,
+      colors: ["#fff"],
+    },
+    tooltip: {
+      theme: "dark",
+      // Adjustments to tooltip formatting can go here
+    },
+  };
+
   const query = qs.stringify({
-    populate: ["client", "structures", "pricing"], // Populate the inspection and its client
+    populate: {
+      client: {
+        populate: "*",
+      },
+      structures: {
+        populate: {
+          inspection: {
+            populate: "*",
+          },
+        },
+      },
+    }, // Populate the inspection and its client
     encodeValuesOnly: true,
   });
 
@@ -265,8 +390,11 @@ export default function Page({ params }) {
           }
         );
 
-        console.log("THis is the page");
-        console.log(invoiceResponse.data.data.attributes);
+        console.log(
+          "Client Pricing",
+          invoiceResponse.data.data.attributes.pricing
+        );
+
         setStructures(invoiceResponse.data.data.attributes.structures.data);
         setClient({
           name: invoiceResponse.data.data.attributes.client.data.attributes
@@ -274,19 +402,28 @@ export default function Page({ params }) {
           address: "4338 N 20th St Phoenix AZ 815016",
         });
 
-        console.log(
-          "Client Pricing",
-          invoiceResponse.data.data.attributes.pricing || {}
-        );
-        setClientPricing(invoiceResponse.data.data.attributes.pricing || {});
+        setClientPricing(invoiceResponse.data.data.attributes.pricing || null);
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }
     }
   };
 
-  const hi = "fjdsklfjdklfds";
-  console.log(hi);
+  const toggleVisibility = (type) => {
+    console.log("Toggling visibility for", type);
+    setVisibleTables((prevVisibleTables) => ({
+      ...prevVisibleTables,
+      [type]: !prevVisibleTables[type],
+    }));
+  };
+
+  useEffect(() => {
+    const visibilityState = {};
+    Object.keys(groupedStructures).forEach((type) => {
+      visibilityState[type] = true; // Initially set all tables to be visible
+    });
+    setVisibleTables(visibilityState);
+  }, [groupedStructures]);
 
   useEffect(() => {
     // Ensure fetchData is only called once per effect execution.
@@ -315,8 +452,6 @@ export default function Page({ params }) {
           });
 
           setViewedPage(true); // This will trigger the effect again, but viewedPage check will prevent re-execution of API call.
-
-          console.log(response.data.data);
         } catch (error) {
           console.error("Error creating activity", error.response || error);
         }
@@ -605,47 +740,28 @@ export default function Page({ params }) {
     a.attributes.type.localeCompare(b.attributes.type)
   );
 
+  const subTotalAmount = Object.keys(groupedStructures).reduce(
+    (total, type) => {
+      // Ensure clientPricing[type] is a number to avoid NaN results.
+      const pricePerType = Number(clientPricing[type]) || 0;
+      const quantityPerType = groupedStructures[type].length;
+      const lineTotal = pricePerType * quantityPerType;
+
+      return total + lineTotal;
+    },
+    0
+  );
+
+  const discount = 100;
+
+  const totalAmount = subTotalAmount - Number(discount);
+
   return (
     <>
       <div className="grid grid-cols-6 gap-4 my-6">
         <div className="flex flex-col col-span-4 border-gray-300 dark:border-gray-600 bg-white gap-4">
           <div className="invoice-viewer overflow-x-auto shadow-md">
-            <header className="mb-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col">
-                    <img
-                      src="/inovcc-logo.png"
-                      alt="Company Logo"
-                      className="h-12 mb-4"
-                    />
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        Your Tagline or Slogan
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg text-gray-700 font-semibold">Invoice</p>
-                  <p className="text-sm text-gray-600">
-                    Invoice Number: #27998324
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Invoice Date: 2023-12-05
-                  </p>
-                  <p className="text-sm text-gray-600">Due Date: 2024-01-05</p>
-                </div>
-              </div>
-              <div className="mt-4 border-t pt-4">
-                <p className="text-sm text-gray-600">
-                  Address: 123 Business Road, City, Country
-                </p>
-                <p className="text-sm text-gray-600">
-                  Phone: (123) 456-7890 | Email: contact@example.com
-                </p>
-              </div>
-            </header>
+            <InvoiceHeading />
 
             <section className="mb-10">
               <p className="text-lg text-gray-700 font-semibold">Bill To:</p>
@@ -653,104 +769,154 @@ export default function Page({ params }) {
               <p className="text-sm text-gray-600">{client.address}</p>
             </section>
 
-            <section className="mb-6 border border-gray-200 rounded-md overflow-hidden">
+            <section className="mb-0 border border-gray-200 rounded-t rounded-b-none rounded-bl-md overflow-hidden">
               <Table hoverable className="border rounded-md">
                 <Table.Head>
-                  <Table.HeadCell className="text-left pt-4 pb-5 px-3 remove-border-radius">
+                  <Table.HeadCell className="text-left pt-4 pb-5 px-5 remove-border-radius">
                     Type of Structure
                   </Table.HeadCell>
-                  <Table.HeadCell className="text-right pt-4 pb-5 px-3 remove-border-radius">
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
                     Quantity
                   </Table.HeadCell>
-                  <Table.HeadCell className="text-right pt-4 pb-5 px-3 remove-border-radius">
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
                     Unit Price
                   </Table.HeadCell>
-                  <Table.HeadCell className="text-right pt-4 pb-5 px-3 remove-border-radius">
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
                     Total
                   </Table.HeadCell>
                 </Table.Head>
                 <Table.Body className="divide-y ">
                   {/* Repeat for each item */}
-                  {Object.keys(groupedStructures).map((type, key) => (
-                    <Table.Row key={`${key}-${type}`}>
-                      <Table.Cell className="pt-4 pb-5 px-3">
-                        {camelCaseToTitleCase(type)}
-                      </Table.Cell>
-                      <Table.Cell className="text-right pt-4 pb-5 px-3">
-                        {groupedStructures[type].length}
-                      </Table.Cell>
-                      <Table.Cell className="text-right pt-4 pb-5 px-3">
-                        ${clientPricing ? clientPricing[type] : ""}
-                      </Table.Cell>
-                      <Table.Cell className="text-right pt-4 pb-5 px-3">
-                        $
-                        {/* {clientPricing[type.toLowerCase().replace(" ", "-")] &&
+                  {Object.keys(groupedStructures).map((type, key) => {
+                    return (
+                      <Table.Row key={`${key}-${type}`}>
+                        <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-800">
+                          {camelCaseToTitleCase(type)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          {groupedStructures[type].length}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          ${clientPricing ? clientPricing[type] : ""}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          $
+                          {`${
+                            (
+                              clientPricing[type] *
+                              groupedStructures[type].length
+                            ).toFixed(2) || ""
+                          }`}
+                          {/* {clientPricing[type.toLowerCase().replace(" ", "-")] &&
               clientPricing[type.toLowerCase().replace(" ", "-")].price * groupedStructures[type].length} */}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })}
+                </Table.Body>
+              </Table>
+            </section>
+            <section className="ml-auto border-2 border-t-0 border-gray-200 rounded-b rounded-t-none bg-gray-50 w-fit overflow-hidden mb-14">
+              <Table className="text-right">
+                <Table.Body className=" divide-y divide-gray-200">
+                  <Table.Row>
+                    <Table.Cell className="pt-4 pb-5 px-12 font-semibold text-gray-900">
+                      Subtotal:{" "}
+                    </Table.Cell>
+                    <Table.Cell className="pt-4 pb-5 px-5 font-semibold text-gray-900">
+                      {`$${subTotalAmount.toFixed(2)}`}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row>
+                    <Table.Cell className="pt-4 pb-5 px-12 font-semibold text-gray-900">
+                      Total:
+                    </Table.Cell>
+                    <Table.Cell className="pt-4 pb-5 px-5 font-semibold text-gray-900">
+                      {`$${totalAmount.toFixed(2)}`}
+                    </Table.Cell>
+                  </Table.Row>
                 </Table.Body>
               </Table>
             </section>
 
-            <section className="p-0 text-right mb-20">
-              <p className="text-sm">Subtotal: $100.00</p>
-              <p className="text-sm">Total: </p>
-            </section>
-
             <div className="flex flex-col gap-3">
-              {Object.keys(groupedStructures).map((type, index) => {
-                return (
-                  <div
-                    key={index}
-                    className="p-6 border rounded-md border-gray-300"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
-                        {camelCaseToTitleCase(type)}
-                      </p>
-                      <div className="flex">
+              {Object.keys(groupedStructures).map((type, index) => (
+                <div
+                  key={index}
+                  className="p-5 border rounded-md border-gray-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
+                      {camelCaseToTitleCase(type)}
+                    </p>
+                    <div
+                      className="flex cursor-pointer"
+                      onClick={() => toggleVisibility(type)}
+                    >
+                      {visibleTables[type] ? (
                         <IoIosArrowUp size={"14px"} />
-                      </div>
+                      ) : (
+                        <IoIosArrowDown size={"14px"} />
+                      )}
                     </div>
-                    <div className="border border-gray-200 rounded-md overflow-hidden">
+                  </div>
+
+                  {visibleTables[type] && (
+                    <div className="group-type-table border border-gray-200 rounded-md overflow-hidden mt-4">
                       <Table striped hoverable key={type}>
                         <Table.Head>
-                          <Table.HeadCell>ID</Table.HeadCell>
-                          <Table.HeadCell>Map Section</Table.HeadCell>
-                          <Table.HeadCell>Type</Table.HeadCell>
-                          <Table.HeadCell>Inspection Date</Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            ID
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Map Section
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Type
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Inspection Date
+                          </Table.HeadCell>
                         </Table.Head>
                         <Table.Body className="divide-y">
-                          {groupedStructures[type].map((structure) => (
-                            <Table.Row
-                              className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                              key={structure.id}
-                            >
-                              <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                {structure.id}
-                              </Table.Cell>
-                              <Table.Cell>
-                                {structure.attributes.mapSection}
-                              </Table.Cell>
-                              <Table.Cell>
-                                {structure.attributes.type}
-                              </Table.Cell>
-                              <Table.Cell>
-                                {structure.attributes.inspectionDate}
-                              </Table.Cell>
-                            </Table.Row>
-                          ))}
+                          {groupedStructures[type].map((structure) => {
+                            return (
+                              <Table.Row
+                                className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                                key={structure.id}
+                              >
+                                <Table.Cell className="whitespace-nowrap font-medium dark:text-white pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {structure.id}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  <Link
+                                    className="text-dark-blue-600 hover:underline"
+                                    href={`/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`}
+                                  >
+                                    {structure.attributes.mapSection}
+                                  </Link>
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {structure.attributes.type}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {formatDateToString(
+                                    structure.attributes.inspectionDate
+                                  )}
+                                </Table.Cell>
+                              </Table.Row>
+                            );
+                          })}
                         </Table.Body>
                       </Table>
                     </div>
-                  </div>
-                );
-              })}
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 col-span-2 h-fit-content px-6 py-8 bg-white rounded-lg sticky">
+        <div className="grid grid-cols-1 gap-4 col-span-2 h-fit-content px-6 py-8 bg-white rounded-lg sticky shadow">
           <div className="flex flex-col gap-3">
             <h2 className="leading-tight text-2xl font-medium">New Invoice</h2>
             <p className="text-xs text-gray-400 mb-8">
@@ -760,27 +926,23 @@ export default function Page({ params }) {
           </div>
           <div className="flex flex-col">
             <ApexChart
-              type="bar"
-              options={chartOptions}
-              series={[
-                {
-                  name: "basic",
-                  data: Object.keys(groupedStructures).map((type) => {
-                    return type.length;
-                  }),
-                },
-              ]}
+              type="donut"
+              options={donutChartOptions}
+              series={Object.keys(groupedStructures).map((type) => {
+                return type.length;
+              })}
               height={300}
               width={"100%"}
             />
           </div>
-          <div className="flex flex-col">
-            <button
+          <div className="grid grid-flow-col gap-3">
+            <Button
               onClick={generatePdf}
-              className="bg-transparent text-dark-blue-700 border-2 border-dark-blue-700 py-2 px-4 rounded"
+              className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
             >
               Download
-            </button>
+            </Button>
+            <InvoiceDrawer btnText="Invoice" />
           </div>
         </div>
       </div>

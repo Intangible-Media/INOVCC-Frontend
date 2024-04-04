@@ -16,6 +16,8 @@ import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
 import { getLocationDetails } from "../../../utils/api/mapbox";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   CheckMark,
   FavoriteIcon,
@@ -31,6 +33,7 @@ import { useInspection } from "../../../context/InspectionContext";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page(props) {
+  const router = useRouter();
   const { params } = props;
   const pathname = usePathname();
   const { data: session, loading } = useSession();
@@ -81,6 +84,7 @@ export default function Page(props) {
     labels: [structureAssetType],
   });
 
+  const searchParams = useSearchParams();
   const activeMapStyleTab =
     "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
   const inactiveMapStyleTab =
@@ -276,6 +280,25 @@ export default function Page(props) {
     }
   };
 
+  const createStructureSelectedParam = (structureId) => {
+    const url = new URL(window.location);
+    url.searchParams.set("structure", structureId);
+    window.history.pushState({}, "", url.toString());
+
+    // Any additional logic you need after setting the URL can go here.
+  };
+
+  // Simplified query string handling using Next.js router
+  const createQueryString = useCallback(
+    (name, value) => {
+      const params = new URLSearchParams(searchParams);
+      params.set(name, value);
+
+      return params.toString();
+    },
+    [searchParams]
+  );
+
   useEffect(() => {
     setOptions((prevOptions) => ({
       ...prevOptions,
@@ -285,6 +308,25 @@ export default function Page(props) {
 
   useEffect(() => {
     if (!map.current || structures.length === 0) return;
+
+    const structureId = searchParams.get("structure");
+
+    console.log("something");
+    console.log(structureId);
+
+    if (structureId) {
+      console.log("searchParams.structure");
+      console.log(structureId);
+
+      const structure = structures.find((s) => s.id === Number(structureId));
+
+      updateCenterOnClick(
+        structure.attributes.longitude,
+        structure.attributes.latitude
+      );
+      setSelectedStructure(structure);
+      setActiveView("singleView");
+    }
 
     // Function to execute map operations
     const executeMapOperations = () => {
@@ -516,7 +558,14 @@ export default function Page(props) {
 
   useEffect(() => {
     if (!map.current || !selectedStructure) return;
-
+    console.log(selectedStructure);
+    router.push(
+      pathname + "?" + createQueryString("structure", selectedStructure.id)
+    );
+    console.log(
+      "Selected structure:",
+      pathname + "?" + createQueryString("structure", selectedStructure.id)
+    );
     if (
       map.current.getLayer("marker-layer") &&
       map.current.getSource("markers")

@@ -314,9 +314,12 @@
   color: #E02424;
 }
 
+.z-max {
+  z-index: 9999 !important;
+}
 
 .invoice-viewer * {
-  font-size: 95% !important;
+  font-size: 98% !important;
 }
 
 .main-sidebar {

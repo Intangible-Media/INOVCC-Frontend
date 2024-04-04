@@ -4,8 +4,6 @@ import { useSession } from "next-auth/react";
 const ProtectedContent = ({ requiredRoles, children }) => {
   const { data: session, status } = useSession();
 
-  console.log("session", session);
-
   // Determine if we are still waiting for session data to load
   const isLoading = status === "loading";
 

@@ -12,11 +12,16 @@ import qs from "qs";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import dynamic from "next/dynamic";
-import { BsCurrencyDollar } from "react-icons/bs";
 import ActivityLog from "../../../components/ActivityLog";
-import { CiCalendarDate } from "react-icons/ci";
-import { MdFileDownload } from "react-icons/md";
+import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
+import Link from "next/link";
 import { FaCalendarDays } from "react-icons/fa6";
+import InvoiceHeading from "../../../components/Invoice/Heading";
+import {
+  camelCaseToTitleCase,
+  titleCaseToKebabCase,
+  formatDateToString,
+} from "../../../utils/strings";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -133,6 +138,7 @@ export default function Page({ params }) {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showPublishButton, setShowPublishButton] = useState(false);
   const [invoicePricing, setInvoicePricing] = useState({});
+  const [visibleTables, setVisibleTables] = useState({});
   const [client, setClient] = useState({
     name: "",
     address: "",
@@ -144,6 +150,14 @@ export default function Page({ params }) {
     setInputValues((prevValues) => ({
       ...prevValues,
       [type.toLowerCase().replace(" ", "-")]: value,
+    }));
+  };
+
+  const toggleVisibility = (type) => {
+    console.log("Toggling visibility for", type);
+    setVisibleTables((prevVisibleTables) => ({
+      ...prevVisibleTables,
+      [type]: !prevVisibleTables[type],
     }));
   };
 
@@ -193,37 +207,42 @@ export default function Page({ params }) {
     },
   };
 
-  const query = qs.stringify(
-    {
-      filters: {
-        $and: [
-          {
-            inspection: {
-              client: {
-                id: {
-                  $eq: selectedClientId, // Assuming params.id is your client's ID
-                },
+  const query = qs.stringify({
+    filters: {
+      $and: [
+        {
+          inspection: {
+            client: {
+              id: {
+                $eq: selectedClientId, // Assuming params.id is your client's ID
               },
             },
           },
-          {
-            status: {
-              $eq: "Inspected", // Filter structures by "inspected" status
-            },
+        },
+        {
+          status: {
+            $eq: "Inspected", // Filter structures by "inspected" status
           },
-          {
-            inspectionDate: {
-              $gte: startDate, // Start of the date range
-              $lte: endDate, // End of the date range
-            },
+        },
+        {
+          inspectionDate: {
+            $gte: startDate, // Start of the date range
+            $lte: endDate, // End of the date range
           },
-        ],
+        },
+      ],
+    },
+    populate: {
+      client: {
+        populate: "*",
+      },
+      inspection: {
+        populate: "*",
       },
     },
-    {
-      encodeValuesOnly: true,
-    }
-  );
+
+    encodeValuesOnly: true,
+  });
 
   const getInvoicehData = async () => {
     if (session?.accessToken) {
@@ -511,6 +530,19 @@ export default function Page({ params }) {
     return acc + lineTotal;
   }, 0);
 
+  const subTotalAmount = Object.keys(groupedStructures).reduce(
+    (total, type) => {
+      const pricePerType = Number(inputValues[titleCaseToKebabCase(type)] || 0);
+      const quantityPerType = groupedStructures[type].length;
+      return total + pricePerType * quantityPerType;
+    },
+    0
+  );
+
+  const discount = 100;
+
+  const totalAmount = subTotalAmount - Number(discount);
+
   return (
     <>
       {showSuccessAlert && (
@@ -526,42 +558,7 @@ export default function Page({ params }) {
       <div className="grid grid-cols-6 gap-4 my-6">
         <div className="flex flex-col col-span-4 border-gray-300 dark:border-gray-600 bg-white gap-4">
           <div className="invoice-viewer overflow-x-auto shadow-md">
-            <header className="mb-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col">
-                    <img
-                      src="/inovcc-logo.png"
-                      alt="Company Logo"
-                      className="h-12 mb-4"
-                    />
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        Your Tagline or Slogan
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg text-gray-700 font-semibold">Invoice</p>
-                  <p className="text-sm text-gray-600">
-                    Invoice Number: #27998324
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Invoice Date: 2023-12-05
-                  </p>
-                  <p className="text-sm text-gray-600">Due Date: 2024-01-05</p>
-                </div>
-              </div>
-              <div className="mt-4 border-t pt-4">
-                <p className="text-sm text-gray-600">
-                  Address: 123 Business Road, City, Country
-                </p>
-                <p className="text-sm text-gray-600">
-                  Phone: (123) 456-7890 | Email: contact@example.com
-                </p>
-              </div>
-            </header>
+            <InvoiceHeading />
 
             <section className="mb-10">
               <p className="text-lg text-gray-700 font-semibold">Bill To:</p>
@@ -569,93 +566,156 @@ export default function Page({ params }) {
               <p className="text-sm text-gray-600">{client.address}</p>
             </section>
 
-            <section className="mb-6">
-              <table className="min-w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left py-2">Type of Structure</th>
-                    <th className="text-right py-2">Quantity</th>
-                    <th className="text-right py-2">Unit Price</th>
-                    <th className="text-right py-2">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <section className="mb-0 border border-gray-200 rounded-t rounded-b-none rounded-bl-md overflow-hidden">
+              <Table hoverable className="border rounded-md">
+                <Table.Head>
+                  <Table.HeadCell className="text-left pt-4 pb-5 px-5 remove-border-radius">
+                    Type of Structure
+                  </Table.HeadCell>
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
+                    Quantity
+                  </Table.HeadCell>
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
+                    Unit Price
+                  </Table.HeadCell>
+                  <Table.HeadCell className="text-right pt-4 pb-5 px-5 remove-border-radius">
+                    Total
+                  </Table.HeadCell>
+                </Table.Head>
+                <Table.Body className="divide-y ">
                   {/* Repeat for each item */}
-                  {Object.keys(groupedStructures).map((type, index) => (
-                    <tr key={`${type}-${index}-${index}`}>
-                      <td className="py-3">{type}</td>
-                      <td className="text-right py-3">
-                        {groupedStructures[type].length}
-                      </td>
-                      <td className="text-right py-3">
-                        $
-                        {
-                          /* {invoicePricing ? invoicePricing[type].price : ""} */
-                          inputValues[type.toLowerCase().replace(" ", "-")] || 0
-                        }
-                      </td>
-                      <td className="text-right py-3">
-                        $
-                        {(
-                          parseFloat(
-                            inputValues[type.toLowerCase().replace(" ", "-")] ||
-                              0
-                          ) * groupedStructures[type].length
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-
-                  {/* End of Repeat */}
-                </tbody>
-              </table>
+                  {Object.keys(groupedStructures).map((type, key) => {
+                    console.log("inputValues[type]");
+                    console.log(inputValues);
+                    console.log(type);
+                    return (
+                      <Table.Row key={`${key}-${type}`}>
+                        <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-800">
+                          {camelCaseToTitleCase(type)}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          {groupedStructures[type].length}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          ${inputValues[titleCaseToKebabCase(type)] || 0}
+                        </Table.Cell>
+                        <Table.Cell className="text-right pt-4 pb-5 px-5 text-xs text-gray-800">
+                          {`$${
+                            (
+                              (inputValues[titleCaseToKebabCase(type)] || 0) *
+                              groupedStructures[type].length
+                            ).toFixed(2) || ""
+                          }`}
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })}
+                </Table.Body>
+              </Table>
             </section>
 
-            <section className="p-0 text-right mb-20">
-              <p className="text-sm">Subtotal: $100.00</p>
-              <p className="text-sm">Total: ${invoiceTotal.toFixed(2)}</p>
+            <section className="ml-auto border-2 border-t-0 border-gray-200 rounded-b rounded-t-none bg-gray-50 w-fit overflow-hidden mb-14">
+              <Table className="text-right">
+                <Table.Body className=" divide-y divide-gray-200">
+                  <Table.Row>
+                    <Table.Cell className="pt-4 pb-5 px-12 font-semibold text-gray-900">
+                      Subtotal:{" "}
+                    </Table.Cell>
+                    <Table.Cell className="pt-4 pb-5 px-5 font-semibold text-gray-900">
+                      {`$${subTotalAmount.toFixed(2)}`}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row>
+                    <Table.Cell className="pt-4 pb-5 px-12 font-semibold text-gray-900">
+                      Total:
+                    </Table.Cell>
+                    <Table.Cell className="pt-4 pb-5 px-5 font-semibold text-gray-900">
+                      {`$${totalAmount.toFixed(2)}`}
+                    </Table.Cell>
+                  </Table.Row>
+                </Table.Body>
+              </Table>
             </section>
 
-            {Object.keys(groupedStructures).map((type, index) => {
-              return (
-                <div key={`invoice-${type}-${index}`}>
-                  <p className="flex items-center gap-2 text-lg font-semibold mb-4 mr-auto">
-                    {type}
-                  </p>
-                  <Table striped hoverable key={type} className="mb-10">
-                    <Table.Head>
-                      <Table.HeadCell>ID</Table.HeadCell>
-                      <Table.HeadCell>Map Section</Table.HeadCell>
-                      <Table.HeadCell>Type</Table.HeadCell>
-                      <Table.HeadCell>Inspection Date</Table.HeadCell>
-                    </Table.Head>
-                    <Table.Body className="divide-y">
-                      {groupedStructures[type].map((structure) => (
-                        <Table.Row
-                          className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                          key={structure.id}
-                        >
-                          <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                            {structure.id}
-                          </Table.Cell>
-                          <Table.Cell>
-                            {structure.attributes.mapSection}
-                          </Table.Cell>
-                          <Table.Cell>{structure.attributes.type}</Table.Cell>
-                          <Table.Cell>
-                            {structure.attributes.inspectionDate}
-                          </Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table>
+            <div className="flex flex-col gap-3">
+              {Object.keys(groupedStructures).map((type, index) => (
+                <div
+                  key={index}
+                  className="p-5 border rounded-md border-gray-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="flex items-center gap-2 text-lg font-semibold mr-auto">
+                      {camelCaseToTitleCase(type)}
+                    </p>
+                    <div
+                      className="flex cursor-pointer"
+                      onClick={() => toggleVisibility(type)}
+                    >
+                      {visibleTables[type] ? (
+                        <IoIosArrowUp size={"14px"} />
+                      ) : (
+                        <IoIosArrowDown size={"14px"} />
+                      )}
+                    </div>
+                  </div>
+
+                  {visibleTables[type] && (
+                    <div className="group-type-table border border-gray-200 rounded-md overflow-hidden mt-4">
+                      <Table striped hoverable key={type}>
+                        <Table.Head>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            ID
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Map Section
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Type
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                            Inspection Date
+                          </Table.HeadCell>
+                        </Table.Head>
+                        <Table.Body className="divide-y">
+                          {groupedStructures[type].map((structure) => {
+                            return (
+                              <Table.Row
+                                className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                                key={structure.id}
+                              >
+                                <Table.Cell className="whitespace-nowrap font-medium dark:text-white pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {structure.id}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  <Link
+                                    className="text-dark-blue-600 hover:underline"
+                                    href={`/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`}
+                                  >
+                                    {structure.attributes.mapSection}
+                                  </Link>
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {structure.attributes.type}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                  {formatDateToString(
+                                    structure.attributes.inspectionDate
+                                  )}
+                                </Table.Cell>
+                              </Table.Row>
+                            );
+                          })}
+                        </Table.Body>
+                      </Table>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 col-span-2 h-fit-content">
-          <div className="invoice-control-panel flex md:col-span-2 flex-col border-gray-200 dark:border-gray-600 bg-white gap-4 p-4 md:px-8 md:py-10 rounded-lg overflow-auto">
+          <div className="invoice-control-panel shadow flex md:col-span-2 flex-col border-gray-200 dark:border-gray-600 bg-white gap-4 p-4 md:px-8 md:py-10 rounded-lg overflow-auto">
             <div className="flex flex-col gap-3">
               <h2 className="leading-tight text-2xl font-medium">
                 New Invoice
@@ -804,7 +864,7 @@ export default function Page({ params }) {
               </Button>
             </div>
           </div>
-          <div className="flex md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg pt-10">
+          <div className="flex shadow md:col-span-2 flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg pt-10">
             <ApexChart
               type="donut"
               options={chartOptions}

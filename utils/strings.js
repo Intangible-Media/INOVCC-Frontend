@@ -343,3 +343,51 @@ export const camelCaseToTitleCase = (input) => {
     .join(" ");
   return result;
 };
+
+/**
+ * Converts a Title Case string into camelCase.
+ * camelCase means the first letter of the first word is lowercase and no spaces between words,
+ * with each subsequent word starting with an uppercase letter.
+ *
+ * @param {string} input The Title Case string to be converted.
+ * @return {string} The converted string in camelCase.
+ *
+ * @example
+ * // returns "helloWorld"
+ * titleCaseToCamelCase("Hello World");
+ *
+ * @example
+ * // returns "myNewVariable"
+ * titleCaseToCamelCase("My New Variable");
+ */
+export const titleCaseToCamelCase = (input) => {
+  let words = input.split(" ").map((word) => word.toLowerCase());
+  let result = words
+    .map((word, index) =>
+      index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join("");
+  return result;
+};
+
+/**
+ * Converts a Title Case string into kebab-case.
+ * kebab-case means all letters are lowercase and separated by hyphens.
+ *
+ * @param {string} input The Title Case string to be converted.
+ * @return {string} The converted string in kebab-case.
+ *
+ * @example
+ * // returns "hello-world"
+ * titleCaseToKebabCase("Hello World");
+ *
+ * @example
+ * // returns "my-new-variable"
+ * titleCaseToKebabCase("My New Variable");
+ */
+export const titleCaseToKebabCase = (input) => {
+  return input
+    .split(" ")
+    .map((word) => word.toLowerCase())
+    .join("-");
+};
