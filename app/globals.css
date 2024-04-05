@@ -289,7 +289,7 @@
 }
 
 .drawer-background-overlay {
-  z-index: 40;
+  z-index: 40 !important;
 }
 
 .invoice-viewer {
@@ -314,9 +314,6 @@
   color: #E02424;
 }
 
-.z-max {
-  z-index: 9999 !important;
-}
 
 .invoice-viewer * {
   font-size: 98% !important;

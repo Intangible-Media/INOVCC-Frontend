@@ -35,8 +35,11 @@ const InvoiceDrawer = ({ btnText }) => {
   const router = useRouter();
   const params = useParams();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
   const [switch1, setSwitch1] = useState(false);
   const [clients, setClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState("");
+  const [selectedClientName, setSelectedClientName] = useState("");
 
   /**
    * Toggles the visibility state of a UI drawer component.
@@ -46,13 +49,28 @@ const InvoiceDrawer = ({ btnText }) => {
     setIsDrawerOpen(!isDrawerOpen);
   };
 
+  useEffect(() => {
+    const fetchClients = async () => {
+      const apiParams = {
+        jwt: session?.accessToken,
+        query: "",
+      };
+
+      const response = await getAllClients(apiParams);
+      console.log(response.data.data);
+      setClients(response.data.data);
+    };
+
+    fetchClients();
+  }, [session]);
+
   return (
     <div>
       <Button
         onClick={toggleDrawer}
         className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
       >
-        {btnText || "New Inspection"}
+        {btnText || "Open Drawer"}
       </Button>
 
       {isDrawerOpen && (
@@ -63,26 +81,29 @@ const InvoiceDrawer = ({ btnText }) => {
       )}
 
       <div
-        className={`im-drawer im-inspection-drawer fixed right-0 bottom-0 z-max overflow-y-auto transition-transform duration-500 rounded-md ${
+        className={`im-drawer im-inspection-drawer fixed right-0 bottom-0 z-50 overflow-y-auto transition-transform duration-500 rounded-md ${
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         } bg-white dark:bg-gray-800`}
         tabIndex="-1"
-        aria-labelledby="drawer-form-label"
+        aria-labelledby="drawer-label"
       >
         <button
           onClick={toggleDrawer}
-          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-6 h-6 absolute top-20 right-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-50"
+          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-3 absolute top-5 right-5 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-50"
           aria-label="Close menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            fill="#000000"
-            width="800px"
-            height="800px"
-            viewBox="0 0 256 256"
-            id="Flat"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
           >
-            <path d="M202.82861,197.17188a3.99991,3.99991,0,1,1-5.65722,5.65624L128,133.65723,58.82861,202.82812a3.99991,3.99991,0,0,1-5.65722-5.65624L122.343,128,53.17139,58.82812a3.99991,3.99991,0,0,1,5.65722-5.65624L128,122.34277l69.17139-69.17089a3.99991,3.99991,0,0,1,5.65722,5.65624L133.657,128Z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
@@ -91,52 +112,48 @@ const InvoiceDrawer = ({ btnText }) => {
             <Breadcrumb.Item href="/" icon={HiHome}>
               Home
             </Breadcrumb.Item>
-            <Breadcrumb.Item href="/">Inspection</Breadcrumb.Item>
-            <Breadcrumb.Item href="/">hi </Breadcrumb.Item>
+            <Breadcrumb.Item href="/">Invoice</Breadcrumb.Item>
+            <Breadcrumb.Item href="/">Create </Breadcrumb.Item>
           </Breadcrumb>
         </div>
 
-        <div className="relative overflow-x-clip">
-          <div
-            className={`absolute inset-0 transition-transform duration-500 transform -translate-x-full hidden`}
-          >
-            <div id="new-inspection-form" className="flex flex-col gap-7 p-10">
-              <div className="flex flex-col gap-2">
-                <h3 className="leading-tight text-2xl font-medium">
-                  Edit
-                  <span>&quot;Map Name Here&quot;</span>
-                </h3>
-                <p className="text-xs">
-                  Please fill out all of the steps below and be sure click
-                  “Save” when you’re done.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs" htmlFor="inspectionName">
-                  Inspection Name
-                </Label>
-                <input
-                  className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                  type="text"
-                  id="inspectionName"
-                  placeholder="Enter Inspection Name"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <div className="mb-2 block">
-                  <Label htmlFor="client" value="Select Client" />
-                </div>
-                <Select id="client" required defaultValue={""}>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.attributes.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+        <div className="flex flex-col gap-7 p-10">
+          <div className="flex flex-col">
+            <div className="mb-2 block">
+              <Label htmlFor="client" value="Select Client" />
             </div>
+            <Select
+              id="client"
+              required
+              defaultValue={selectedClientName || ""}
+              onChange={(e) => {
+                const getSelectedClient = clients.find(
+                  (client) => client.id == e.target.value
+                );
+                setSelectedClientName(getSelectedClient.attributes.name);
+              }}
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.attributes.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-col">
+            <div className="mb-2 block">
+              <Label htmlFor="paid-switch" value="Invoice Number" />
+            </div>
+            <ToggleSwitch
+              id="paid-switch"
+              checked={isPaid}
+              onChange={setIsPaid}
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button className="rounded-md bg-dark-blue-700 text-white">
+              Update
+            </Button>
           </div>
         </div>
       </div>

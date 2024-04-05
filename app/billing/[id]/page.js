@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import InvoiceDrawer from "../../../components/Drawers/InvoiceDrawer";
 import InvoiceHeading from "../../../components/Invoice/Heading";
+import ProtectedContent from "../../../components/ProtectedContent";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -916,7 +917,7 @@ export default function Page({ params }) {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 col-span-2 h-fit-content px-6 py-8 bg-white rounded-lg sticky shadow">
+        <div className="grid grid-cols-1 gap-4 col-span-2 h-fit-content px-6 py-8 bg-white rounded-lg shadow">
           <div className="flex flex-col gap-3">
             <h2 className="leading-tight text-2xl font-medium">New Invoice</h2>
             <p className="text-xs text-gray-400 mb-8">
@@ -942,7 +943,9 @@ export default function Page({ params }) {
             >
               Download
             </Button>
-            <InvoiceDrawer btnText="Invoice" />
+            <ProtectedContent requiredRoles={["Admin"]}>
+              <InvoiceDrawer btnText="Invoice" />
+            </ProtectedContent>
           </div>
         </div>
       </div>

@@ -83,7 +83,7 @@ export default function RootLayout({ children }) {
                 />
               </Navbar.Brand>
               <div className="flex md:order-2">
-                <div className="mr-5 flex align-middle m-autoa">
+                {/* <div className="mr-5 flex align-middle m-autoa">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -96,7 +96,7 @@ export default function RootLayout({ children }) {
                       fill="white"
                     />
                   </svg>
-                </div>
+                </div> */}
                 <Dropdown
                   arrowIcon={false}
                   inline
