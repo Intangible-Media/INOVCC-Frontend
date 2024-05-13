@@ -328,12 +328,7 @@ export default function Page({ params }) {
         );
 
         setShowSuccessAlert(true);
-
-        setTimeout(() => {
-          router.push(`/clients/invoices/${invoiceResponse.data.data.id}`, {
-            scroll: false,
-          });
-        }, 1000);
+        return invoiceResponse;
       } catch (error) {
         console.error("Error fetching data", error.response || error);
       }

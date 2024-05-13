@@ -11,11 +11,30 @@ export function useAlert() {
 export const AlertProvider = ({ children }) => {
   const [alert, setAlert] = useState({ open: false, message: "", type: "" });
 
-  const showAlert = (message, type = "info", duration = 3000) => {
+  /**
+   * Displays an alert message.
+   *
+   * @param {string} message - The message to display in the alert.
+   * @param {string} [type="info"] - The type of the alert. Defaults to "info".
+   * @param {number} [duration=3000] - The duration in milliseconds for which the alert should be displayed. Defaults to 3000.
+   * @param {Function} [callback=null] - An optional callback function to be executed after the alert is displayed.
+   */
+
+  const showAlert = (
+    message,
+    type = "info",
+    duration = 3000,
+    callback = null
+  ) => {
     setAlert({ open: true, message, type });
     setTimeout(() => {
       setAlert((prevState) => ({ ...prevState, open: false }));
     }, duration);
+    if (callback) {
+      setTimeout(() => {
+        callback();
+      }, duration);
+    }
   };
 
   return (

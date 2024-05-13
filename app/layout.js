@@ -206,6 +206,26 @@ export default function RootLayout({ children }) {
                 </li>
                 <li>
                   <Link
+                    href="/tasks"
+                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M18.066 2.00001H9.82799C9.43388 1.99889 9.04346 2.07601 8.67937 2.22689C8.31529 2.37778 7.98477 2.59944 7.70699 2.87901L4.87899 5.70701C4.5993 5.98491 4.37757 6.31559 4.22668 6.67986C4.07579 7.04413 3.99873 7.43473 3.99999 7.82901V20C3.99196 20.5215 4.19104 21.0249 4.55359 21.3998C4.91613 21.7747 5.41254 21.9905 5.93399 22H18.066C18.5874 21.9905 19.0839 21.7747 19.4464 21.3998C19.8089 21.0249 20.008 20.5215 20 20V4.00001C20.008 3.47854 19.8089 2.97516 19.4464 2.60025C19.0839 2.22534 18.5874 2.00948 18.066 2.00001ZM8.99999 4.41401V7.00001H6.41399L8.99999 4.41401ZM5.99999 20V9.00001H8.99999C9.53042 9.00001 10.0391 8.7893 10.4142 8.41423C10.7893 8.03915 11 7.53045 11 7.00001V4.00001L17.994 3.97801C17.9981 3.98461 18.0002 3.99225 18 4.00001L18.066 20H5.99999Z"
+                        fill="#4B5563"
+                      />
+                    </svg>
+                    {!isCollapsed && <span className="ml-3">Tasks</span>}
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/billing"
                     className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                   >

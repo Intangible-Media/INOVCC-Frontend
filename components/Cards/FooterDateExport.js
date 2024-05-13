@@ -7,13 +7,13 @@ export default function FooterDateExport() {
   const [dateRange, setDateRange] = useState("");
 
   return (
-    <div className="flex items-center justify-between pt-6 mt-6 border-t">
-      <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+    <div className="flex items-center justify-between pt-6 mt-auto border-t">
+      {/* <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
         <option value="week">Week</option>
         <option value="month">Month</option>
         <option value="quarter">Quarter</option>
         <option value="year">Year</option>
-      </select>
+      </select> */}
 
       <div className="flex gap-2 items-center">
         <p className="font-semibold text-gray-600">Download Report</p>
