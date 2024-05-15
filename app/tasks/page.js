@@ -1,1000 +1,313 @@
 "use client";
 
-import { Table, Modal, Button } from "flowbite-react";
+import {
+  Table,
+  Modal,
+  Button,
+  Badge,
+  Checkbox,
+  Dropdown,
+  Label,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
 import ActivityLog from "../../components/ActivityLog";
 import ImageCardGrid from "../../components/ImageCardGrid";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { getAllTasks } from "../../utils/api/tasks";
+import { createActivity } from "../../utils/api/activities";
+import Link from "next/link";
+import { formatReadableDate, formatAbbreviatedDate } from "../../utils/strings";
+import { createTask, uploadFiles } from "../../utils/api/tasks";
+import { getAllUsers } from "../../utils/api/users";
+import qs from "qs";
+
+const UrgencyBadge = ({ urgency }) => {
+  const urgencyMap = {
+    low: { color: "success", text: "Low" },
+    medium: { color: "warning", text: "Medium" },
+    high: { color: "danger", text: "High" },
+    default: { color: "failure", text: "Failure" },
+  };
+
+  const { color, text } =
+    urgencyMap[urgency.toLowerCase()] || urgencyMap.default;
+
+  return (
+    <div className="flex justify-center">
+      <Badge color={color} className="text-center" size="sm">
+        {text}
+      </Badge>
+    </div>
+  );
+};
+
+const CreateTaskModal = () => {
+  const { data: session } = useSession();
+  const [openModal, setOpenModal] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    isComplete: false,
+    dueDate: "",
+    urgency: "",
+    images: [],
+  });
+  const [availableUsers, setAvailableUsers] = useState([]);
+
+  const fetchUsers = async () => {
+    try {
+      const userResponse = await getAllUsers({
+        jwt: session?.accessToken,
+        query: "",
+      });
+      console.log(userResponse.data);
+      setAvailableUsers(userResponse.data);
+    } catch (error) {
+      console.error("Error fetching users:", error.response.data.error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (session) fetchUsers();
+  }, [session]);
+
+  const handleUserSelect = (user) => {
+    setFormData({ ...formData, assignedUser: user });
+  };
+
+  const handleChange = (e) => {
+    const { name, type, checked, files } = e.target;
+    if (type === "file") {
+      setFormData((prev) => ({ ...prev, [name]: Array.from(files) }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : e.target.value,
+      }));
+    }
+  };
+
+  const handleImageUpload = async (taskId) => {
+    if (formData.images.length) {
+      await uploadFiles(
+        session?.accessToken,
+        formData.images,
+        taskId,
+        "documents"
+      );
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const apiParams = {
+        jwt: session?.accessToken,
+        payload: {
+          data: {
+            title: formData.title,
+            description: formData.description,
+            isComplete: formData.isComplete,
+            urgency: formData.urgency.toLowerCase(),
+            assigned: formData.assignedUser?.id,
+          },
+        },
+        query: "",
+      };
+
+      // Assuming createTask is a function that you have defined or imported
+      const taskResponse = await createTask(apiParams);
+
+      console.log(taskResponse.data);
+
+      if (taskResponse.data && formData.images.length) {
+        await handleImageUpload(taskResponse.data.data.id);
+      }
+
+      console.log("Task and files submitted successfully.");
+      setFormData({
+        title: "",
+        description: "",
+        isComplete: false,
+        dueDate: "",
+        urgency: "",
+        images: [],
+        assignedUser: null,
+      }); // Reset form
+      setOpenModal(false); // Close the modal on successful submission
+    } catch (error) {
+      console.error(
+        "Error submitting form:",
+        error.response.data.error.message
+      );
+    }
+  };
+  return (
+    <>
+      <Button onClick={() => setOpenModal(true)} className="w-full">
+        Toggle modal
+      </Button>
+      <Modal show={openModal} onClose={() => setOpenModal(false)}>
+        <Modal.Header>Create a Task</Modal.Header>
+        <Modal.Body>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            {/* Existing form fields */}
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="title" value="Title" />
+              </div>
+              <TextInput
+                id="title"
+                name="title"
+                type="text"
+                placeholder="Enter title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                shadow
+              />
+            </div>
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="description" value="Description" />
+              </div>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Enter description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="dueDate" value="Due Date" />
+              </div>
+              <TextInput
+                id="dueDate"
+                name="dueDate"
+                type="text"
+                value={formData.dueDate}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="urgency" value="Urgency" />
+              </div>
+              <select
+                id="urgency"
+                name="urgency"
+                defaultValue={formData.urgency || "low"}
+                onChange={handleChange}
+                className="form-select block w-full mt-1 rounded-md bg-gray-50 border-gray-300"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="images" value="Upload Images" />
+              </div>
+              <input
+                type="file"
+                id="images"
+                name="images"
+                multiple
+                onChange={handleChange}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-violet-50 file:text-violet-700
+                  hover:file:bg-violet-100"
+              />
+            </div>
+            <div className="mb-2 block">
+              <Label value="Assign User" />
+              <select
+                id="urgency"
+                name="urgency"
+                defaultValue={formData.urgency || "low"}
+                onChange={handleChange}
+                className="form-select block w-full mt-1 rounded-md bg-gray-50 border-gray-300"
+              >
+                {availableUsers.map((user) => (
+                  <option
+                    key={user.id}
+                    value={user.id}
+                    onClick={() => handleUserSelect(user)}
+                  >
+                    {user.firstName} {user.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Submit button */}
+            <Button type="submit">Submit</Button>
+          </form>
+        </Modal.Body>
+      </Modal>
+    </>
+  );
+};
 
 export default function Page({ params }) {
+  const { data: session } = useSession();
   const [openModal, setOpenModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [tasks, setTasks] = useState([
-    {
-      attributes: {
-        name: 'Apple MacBook Pro 17"',
-        urgency: "Urgent",
-        dueDate: "2021-12-31",
-        assignedBy: "John Doe",
-        created: "2021-12-01",
-        isComplete: false,
-        documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
-        },
+  const [tasks, setTasks] = useState([]);
 
-        description:
-          "Complete the system setup and software installation for the new MacBook Pro intended for the design team.",
-      },
-    },
-    {
-      attributes: {
-        name: 'Dell XPS 15"',
-        urgency: "High",
-        dueDate: "2022-01-15",
-        assignedBy: "Alice Smith",
-        created: "2021-12-05",
-        isComplete: false,
+  useEffect(() => {
+    const query = qs.stringify({
+      populate: {
         documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
+          populate: "*",
         },
-        description:
-          "Review and update the security protocols on the Dell XPS laptops to meet the new IT guidelines.",
       },
-    },
-    {
-      attributes: {
-        name: "Lenovo ThinkPad X1",
-        urgency: "Medium",
-        dueDate: "2022-01-30",
-        assignedBy: "Bob Johnson",
-        created: "2021-12-10",
-        isComplete: false,
-        documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
+    });
+
+    const fetchTasks = async () => {
+      if (!session) return;
+      const response = await getAllTasks({
+        jwt: session?.accessToken,
+        query: query,
+      });
+
+      console.log(response.data.data);
+      setTasks(response.data.data);
+    };
+
+    fetchTasks();
+  }, [session]);
+
+  const createActivityLog = async ({ taskId }) => {
+    console.log("instide the activity loag");
+    const apiParams = {
+      jwt: session?.accessToken,
+      payload: {
+        data: {
+          collection: "tasks",
+          collectionId: taskId,
+          action: "Created",
+          message: `${session?.user.email} has viewed this task`,
+          user: session?.user.id,
         },
-        description:
-          "Prepare the Lenovo ThinkPad X1 for the new interns starting next month with necessary software and access rights.",
       },
-    },
-    {
-      attributes: {
-        name: "HP Spectre x360",
-        urgency: "Low",
-        dueDate: "2022-02-20",
-        assignedBy: "Clara Oswald",
-        created: "2021-12-15",
-        isComplete: false,
-        documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        description:
-          "Conduct a performance review and hardware check on the HP Spectre x360 to ensure optimal operation.",
-      },
-    },
-    {
-      attributes: {
-        name: "Asus ZenBook 14",
-        urgency: "Urgent",
-        dueDate: "2022-03-01",
-        assignedBy: "Danny Phantom",
-        created: "2021-12-20",
-        isComplete: false,
-        documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        description:
-          "Coordinate with the procurement team to ensure the Asus ZenBook 14 is acquired and ready for the Q2 project launch.",
-      },
-    },
-    {
-      attributes: {
-        name: "Microsoft Surface Laptop 4",
-        urgency: "High",
-        dueDate: "2022-03-15",
-        assignedBy: "Eve Polastri",
-        created: "2021-12-25",
-        isComplete: true,
-        documents: {
-          data: [
-            {
-              id: 26,
-              attributes: {
-                name: "Jan 27, 2024, 12_03 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Jan_27_2024_12_03_PM_b73120ca2e",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 0.37,
-                url: "/uploads/Jan_27_2024_12_03_PM_b73120ca2e.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.155Z",
-                updatedAt: "2024-02-01T19:20:11.155Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 27,
-              attributes: {
-                name: "Website _ Production_402583578878193_PageView_Jan 27, 2024, 12_00 PM.csv",
-                alternativeText: null,
-                caption: null,
-                width: null,
-                height: null,
-                formats: null,
-                hash: "Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64",
-                ext: ".csv",
-                mime: "text/csv",
-                size: 3.3,
-                url: "/uploads/Website_Production_402583578878193_Page_View_Jan_27_2024_12_00_PM_6c8c223a64.csv",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.163Z",
-                updatedAt: "2024-02-01T19:20:11.163Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-            {
-              id: 28,
-              attributes: {
-                name: "Screenshot 202fdsfds.png",
-                alternativeText: null,
-                caption: null,
-                width: 1425,
-                height: 856,
-                formats: {
-                  thumbnail: {
-                    name: "thumbnail_Screenshot 202fdsfds.png",
-                    hash: "thumbnail_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 245,
-                    height: 147,
-                    size: 61.92,
-                    url: "/uploads/thumbnail_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  small: {
-                    name: "small_Screenshot 202fdsfds.png",
-                    hash: "small_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 500,
-                    height: 300,
-                    size: 208.99,
-                    url: "/uploads/small_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  medium: {
-                    name: "medium_Screenshot 202fdsfds.png",
-                    hash: "medium_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 750,
-                    height: 451,
-                    size: 399.97,
-                    url: "/uploads/medium_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                  large: {
-                    name: "large_Screenshot 202fdsfds.png",
-                    hash: "large_Screenshot_202fdsfds_e54c635d49",
-                    ext: ".png",
-                    mime: "image/png",
-                    path: null,
-                    width: 1000,
-                    height: 601,
-                    size: 628.67,
-                    url: "/uploads/large_Screenshot_202fdsfds_e54c635d49.png",
-                  },
-                },
-                hash: "Screenshot_202fdsfds_e54c635d49",
-                ext: ".png",
-                mime: "image/png",
-                size: 257.92,
-                url: "/uploads/Screenshot_202fdsfds_e54c635d49.png",
-                previewUrl: null,
-                provider: "local",
-                provider_metadata: null,
-                createdAt: "2024-02-01T19:20:11.597Z",
-                updatedAt: "2024-02-01T19:20:11.597Z",
-                related: [
-                  {
-                    __type: "api::inspection.inspection",
-                    id: 11,
-                    name: "Ex. 1 Map 323343",
-                    createdAt: "2023-11-17T19:52:58.250Z",
-                    updatedAt: "2024-04-01T16:24:55.007Z",
-                    publishedAt: "2023-11-17T19:52:57.899Z",
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        description:
-          "Verify software compatibility on all Surface Laptop 4 devices and update to the latest Windows version.",
-      },
-    },
-    {
-      attributes: {
-        name: "Acer Swift 3",
-        urgency: "Medium",
-        dueDate: "2022-04-01",
-        assignedBy: "Frank Castle",
-        created: "2021-12-30",
-        isComplete: true,
-        documents: {
-          data: [],
-        },
-        description:
-          "Arrange for the Acer Swift 3 units to be upgraded with additional RAM to handle more intensive applications.",
-      },
-    },
-    {
-      attributes: {
-        name: "Samsung Galaxy Book",
-        urgency: "Low",
-        dueDate: "2022-04-15",
-        assignedBy: "Gina Linetti",
-        created: "2022-01-01",
-        isComplete: true,
-        documents: {
-          data: [],
-        },
-        description:
-          "Create an onboarding guide for Samsung Galaxy Book users focusing on mobile and remote working capabilities.",
-      },
-    },
-    {
-      attributes: {
-        name: 'MacBook Air 13"',
-        urgency: "Urgent",
-        dueDate: "2022-05-01",
-        assignedBy: "Hank Moody",
-        created: "2022-01-05",
-        isComplete: false,
-        documents: {
-          data: [],
-        },
-        description:
-          "Ensure all MacBook Air laptops are updated to the latest macOS and check for any software licensing issues.",
-      },
-    },
-    {
-      attributes: {
-        name: "Alienware m15",
-        urgency: "High",
-        dueDate: "2022-05-15",
-        assignedBy: "Ivy Dickens",
-        created: "2022-01-10",
-        isComplete: true,
-        documents: {
-          data: [],
-        },
-        description:
-          "Optimize the Alienware m15 setups for gaming development projects, including GPU and memory performance tests.",
-      },
-    },
-  ]);
+      query: "",
+    };
+    const response = await createActivity(apiParams);
+
+    console.log(response.data);
+
+    return response.data.data;
+  };
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
@@ -1013,6 +326,10 @@ export default function Page({ params }) {
 
   return (
     <div className="flex flex-col justify-between py-6">
+      <section className="flex justify-between items-center mb-5">
+        <CreateTaskModal />
+      </section>
+
       <section className="overflow-x-auto bg-transparent">
         <Table hoverable>
           <Table.Head>
@@ -1020,10 +337,7 @@ export default function Page({ params }) {
             <Table.HeadCell>Task Description</Table.HeadCell>
             <Table.HeadCell>Urgency</Table.HeadCell>
             <Table.HeadCell>Due Date</Table.HeadCell>
-            <Table.HeadCell>Price</Table.HeadCell>
-            <Table.HeadCell>
-              <span className="sr-only">Edit</span>
-            </Table.HeadCell>
+            <Table.HeadCell>Completed</Table.HeadCell>
           </Table.Head>
           <Table.Body className="divide-y">
             {tasks.map((task, index) => (
@@ -1033,17 +347,23 @@ export default function Page({ params }) {
                 onClick={() => {
                   setOpenModal(true);
                   setSelectedTask(task);
+                  createActivityLog({ taskId: task.id });
                 }}
               >
                 <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                  {task.attributes.name}
+                  {task.attributes.title}
                 </Table.Cell>
                 <Table.Cell className="font-medium text-gray-900 dark:text-white">
                   {task.attributes.description.slice(0, 30) + "..."}
                 </Table.Cell>
-                <Table.Cell>{task.attributes.urgency}</Table.Cell>
-                <Table.Cell>{task.attributes.dueDate}</Table.Cell>
-                <Table.Cell>{task.attributes.created}</Table.Cell>
+                <Table.Cell>
+                  <UrgencyBadge urgency={task.attributes.urgency} />
+                </Table.Cell>
+                <Table.Cell>
+                  {`${formatAbbreviatedDate(task.attributes.dueDate).month} ${
+                    formatAbbreviatedDate(task.attributes.dueDate).day
+                  }`}
+                </Table.Cell>
                 <Table.Cell>{task.attributes.isComplete}</Table.Cell>
               </Table.Row>
             ))}
@@ -1058,15 +378,18 @@ export default function Page({ params }) {
             <section className="flex">
               <div className="w-full p-6">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {selectedTask && selectedTask.attributes.name}
+                  {selectedTask && selectedTask.attributes.title}
                 </h2>
-                <div className=" h-24 overflow-auto">
-                  <p className="text-gray-600 dark:text-gray-300 mb-5">
+                <div className="max-h-24 h-24 overflow-auto mb-5">
+                  <p className="text-gray-600 dark:text-gray-300">
                     {selectedTask && selectedTask.attributes.description}
                   </p>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Urgency: {selectedTask && selectedTask.attributes.urgency}
+                <p className="text-gray-600 dark:text-gray-300 flex">
+                  Urgency:{" "}
+                  {selectedTask && (
+                    <UrgencyBadge urgency={selectedTask.attributes.urgency} />
+                  )}
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
                   Due Date: {selectedTask && selectedTask.attributes.dueDate}
@@ -1080,7 +403,7 @@ export default function Page({ params }) {
                   <ImageCardGrid
                     files={
                       (selectedTask &&
-                        selectedTask.attributes.documents.data) ||
+                        selectedTask.attributes.documents?.data) ||
                       []
                     }
                     background={"bg-white"}
@@ -1092,8 +415,8 @@ export default function Page({ params }) {
               </div>
               <div className="w-full p-6 bg-gray-100">
                 <ActivityLog
-                  id={11}
-                  collection="inspections"
+                  id={selectedTask && selectedTask.id}
+                  collection="tasks"
                   defaultExpanded={true}
                 />
               </div>
@@ -1101,10 +424,7 @@ export default function Page({ params }) {
           </Modal.Body>
           <Modal.Footer>
             <Button onClick={() => requestNotificationPermission()}>
-              I accept
-            </Button>
-            <Button color="gray" onClick={() => sendNotification()}>
-              Decline
+              Mark Complete
             </Button>
           </Modal.Footer>
         </Modal>
