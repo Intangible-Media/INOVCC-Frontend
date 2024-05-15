@@ -12,7 +12,7 @@ import qs from "qs";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ClientDrawer from "../../../components/Drawers/ClientDrawer";
-import { useClient } from "../../../context/clientContext";
+import { useClient } from "../../../context/ClientContext";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 

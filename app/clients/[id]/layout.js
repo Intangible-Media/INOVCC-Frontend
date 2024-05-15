@@ -1,4 +1,4 @@
-import { ClientProvider } from "../../../context/clientContext";
+import { ClientProvider } from "../../../context/ClientContext";
 
 export default function Layout({ children }) {
   return (
