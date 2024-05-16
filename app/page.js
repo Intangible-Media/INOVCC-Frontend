@@ -5,14 +5,60 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import FooterDateExport from "../components/Cards/FooterDateExport";
 import InspectionTable from "../components/InspectionTable";
+import { getAllInspections } from "../utils/api/inspections";
 import qs from "qs";
 import dynamic from "next/dynamic";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
+const useInspectionStatusCount = (inspections) => {
+  const [statusCounts, setStatusCounts] = useState({
+    projectsInProgress: 0,
+    projectsNotStarted: 0,
+    projectsCompleted: 0,
+  });
+
+  useEffect(() => {
+    const countStatuses = () => {
+      let inProgress = 0;
+      let notStarted = 0;
+      let completed = 0;
+
+      inspections.forEach((inspection) => {
+        switch (inspection.attributes.status) {
+          case "in progress":
+            inProgress++;
+            break;
+          case "not started":
+            notStarted++;
+            break;
+          case "completed":
+            completed++;
+            break;
+          default:
+            break;
+        }
+      });
+
+      setStatusCounts({
+        projectsInProgress: inProgress,
+        projectsNotStarted: notStarted,
+        projectsCompleted: completed,
+      });
+    };
+
+    countStatuses();
+  }, [inspections]);
+
+  return statusCounts;
+};
+
 export default function Home() {
   const [inspections, setInspections] = useState([]);
   const { data: session } = useSession();
+
+  const { projectsInProgress, projectsNotStarted, projectsCompleted } =
+    useInspectionStatusCount(inspections);
 
   const option = {
     chart: {
@@ -160,25 +206,20 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (session?.accessToken) {
-        try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${query}`,
-            {
-              headers: {
-                Authorization: `Bearer ${session?.accessToken}`,
-              },
-            }
-          );
-          setInspections(response.data.data);
-        } catch (error) {
-          console.error("Error fetching data", error.response || error);
-        }
-      }
+    if (!session) return;
+
+    const fetchProjects = async () => {
+      const apiParams = {
+        jwt: session?.accessToken,
+        query: query,
+      };
+      // Eventually you will want to do a Promise.all for all of the other project types
+      const inspectionResponse = await getAllInspections(apiParams);
+
+      setInspections(inspectionResponse.data.data);
     };
 
-    fetchData();
+    fetchProjects();
   }, [session]);
 
   return (
@@ -194,47 +235,47 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-3 w-full">
             <div className="flex flex-col bg-red-50 py-14 rounded-lg">
               <div className="bg-red-100 p-5 rounded-full m-auto">
-                <p className="text-3xl text-red-800">50</p>
+                <p className="text-3xl text-red-800">{projectsNotStarted}</p>
               </div>
-              <p className="text-center text-red-800 font-semibold mt-2">
-                To do
+              <p className=" text-sm text-center text-red-800 font-semibold mt-2">
+                Not Started
               </p>
             </div>
             <div className="flex flex-col bg-yellow-50 py-14 rounded-lg">
               <div className="bg-yellow-100 p-5 rounded-full m-auto">
-                <p className="text-3xl text-yellow-800">50</p>
+                <p className="text-3xl text-yellow-800">{projectsInProgress}</p>
               </div>
-              <p className="text-center text-yellow-800 font-semibold mt-2">
+              <p className=" text-sm text-center text-yellow-800 font-semibold mt-2">
                 In Progress
               </p>
             </div>
             <div className="flex flex-col bg-green-50 py-14 rounded-lg">
               <div className="bg-green-100 p-5 rounded-full m-auto">
-                <p className="text-3xl text-green-600">50</p>
+                <p className="text-3xl text-green-600">{projectsCompleted}</p>
               </div>
-              <p className="text-center text-green-600 font-semibold mt-2">
+              <p className=" text-sm text-center text-green-600 font-semibold mt-2">
                 Completed
               </p>
             </div>
           </div>
 
-          <div className="flex gap-2 w-full justify-center mt-10 rounded-lg">
-            <span className="flex items-center text-sm font-medium text-gray-900 dark:text-white me-3">
+          <div className="flex gap-2 w-full justify-center mt-8 mb-4 rounded-lg">
+            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
               <span className="flex w-2.5 h-2.5 bg-red-600 rounded-full me-1.5 flex-shrink-0"></span>
-              To Do
+              Not Started
             </span>
-            <span className="flex items-center text-sm font-medium text-gray-900 dark:text-white me-3">
+            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
               <span className="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>
               In Progress
             </span>
-            <span className="flex items-center text-sm font-medium text-gray-900 dark:text-white me-3">
+            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
               <span className="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>
               Completed
             </span>
           </div>
-          <div className="mt-auto">
+          {/* <div className="mt-auto">
             <FooterDateExport />
-          </div>
+          </div> */}
         </div>
 
         <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
@@ -256,7 +297,7 @@ export default function Home() {
               width={"100%"}
             />
           </div>
-          <FooterDateExport />
+          {/* <FooterDateExport /> */}
         </div>
         <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between h-11">
@@ -277,7 +318,7 @@ export default function Home() {
               width={"100%"}
             />
           </div>
-          <FooterDateExport />
+          {/* <FooterDateExport /> */}
         </div>
       </div>
 

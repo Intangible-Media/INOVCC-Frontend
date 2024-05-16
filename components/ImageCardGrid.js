@@ -19,14 +19,60 @@ export default function ImageCardGrid({
     updateFiles([...files, ...newFiles]);
   };
 
-  const downloadImage = (file) => {
-    // Create a URL for the file
-    const url = URL.createObjectURL(file);
+  // const downloadImage = (file) => {
+  //   // Create a URL for the file
+  //   const url = URL.createObjectURL(file);
+
+  //   // Create a temporary anchor (`<a>`) element
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = file.name; // Set the file name for the download
+
+  //   // Append the anchor to the body, click it, and then remove it
+  //   document.body.appendChild(a);
+  //   a.click();
+  //   document.body.removeChild(a);
+
+  //   // Clean up the URL object
+  //   URL.revokeObjectURL(url);
+  // };
+
+  const downloadImage = async (fileOrUrl) => {
+    let blob;
+    let filename = "download"; // Default filename
+
+    if (typeof fileOrUrl === "string") {
+      // If fileOrUrl is a URL string
+      try {
+        // Fetch the resource and convert it to a Blob
+        const response = await fetch(fileOrUrl);
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        blob = await response.blob();
+        filename = fileOrUrl.split("/").pop() || filename; // Use the last part of the URL as the filename
+      } catch (e) {
+        console.error("Invalid URL string or network error.", e);
+        return;
+      }
+    } else if (fileOrUrl instanceof Blob || fileOrUrl instanceof File) {
+      // If fileOrUrl is a Blob or File object
+      blob = fileOrUrl;
+      filename = fileOrUrl.name || filename; // Use the file name if available
+    } else {
+      console.error(
+        "Invalid input type. Expected a URL string, Blob, or File object."
+      );
+      return;
+    }
+
+    // Create a URL for the Blob
+    const url = URL.createObjectURL(blob);
 
     // Create a temporary anchor (`<a>`) element
     const a = document.createElement("a");
     a.href = url;
-    a.download = file.name; // Set the file name for the download
+    a.download = filename; // Set the file name for the download
 
     // Append the anchor to the body, click it, and then remove it
     document.body.appendChild(a);
@@ -151,9 +197,11 @@ export default function ImageCardGrid({
                     </span>
                   )}
                 >
-                  <Dropdown.Item onClick={() => downloadImage(file)}>
+                  <Dropdown.Item
+                    onClick={() => downloadImage(ensureDomain(fileUrl))}
+                  >
                     <div className="flex items-center">
-                      <span className="">Download</span>
+                      <span>Download</span>
                     </div>
                   </Dropdown.Item>
                   <Dropdown.Item>

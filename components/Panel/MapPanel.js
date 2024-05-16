@@ -597,8 +597,8 @@ const StructureComments = ({ comments = [], editable = false }) => {
                 <path
                   d="M3.99967 0.583496V3.50016M3.99967 3.50016V6.41683M3.99967 3.50016H6.91634M3.99967 3.50016H1.08301"
                   stroke="#312E8E"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </p>

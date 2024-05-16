@@ -9,6 +9,7 @@ import DynamicBreadcrumb from "../components/DynamicBreadcrumb";
 import { useEffect, useState } from "react";
 import { AlertProvider } from "../context/AlertContext";
 import { HiInformationCircle } from "react-icons/hi";
+import NavbarDropdown from "../components/NavbarDropdown";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -83,45 +84,7 @@ export default function RootLayout({ children }) {
                 />
               </Navbar.Brand>
               <div className="flex md:order-2">
-                {/* <div className="mr-5 flex align-middle m-autoa">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M19.079 14.829C18.4881 14.2477 18.1488 13.4578 18.134 12.629V10.829C18.133 9.35216 17.6212 7.92113 16.6855 6.77854C15.7497 5.63596 14.4477 4.85214 13 4.56001V3.10001C13 2.83479 12.8946 2.58044 12.7071 2.3929C12.5196 2.20536 12.2652 2.10001 12 2.10001C11.7348 2.10001 11.4804 2.20536 11.2929 2.3929C11.1054 2.58044 11 2.83479 11 3.10001V4.56001C9.55183 4.85225 8.24937 5.6365 7.31359 6.7797C6.37781 7.9229 5.86635 9.35465 5.866 10.832V12.418C5.86607 12.4886 5.87378 12.559 5.889 12.628H5.866C5.85125 13.4568 5.51194 14.2467 4.921 14.828C4.38423 15.3542 4.05692 16.0575 4 16.807C4 17.35 4 19 5.538 19H7.746C8.03584 19.9003 8.60385 20.6855 9.36829 21.2425C10.1327 21.7995 11.0542 22.0995 12 22.0995C12.9458 22.0995 13.8673 21.7995 14.6317 21.2425C15.3961 20.6855 15.9642 19.9003 16.254 19H18.462C20 19 20 17.35 20 16.807C19.9428 16.0578 19.6156 15.3549 19.079 14.829ZM12 20.1C11.5932 20.0995 11.1928 19.9989 10.834 19.8071C10.4753 19.6152 10.1693 19.3381 9.943 19H14.057C13.8307 19.3381 13.5247 19.6152 13.166 19.8071C12.8072 19.9989 12.4068 20.0995 12 20.1ZM18 17H6C6 16.933 6 16.864 6 16.807C6.1063 16.54 6.26627 16.2977 6.47 16.095C7.35569 15.1579 7.85559 13.9214 7.87 12.632V10.832C7.8681 9.71355 8.2954 8.63699 9.06382 7.82429C9.83224 7.01159 10.8832 6.5247 12 6.46401C13.1175 6.52372 14.1695 7.01017 14.9387 7.82298C15.708 8.63578 16.1359 9.71289 16.134 10.832V12.418C16.1342 12.4886 16.1416 12.5589 16.156 12.628H16.134C16.1484 13.9174 16.6483 15.1539 17.534 16.091C17.7377 16.2937 17.8977 16.536 18.004 16.803C18 16.864 18 16.933 18 17Z"
-                      fill="white"
-                    />
-                  </svg>
-                </div> */}
-                <Dropdown
-                  arrowIcon={false}
-                  inline
-                  label={
-                    <Avatar
-                      alt="User settings"
-                      img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                      rounded
-                    />
-                  }
-                >
-                  <Dropdown.Header>
-                    <span className="block text-sm">Bonnie Green</span>
-                    <span className="block truncate text-sm font-medium">
-                      name@flowbite.com
-                    </span>
-                  </Dropdown.Header>
-                  <Dropdown.Item>Dashboard</Dropdown.Item>
-                  <Dropdown.Item>Settings</Dropdown.Item>
-                  <Dropdown.Item>Earnings</Dropdown.Item>
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={() => signOut()}>
-                    Sign out
-                  </Dropdown.Item>
-                </Dropdown>
+                <NavbarDropdown />
                 <Navbar.Toggle />
               </div>
               <Navbar.Collapse>
