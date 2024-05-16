@@ -548,14 +548,16 @@ const StructureComments = ({ comments = [], editable = false }) => {
             <div className="p-3">
               <div className="flex items-center space-x-4 rtl:space-x-reverse">
                 <div className="flex-shrink-0">
-                  <img
-                    className="w-10 h-10 rounded-full object-cover"
-                    src={ensureDomain(
-                      comment.attributes.author.data.attributes.picture.data
-                        .attributes.formats.thumbnail.url
-                    )}
-                    alt="something"
-                  />
+                  {comment.attributes.author.data.attributes.picture.data && (
+                    <img
+                      className="w-10 h-10 rounded-full object-cover"
+                      src={ensureDomain(
+                        comment.attributes.author.data.attributes.picture.data
+                          .attributes.formats.thumbnail.url
+                      )}
+                      alt="something"
+                    />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
@@ -735,7 +737,9 @@ const AddInspectorForm = ({
             {assignedInspectors.map((inspector, index) => {
               const inspectorImage =
                 inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url || inspector.picture.formats.thumbnail.url;
+                  .url ||
+                inspector.picture.formats.thumbnail.url ||
+                "/empty.png";
               return (
                 <div key={index} className="relative group">
                   <button
@@ -774,7 +778,9 @@ const AddInspectorForm = ({
             {assignedInspectors.map((inspector, index) => {
               const inspectorImage =
                 inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url || inspector.picture.formats.thumbnail.url;
+                  .url ||
+                inspector.picture.formats.thumbnail.url ||
+                "/empty.png";
               return (
                 <img
                   key={index}

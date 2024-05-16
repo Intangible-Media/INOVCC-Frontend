@@ -661,7 +661,9 @@ const AddInspectorForm = ({
             {assignedInspectors.map((inspector, index) => {
               const inspectorImage =
                 inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url || inspector.picture.formats.thumbnail.url;
+                  .url ||
+                inspector.picture.formats.thumbnail.url ||
+                "/empty.png";
               return (
                 <div key={index} className="relative group">
                   <button
@@ -700,7 +702,9 @@ const AddInspectorForm = ({
             {assignedInspectors.map((inspector, index) => {
               const inspectorImage =
                 inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url || inspector.picture.formats.thumbnail.url;
+                  .url ||
+                inspector.picture.formats.thumbnail.url ||
+                "/empty.png";
               return (
                 <img
                   key={index}
