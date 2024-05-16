@@ -140,6 +140,11 @@ export const isImage = (fileName) => {
  * @returns {string} The original URL if it starts with a protocol, or the URL with 'http://localhost:1337' prepended if it does not.
  */
 export const ensureDomain = (url) => {
+  // Return placeholder image if the URL is undefined or null
+  if (!url) {
+    return "/empty.png";
+  }
+
   // Extend the regex to include "blob:" URLs
   const protocolRegex = /^(http:\/\/|https:\/\/|ftp:\/\/|ftps:\/\/|blob:)/;
 

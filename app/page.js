@@ -167,7 +167,7 @@ export default function Home() {
             `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${query}`,
             {
               headers: {
-                Authorization: `Bearer ${session.accessToken}`,
+                Authorization: `Bearer ${session?.accessToken}`,
               },
             }
           );
