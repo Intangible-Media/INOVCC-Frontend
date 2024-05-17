@@ -189,10 +189,6 @@ export default function Dashboard() {
           <InspectionTable inspectionData={inspections} />
         </div>
       </div>
-
-      <div className="grid grid-cols-1 mb-4">
-        <ActivityLog />
-      </div>
     </>
   );
 }
