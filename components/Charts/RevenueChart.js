@@ -1,5 +1,7 @@
 // components/RevenueChart.js
 
+"use client";
+
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 
@@ -144,7 +146,8 @@ const RevenueChart = ({ invoices }) => {
     annotations: {
       xaxis: [
         {
-          x: currentMonth,
+          x: (chartRef.current?.offsetWidth / 12) * currentMonth + 1 || 0,
+          x2: (chartRef.current?.offsetWidth / 12) * (currentMonth + 1) || 0,
           borderColor: "#FF4560",
           label: {
             borderColor: "#FF4560",
@@ -167,15 +170,30 @@ const RevenueChart = ({ invoices }) => {
   ];
 
   return (
-    <div ref={chartRef} className="w-full mt-auto">
-      <ApexChart
-        type="area"
-        options={revenueOption}
-        series={revenueSeries}
-        height={250}
-        width="100%"
-      />
-    </div>
+    <>
+      <div className="flex justify-between h-11">
+        <h3 className="text-3xl font-bold dark:text-white">${totalSum}</h3>
+        <div>
+          <span
+            className={`text-base font-semibold ${
+              percentageChange > 0 ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {percentageChange.toFixed(2)}%
+          </span>
+        </div>
+      </div>
+      <p className="text-gray-500">Revenue YTD</p>
+      <div ref={chartRef} className="w-full mt-auto">
+        <ApexChart
+          type="area"
+          options={revenueOption}
+          series={revenueSeries}
+          height={250}
+          width="100%"
+        />
+      </div>
+    </>
   );
 };
 

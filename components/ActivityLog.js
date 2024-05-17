@@ -33,7 +33,7 @@ export default function ActivityLog({
           sort: ["createdAt:desc"],
           pagination: {
             page,
-            pageSize: 5, // Adjust pageSize as needed
+            pageSize: 15, // Adjust pageSize as needed
           },
           populate: {
             user: {

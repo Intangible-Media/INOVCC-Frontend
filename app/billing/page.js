@@ -3,6 +3,7 @@
 import { Table, Button } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import RevenueChart from "../../components/Charts/RevenueChart.js";
 import Link from "next/link";
 import axios from "axios";
 import qs from "qs";
@@ -17,7 +18,7 @@ export default function Page() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInvoices = async () => {
       if (session?.accessToken) {
         try {
           const response = await axios.get(
@@ -36,7 +37,7 @@ export default function Page() {
         }
       }
     };
-    fetchData();
+    fetchInvoices();
   }, [session]);
 
   return (
@@ -49,9 +50,17 @@ export default function Page() {
         </Link>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-4 mb-4">
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 h-60 rounded-lg"></div>
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 h-60 rounded-lg"></div>
-        <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 h-60 rounded-lg"></div>
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
+          {" "}
+          <RevenueChart invoices={invoices} />
+        </div>
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
+          <RevenueChart invoices={invoices} />
+        </div>
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
+          {" "}
+          <RevenueChart invoices={invoices} />
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4">
         <div className="flex flex-col border-gray-300 dark:border-gray-600 bg-white gap-4 p-4 md:p-8 rounded-lg mb-4">

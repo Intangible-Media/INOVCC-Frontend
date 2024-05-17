@@ -171,18 +171,15 @@ export default function Dashboard() {
         <InspectionDrawer />
       </div>
 
-      <div className="flex overflow-x-scroll mb-4 hide-scroll-bar py-2">
-        <div className="flex flex-nowrap gap-3">
-          {favoriteInspections.map((inspection, index) => (
-            <FavoriteInspectionCard key={index} inspection={inspection} />
-          ))}
-
-          <div className="flex flex-col justify-center align-middle gap-1 w-80 max-w-xs overflow-hidden rounded-lg bg-gray-100 border shadow p-6 hover:shadow-lg hover:bg-gray-50 transition-all duration-100 ease-in-out cursor-pointer">
-            <GoPlus className="text-center mx-auto" />
-            <p className="text-center">Add Favorite</p>
+      {favoriteInspections.length > 0 && (
+        <div className="flex overflow-x-scroll mb-4 hide-scroll-bar py-2">
+          <div className="flex flex-nowrap gap-3">
+            {favoriteInspections.map((inspection, index) => (
+              <FavoriteInspectionCard key={index} inspection={inspection} />
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 mb-4 shadow-none">
         <div className="border-gray-300 rounded-lg dark:border-gray-600 bg-white p-0 shadow-none">
