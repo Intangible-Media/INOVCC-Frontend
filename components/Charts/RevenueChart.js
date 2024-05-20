@@ -11,6 +11,7 @@ const RevenueChart = ({ invoices }) => {
   const chartRef = useRef(null);
   const today = new Date();
   const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
 
   const monthNames = [
     "January",
@@ -36,6 +37,18 @@ const RevenueChart = ({ invoices }) => {
     }
   }, []);
 
+  const groupInvoicesByYear = (invoices) => {
+    return invoices.reduce((acc, invoice) => {
+      const { datePaid } = invoice.attributes;
+      const year = new Date(datePaid).getFullYear();
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push(invoice);
+      return acc;
+    }, {});
+  };
+
   const getMonthlyTotals = (invoices) => {
     const monthlyTotals = Array(12).fill(0);
 
@@ -60,11 +73,13 @@ const RevenueChart = ({ invoices }) => {
     return ((currentTotal - previousTotal) / previousTotal) * 100;
   };
 
+  const groupedInvoices = groupInvoicesByYear(invoices);
   const totalSum = invoices
     .reduce((acc, invoice) => acc + invoice.attributes.total, 0)
     .toLocaleString();
-  const monthlyTotals = getMonthlyTotals(invoices);
-  const percentageChange = calculatePercentageChange(monthlyTotals);
+  const percentageChange = calculatePercentageChange(
+    getMonthlyTotals(groupedInvoices[currentYear] || [])
+  );
 
   const revenueOption = {
     chart: {
@@ -162,12 +177,10 @@ const RevenueChart = ({ invoices }) => {
     },
   };
 
-  const revenueSeries = [
-    {
-      name: "2021",
-      data: getMonthlyTotals(invoices),
-    },
-  ];
+  const revenueSeries = Object.keys(groupedInvoices).map((year) => ({
+    name: year,
+    data: getMonthlyTotals(groupedInvoices[year]),
+  }));
 
   return (
     <>
@@ -183,7 +196,7 @@ const RevenueChart = ({ invoices }) => {
           </span>
         </div>
       </div>
-      <p className="text-gray-500">Revenue YTD</p>
+      <p className="text-gray-500 mb-4">Revenue YTD</p>
       <div ref={chartRef} className="w-full mt-auto">
         <ApexChart
           type="area"
