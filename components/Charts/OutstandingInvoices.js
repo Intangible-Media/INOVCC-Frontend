@@ -15,6 +15,8 @@ const OutstandingInvoices = ({ invoices }) => {
     chart: {
       width: 380,
       type: "donut",
+      offsetX: 0,
+      offsetY: 10,
     },
     dataLabels: {
       enabled: false,
@@ -31,7 +33,9 @@ const OutstandingInvoices = ({ invoices }) => {
     ],
     labels: ["Overdue", "Paid in Full", "Outstanding"], // Custom legend names
     legend: {
+      show: true,
       position: "right",
+      horizontalAlign: "center",
       offsetY: 0,
     },
   };
@@ -47,7 +51,7 @@ const OutstandingInvoices = ({ invoices }) => {
           type="donut"
           options={options}
           series={options.series}
-          height={400}
+          height={350}
           width="100%"
         />
       </div>

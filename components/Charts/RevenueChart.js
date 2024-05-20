@@ -4,6 +4,7 @@
 
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { off } from "process";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -12,6 +13,56 @@ const RevenueChart = ({ invoices }) => {
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
+
+  // Example data
+
+  // const invoices = [{
+  //     "id": 30,
+  //     "attributes": {
+  //         "name": "Scottsdale Power | 431899134",
+  //         "createdAt": "2024-05-17T16:53:18.151Z",
+  //         "updatedAt": "2024-05-17T17:31:42.829Z",
+  //         "publishedAt": "2024-05-17T16:53:18.148Z",
+  //         "paid": true,
+  //         "pricing": {
+  //             "beehive": "678",
+  //             "wood-pole": "678"
+  //         },
+  //         "total": 5424,
+  //         "datePaid": "2024-05-09",
+  //         "dueDate": null,
+  //         "client": {
+  //             "data": {
+  //                 "id": 3,
+  //                 "attributes": {
+  //                     "name": "Scottsdale Power",
+  //                     "createdAt": "2023-11-17T19:49:11.894Z",
+  //                     "updatedAt": "2024-04-11T23:37:01.869Z",
+  //                     "publishedAt": "2023-11-17T19:53:20.367Z",
+  //                     "structurePricing": {
+  //                         "pullbox": {
+  //                             "price": 150
+  //                         },
+  //                         "standard-vault": {
+  //                             "price": 150
+  //                         },
+  //                         "streetLight": {
+  //                             "price": 150
+  //                         }
+  //                     },
+  //                     "email": "info@scottsdaleaz.gov",
+  //                     "phone": "4808027890",
+  //                     "address": "1234 sesame st, Scottsdale AZ 85016",
+  //                     "description": "City of Scottsdale Arizona State Owned ",
+  //                     "website": "https://scottsdalewaterpower.gov"
+  //                 }
+  //             }
+  //         },
+  //         "structures": {
+  //             "data": []
+  //         }
+  //     }
+  // }]
 
   const monthNames = [
     "January",
@@ -50,13 +101,35 @@ const RevenueChart = ({ invoices }) => {
   };
 
   const getMonthlyTotals = (invoices) => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
     const monthlyTotals = Array(12).fill(0);
+    let yearOfInvoices = undefined;
 
     invoices.forEach((invoice) => {
       const { total, datePaid } = invoice.attributes;
-      const month = new Date(datePaid).getMonth();
-      monthlyTotals[month] += total;
+      const date = new Date(datePaid);
+      const year = date.getFullYear();
+      yearOfInvoices = year;
+      const month = date.getMonth();
+
+      if (year <= currentYear) {
+        monthlyTotals[month] += total;
+      }
     });
+
+    console.log("yearOfInvoices");
+    console.log(yearOfInvoices);
+
+    // Fill future months with null for the current year
+    if (yearOfInvoices === currentYear) {
+      for (let i = currentMonth + 1; i < 12; i++) {
+        monthlyTotals[i] = null;
+      }
+    }
+
+    console.log(monthlyTotals);
 
     return monthlyTotals;
   };
@@ -73,6 +146,72 @@ const RevenueChart = ({ invoices }) => {
     return ((currentTotal - previousTotal) / previousTotal) * 100;
   };
 
+  /**
+   * Gets the invoices sorted by year and filtered to include only those paid in the last 30 days.
+   * @param {Array} invoices - The array of invoices.
+   * @returns {Object} An object with the series name "revenue" and arrays of invoices sorted by year.
+   */
+  const getMonthsWorthOfInvoices = (invoices) => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    // Filter invoices paid in the last 30 days
+    const filteredInvoices = invoices.filter((invoice) => {
+      const datePaid = new Date(invoice.attributes.datePaid);
+      return datePaid >= thirtyDaysAgo && datePaid <= today;
+    });
+
+    // Group invoices by year
+    const groupedInvoices = filteredInvoices.reduce((acc, invoice) => {
+      const year = new Date(invoice.attributes.datePaid).getFullYear();
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push(invoice);
+      return acc;
+    }, {});
+
+    // Return the result as specified
+    return {
+      series: "revenue",
+      data: groupedInvoices,
+    };
+  };
+
+  /**
+   * Gets the invoices sorted by year and filtered to include only those paid in the last 7 days.
+   * @param {Array} invoices - The array of invoices.
+   * @returns {Object} An object with the series name "revenue" and arrays of invoices sorted by year.
+   */
+  const getWeeksWorthOfInvoices = (invoices) => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    // Filter invoices paid in the last 7 days
+    const filteredInvoices = invoices.filter((invoice) => {
+      const datePaid = new Date(invoice.attributes.datePaid);
+      return datePaid >= sevenDaysAgo && datePaid <= today;
+    });
+
+    // Group invoices by year
+    const groupedInvoices = filteredInvoices.reduce((acc, invoice) => {
+      const year = new Date(invoice.attributes.datePaid).getFullYear();
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push(invoice);
+      return acc;
+    }, {});
+
+    // Return the result as specified
+    return {
+      series: "revenue",
+      data: groupedInvoices,
+    };
+  };
+
   const groupedInvoices = groupInvoicesByYear(invoices);
   const totalSum = invoices
     .reduce((acc, invoice) => acc + invoice.attributes.total, 0)
@@ -86,6 +225,7 @@ const RevenueChart = ({ invoices }) => {
       id: "apexchart-example-alt",
       toolbar: {
         show: true,
+        offsetY: 30,
       },
       sparkline: {
         enabled: true,
@@ -107,38 +247,31 @@ const RevenueChart = ({ invoices }) => {
     fill: {
       type: "gradient",
       gradient: {
-        shadeIntensity: 1,
+        shadeIntensity: 0.1,
         opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 100],
-        colorStops: [
-          {
-            offset: 0,
-            color: "#62C3F7",
-            opacity: 0.6,
-          },
-          {
-            offset: 100,
-            color: "#62C3F7",
-            opacity: 0.0,
-          },
-        ],
+        opacityTo: 0,
       },
+    },
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "right",
+      offsetY: 0,
     },
     xaxis: {
       categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
+        "January",
+        "February",
+        "March",
+        "April",
         "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
       ],
       labels: {
         show: true,
@@ -155,9 +288,11 @@ const RevenueChart = ({ invoices }) => {
     },
     tooltip: {
       y: {
-        formatter: (value) => `$${value.toFixed(2)}`,
+        formatter: (value) =>
+          value ? `$${value.toFixed(2)}` : "Not Available",
       },
     },
+
     annotations: {
       xaxis: [
         {

@@ -146,8 +146,11 @@ const CreateTaskModal = () => {
   };
   return (
     <>
-      <Button onClick={() => setOpenModal(true)} className="w-full">
-        Toggle modal
+      <Button
+        onClick={() => setOpenModal(true)}
+        className="bg-dark-blue-700 text-white w-full"
+      >
+        Add Task
       </Button>
       <Modal show={openModal} onClose={() => setOpenModal(false)}>
         <Modal.Header>Create a Task</Modal.Header>

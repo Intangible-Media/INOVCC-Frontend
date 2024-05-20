@@ -10,10 +10,45 @@ import { useEffect, useState } from "react";
 import { AlertProvider } from "../context/AlertContext";
 import { HiInformationCircle } from "react-icons/hi";
 import NavbarDropdown from "../components/NavbarDropdown";
+import { usePathname, useSearchParams } from "next/navigation";
 import "./globals.css";
+import path from "path";
 
 const inter = Inter({ subsets: ["latin"] });
 
+/**
+ * Custom hook that returns a CSS class if the current URL contains the specified string.
+ * @param {string} searchString - The string to search for in the URL.
+ * @returns {string} The CSS class if the URL contains the search string.
+ */
+export const useBackgroundClass = (searchString) => {
+  const [backgroundClass, setBackgroundClass] = useState("");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const url = `${pathname}?${searchParams}`;
+
+    console.log("URL", url);
+    console.log("searchParams", searchParams);
+
+    if (searchString === "overview") {
+      if (url === "/?") {
+        setBackgroundClass("bg-blue-100");
+      } else {
+        setBackgroundClass("");
+      }
+    } else {
+      if (url.includes(searchString)) {
+        setBackgroundClass("bg-blue-100");
+      } else {
+        setBackgroundClass("");
+      }
+    }
+  }, [pathname, searchParams, searchString]);
+
+  return backgroundClass;
+};
 export default function RootLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -126,7 +161,9 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group bg-blue-100"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "/?"
+                    )}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -150,7 +187,9 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/inspections"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "inspections"
+                    )}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -170,27 +209,56 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/tasks"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "tasks"
+                    )}`}
                   >
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
                       viewBox="0 0 24 24"
                       fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M18.066 2.00001H9.82799C9.43388 1.99889 9.04346 2.07601 8.67937 2.22689C8.31529 2.37778 7.98477 2.59944 7.70699 2.87901L4.87899 5.70701C4.5993 5.98491 4.37757 6.31559 4.22668 6.67986C4.07579 7.04413 3.99873 7.43473 3.99999 7.82901V20C3.99196 20.5215 4.19104 21.0249 4.55359 21.3998C4.91613 21.7747 5.41254 21.9905 5.93399 22H18.066C18.5874 21.9905 19.0839 21.7747 19.4464 21.3998C19.8089 21.0249 20.008 20.5215 20 20V4.00001C20.008 3.47854 19.8089 2.97516 19.4464 2.60025C19.0839 2.22534 18.5874 2.00948 18.066 2.00001ZM8.99999 4.41401V7.00001H6.41399L8.99999 4.41401ZM5.99999 20V9.00001H8.99999C9.53042 9.00001 10.0391 8.7893 10.4142 8.41423C10.7893 8.03915 11 7.53045 11 7.00001V4.00001L17.994 3.97801C17.9981 3.98461 18.0002 3.99225 18 4.00001L18.066 20H5.99999Z"
+                        d="M20 4H4C2.897 4 2 4.897 2 6V18C2 19.103 2.897 20 4 20H20C21.103 20 22 19.103 22 18V6C22 4.897 21.103 4 20 4ZM4 18V6H20L20.001 18H4Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M17 8H11C10.447 8 10 8.448 10 9C10 9.552 10.447 10 11 10H17C17.553 10 18 9.552 18 9C18 8.448 17.553 8 17 8Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M17 11H11C10.447 11 10 11.448 10 12C10 12.552 10.447 13 11 13H17C17.553 13 18 12.552 18 12C18 11.448 17.553 11 17 11Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M17 14H11C10.447 14 10 14.448 10 15C10 15.552 10.447 16 11 16H17C17.553 16 18 15.552 18 15C18 14.448 17.553 14 17 14Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M7 10C7.55228 10 8 9.55228 8 9C8 8.44772 7.55228 8 7 8C6.44772 8 6 8.44772 6 9C6 9.55228 6.44772 10 7 10Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M7 13C7.55228 13 8 12.5523 8 12C8 11.4477 7.55228 11 7 11C6.44772 11 6 11.4477 6 12C6 12.5523 6.44772 13 7 13Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M7 16C7.55228 16 8 15.5523 8 15C8 14.4477 7.55228 14 7 14C6.44772 14 6 14.4477 6 15C6 15.5523 6.44772 16 7 16Z"
                         fill="#4B5563"
                       />
                     </svg>
+
                     {!isCollapsed && <span className="ml-3">Tasks</span>}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/billing"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "/billing"
+                    )}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -210,7 +278,9 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link
                     href="/clients"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "/clients"
+                    )}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

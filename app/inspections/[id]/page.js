@@ -50,7 +50,7 @@ export default function Page(props) {
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [activeView, setActiveView] = useState("overview");
   const [activeCompletion, setActiveCompletion] = useState(0);
-  const [structureProgressType, setStructureProgressType] = useState("all");
+  const [structureProgressType, setStructureProgressType] = useState("All");
   const [structureAssetType, setStructureAssetType] = useState("all");
   const [options, setOptions] = useState({
     series: [70],
