@@ -13,57 +13,6 @@ const RevenueChart = ({ invoices }) => {
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
-
-  // Example data
-
-  // const invoices = [{
-  //     "id": 30,
-  //     "attributes": {
-  //         "name": "Scottsdale Power | 431899134",
-  //         "createdAt": "2024-05-17T16:53:18.151Z",
-  //         "updatedAt": "2024-05-17T17:31:42.829Z",
-  //         "publishedAt": "2024-05-17T16:53:18.148Z",
-  //         "paid": true,
-  //         "pricing": {
-  //             "beehive": "678",
-  //             "wood-pole": "678"
-  //         },
-  //         "total": 5424,
-  //         "datePaid": "2024-05-09",
-  //         "dueDate": null,
-  //         "client": {
-  //             "data": {
-  //                 "id": 3,
-  //                 "attributes": {
-  //                     "name": "Scottsdale Power",
-  //                     "createdAt": "2023-11-17T19:49:11.894Z",
-  //                     "updatedAt": "2024-04-11T23:37:01.869Z",
-  //                     "publishedAt": "2023-11-17T19:53:20.367Z",
-  //                     "structurePricing": {
-  //                         "pullbox": {
-  //                             "price": 150
-  //                         },
-  //                         "standard-vault": {
-  //                             "price": 150
-  //                         },
-  //                         "streetLight": {
-  //                             "price": 150
-  //                         }
-  //                     },
-  //                     "email": "info@scottsdaleaz.gov",
-  //                     "phone": "4808027890",
-  //                     "address": "1234 sesame st, Scottsdale AZ 85016",
-  //                     "description": "City of Scottsdale Arizona State Owned ",
-  //                     "website": "https://scottsdalewaterpower.gov"
-  //                 }
-  //             }
-  //         },
-  //         "structures": {
-  //             "data": []
-  //         }
-  //     }
-  // }]
-
   const monthNames = [
     "January",
     "February",
@@ -84,7 +33,6 @@ const RevenueChart = ({ invoices }) => {
   useEffect(() => {
     if (chartRef.current) {
       const chartWidth = chartRef.current.offsetWidth;
-      console.log(`Chart Width: ${chartWidth}px`);
     }
   }, []);
 
@@ -119,17 +67,12 @@ const RevenueChart = ({ invoices }) => {
       }
     });
 
-    console.log("yearOfInvoices");
-    console.log(yearOfInvoices);
-
     // Fill future months with null for the current year
     if (yearOfInvoices === currentYear) {
       for (let i = currentMonth + 1; i < 12; i++) {
         monthlyTotals[i] = null;
       }
     }
-
-    console.log(monthlyTotals);
 
     return monthlyTotals;
   };
@@ -259,20 +202,8 @@ const RevenueChart = ({ invoices }) => {
       offsetY: 0,
     },
     xaxis: {
-      categories: [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ],
+      type: "category",
+      categories: monthNames,
       labels: {
         show: true,
       },
@@ -332,12 +263,16 @@ const RevenueChart = ({ invoices }) => {
         </div>
       </div>
       <p className="text-gray-500 mb-4">Revenue YTD</p>
-      <div ref={chartRef} className="w-full mt-auto">
+      <div
+        ref={chartRef}
+        className="w-full mt-auto"
+        style={{ height: "300px" }}
+      >
         <ApexChart
           type="area"
           options={revenueOption}
           series={revenueSeries}
-          height={250}
+          height={"100%"}
           width="100%"
         />
       </div>

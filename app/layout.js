@@ -29,9 +29,6 @@ export const useBackgroundClass = (searchString) => {
   useEffect(() => {
     const url = `${pathname}?${searchParams}`;
 
-    console.log("URL", url);
-    console.log("searchParams", searchParams);
-
     if (searchString === "overview") {
       if (url === "/?") {
         setBackgroundClass("bg-blue-100");
@@ -81,12 +78,9 @@ export default function RootLayout({ children }) {
     ) {
       if (touchStart < touchEnd) {
         // Handle left to right swipe
-        console.log("Swiped left to right");
         return setOpenMobileMenu(true);
         // You can add any action you want to perform on left to right swipe here
       }
-
-      console.log("Swiped right to left");
       return setOpenMobileMenu(false);
     }
 

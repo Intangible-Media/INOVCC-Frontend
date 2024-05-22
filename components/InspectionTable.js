@@ -465,13 +465,21 @@ export default function InspectionTable({ inspectionData }) {
                   </Table.Cell>
 
                   <Table.Cell>
-                    <span
+                    {/* <span
                       className={`${getInspectionProgressClasses(
                         inspection
                       )} inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-md`}
                     >
                       {getInspectionProgress(inspection)}%
-                    </span>
+                    </span> */}
+                    <Progress
+                      progress={getInspectionProgress(inspection)}
+                      textLabel=""
+                      size="lg"
+                      color="green"
+                      labelProgress
+                      labelText
+                    />
                   </Table.Cell>
                   <Table.Cell>
                     <Dropdown

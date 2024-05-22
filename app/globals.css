@@ -561,3 +561,9 @@ html body .force-w-full span:focus{
   z-index: 10; /* Ensure it stays on top of other content */
   background-color: inherit; /* Match the background to ensure text readability */
 }
+
+/* Add top border to all bars */
+html body .apexcharts-bar-series .apexcharts-bar {
+  border-top: 5px solid white;
+  margin-bottom: 5px; /* Add margin between bars */
+}

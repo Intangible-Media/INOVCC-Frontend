@@ -5,8 +5,10 @@ import { useSession } from "next-auth/react";
 import InspectionTable from "../components/InspectionTable";
 import { getAllInspections } from "../utils/api/inspections";
 import { getAllInvoices } from "../utils/api/invoices";
+import { getAllStructure } from "../utils/api/structures";
 import qs from "qs";
 import dynamic from "next/dynamic";
+import RevenueChart from "../components/Charts/RevenueChart";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -90,12 +92,37 @@ const calculatePercentageChange = (totals) => {
 };
 
 export default function Home() {
-  const [inspections, setInspections] = useState([]);
-  const [invoices, setInvoices] = useState([]); // [1
   const { data: session } = useSession();
+  const [inspections, setInspections] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [structures, setStructures] = useState([]);
+  const chartRef = useRef(null);
   const today = new Date();
   const currentMonth = today.getMonth();
-  const chartRef = useRef(null);
+
+  // Helper function to format dates as YYYY-MM-DD
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  // Get today's date
+  const todayString = formatDate(today);
+
+  // Calculate the date 6 days ago (7 days total including today)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(today.getDate() - 6);
+  const sevenDaysAgoString = formatDate(sevenDaysAgo);
+
+  // Create a new Date object for tomorrow
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  // Format the date as YYYY-MM-DD
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  const tomorrowString = formatDate(tomorrow);
 
   const monthNames = [
     "January",
@@ -118,7 +145,6 @@ export default function Home() {
     if (chartRef.current) {
       // Get the width of the chart container
       const chartWidth = chartRef.current.offsetWidth;
-      console.log(`Chart Width: ${chartWidth}px`);
     }
   }, []);
 
@@ -134,182 +160,159 @@ export default function Home() {
   const { projectsInProgress, projectsNotStarted, projectsCompleted } =
     useInspectionStatusCount(inspections);
 
-  const option = {
+  /**
+   * Function to get the count of inspections for the last 7 days with today as the last day.
+   * @param {Array} structures - The array of inspection objects.
+   * @returns {Array} An array of length 7 where each element represents the number of inspections on that day.
+   */
+  function getLast7DaysInspections(structures) {
+    const result = Array(7).fill(0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Ensure time is set to midnight
+
+    structures.forEach((structure) => {
+      const inspectionDate = new Date(structure.attributes.inspectionDate);
+      inspectionDate.setHours(0, 0, 0, 0); // Ensure time is set to midnight
+      const diffTime = today - inspectionDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      // Only consider the last 7 days including today
+      if (diffDays >= 0 && diffDays <= 6) {
+        result[6 - diffDays] += 1;
+      }
+    });
+
+    return result;
+  }
+
+  /**
+   * Function to get the days of the week with today as the last day.
+   * @returns {Array} An array of days of the week with today as the last day.
+   */
+  function getDaysOfWeekWithTodayLast() {
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+
+    // Rotate the daysOfWeek array so that today is the last day
+    return daysOfWeek
+      .slice(dayOfWeek + 1)
+      .concat(daysOfWeek.slice(0, dayOfWeek + 1));
+  }
+
+  /**
+   * Function to group structures by their type.
+   * @param {Array} structures - The array of structure objects.
+   * @returns {Object} An object with keys as types and values as arrays of structures.
+   */
+  function groupStructuresByType(structures) {
+    return structures.reduce((acc, structure) => {
+      const type = structure.attributes.type;
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(structure);
+      return acc;
+    }, {});
+  }
+
+  /**
+   * Function to create series data for ApexCharts.
+   * @param {Object} groupedStructures - The grouped structures by type.
+   * @returns {Array} An array of series objects for ApexCharts.
+   */
+  function createSeries(groupedStructures) {
+    return Object.keys(groupedStructures).map((type) => ({
+      name: type,
+      data: getLast7DaysInspections(groupedStructures[type]),
+    }));
+  }
+
+  const groupedStructures = groupStructuresByType(structures);
+  const series = createSeries(groupedStructures);
+
+  const options = {
     chart: {
-      id: "apexchart-example",
+      type: "bar",
+      stacked: true,
       toolbar: {
-        show: true, // Hides the toolbar
+        show: true,
+        offsetY: 30,
       },
       zoom: {
-        autoScaleYaxis: true, // Ensures the chart uses the full width
+        enabled: true,
       },
-      offsetX: -10, // Pulls the chart closer to the left edge of the container
-      offsetY: 0, // Adjust vertically if needed
+      offsetY: 0,
     },
+
     plotOptions: {
       bar: {
-        horizontal: false, // set to false for vertical bars
-        columnWidth: "60%", // Tries to maximize the width of the bars
-        borderRadius: 10, // Rounds the corners of the bars (adjust as needed)
-        barPadding: 0, // Minimize padding between bars
-        // If you need more control over bar width, consider using 'rangeBarGroupRows' and 'barHeight' for horizontal bars
+        horizontal: false,
+        borderRadius: 10,
+        columnWidth: "70%", // Adjust this to make bars narrower and create space
+        // borderRadiusApplication: "end",
+        // borderRadiusWhenStacked: "last",
+        borderRadiusApplication: "around", // Apply border radius around the entire bar
+        borderRadiusWhenStacked: "all", // Apply border radius to all bars when stacked
+        // borderRadiusApplication: "end", // Apply border radius to the end of the bar
+        // borderRadiusWhenStacked: "last", // Apply border radius to the last bar when stacked
       },
     },
-    colors: ["#62C3F7"], // Sets the color of the bars
+    colors: ["#62C3F7", "#F762A4", "#F7F162"], // Example colors, you can adjust as needed
     grid: {
-      show: false, // Removes the grid background
+      show: false,
     },
     dataLabels: {
       enabled: false,
     },
-    stroke: {
-      curve: "smooth",
-    },
     xaxis: {
-      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      categories: getDaysOfWeekWithTodayLast(),
+      labels: {
+        show: true,
+      },
       axisBorder: {
-        show: false, // Ensure the axis border is visible
+        show: false,
       },
       axisTicks: {
-        show: false, // Ensure the axis ticks are visible
-      },
-      position: "bottom", // Ensures the x-axis labels are positioned at the bottom
-      labels: {
-        show: true, // Ensures the x-axis labels are shown
-        // ... other label options
+        show: false,
       },
     },
     yaxis: {
-      show: false, // Hides the y-axis
+      show: false,
     },
-    // Add any other options you need here
-  };
-
-  const revenueOption = {
-    chart: {
-      id: "apexchart-example-alt",
-      toolbar: {
-        show: true, // Hides the toolbar
-      },
-      sparkline: {
-        enabled: true, // This will make the chart occupy the full space of its container
-      },
-      zoom: {
-        autoScaleYaxis: true, // Ensures the chart uses the full width
-      },
-    },
-    grid: {
-      show: false, // Removes the grid background
-    },
-    colors: ["#62C3F7", "#F762A4", "#F7F162"], // Sets the color of the bars
-
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "smooth",
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "right",
+      offsetY: 0,
     },
     fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 100],
-        colorStops: [
-          {
-            offset: 0,
-            color: "#62C3F7",
-            opacity: 0.6,
-          },
-          {
-            offset: 100,
-            color: "#62C3F7",
-            opacity: 0.0,
-          },
-        ],
-      },
+      opacity: 1,
     },
-    xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      labels: {
-        show: true, // Hides the x-axis labels
-      },
-      axisBorder: {
-        show: false, // Hides the x-axis border
-      },
-      axisTicks: {
-        show: false, // Hides the x-axis ticks
-      },
-    },
-    yaxis: {
-      show: false, // Hides the y-axis
-    },
-    tooltip: {
-      y: {
-        formatter: function (value) {
-          return `$${value.toFixed(2)}`;
-        },
-      },
-    },
-    annotations: {
-      xaxis: [
-        {
-          x: (chartRef.current?.offsetWidth / 12) * currentMonth + 1 || 0,
-          x2: (chartRef.current?.offsetWidth / 12) * (currentMonth + 1) || 0,
-          borderColor: "#FF4560",
-          label: {
-            borderColor: "#FF4560",
-            style: {
-              color: "#fff",
-              background: "#FF4560",
-            },
-            text: `Current Month ${currentMonthName}`,
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          legend: {
+            position: "bottom",
+            offsetX: -10,
+            offsetY: 0,
           },
         },
-      ],
-    },
-    // Add any other options you need here
+      },
+    ],
   };
 
-  const series = [
-    {
-      name: "series-1",
-      data: [30, 40, 135, 50, 49, 60, 70],
-    },
-  ];
-
-  const revenueSeries = [
-    {
-      name: "2021",
-      data: getMonthlyTotals(invoices),
-    },
-    // {
-    //   name: "2023",
-    //   data: [50, 80, 75, 10, 69, 30, 149, 91, 66, 50, 30, 40],
-    // },
-    // {
-    //   name: "2024",
-    //   data: [55, 23, 48, 88, 34, 56, 78, 90, 12, 45, 67, 89],
-    // },
-    // {
-    //   name: "2025",
-    //   data: [88, 34, 56, 78, 90, 12, 45, 67, 89, 55, 23, 48],
-    // },
-  ];
+  // const series = [
+  //   {
+  //     name: "Inspections",
+  //     data: getLast7DaysInspections(structures),
+  //   },
+  //   {
+  //     name: "Alt Inspections",
+  //     data: getLast7DaysInspections(structures),
+  //   },
+  // ];
 
   const projectsQuery = qs.stringify({
     populate: {
@@ -324,6 +327,18 @@ export default function Home() {
         populate: {
           fields: ["name"],
         },
+      },
+    },
+  });
+
+  const structuresQuery = qs.stringify({
+    filters: {
+      status: {
+        $eq: "Inspected",
+      },
+      inspectionDate: {
+        $gte: sevenDaysAgoString,
+        $lte: tomorrowString,
       },
     },
   });
@@ -346,8 +361,21 @@ export default function Home() {
       };
       // Eventually you will want to do a Promise.all for all of the other project types
       const inspectionResponse = await getAllInspections(apiParams);
-
+      // console.log("inspectionResponse.data.data");
+      // console.log(inspectionResponse.data.data);
       setInspections(inspectionResponse.data.data);
+    };
+
+    const fetchStructures = async () => {
+      const apiParams = {
+        jwt: session?.accessToken,
+        query: structuresQuery,
+      };
+      // Eventually you will want to do a Promise.all for all of the other project types
+      const structuresResponse = await getAllStructure(apiParams);
+      console.log("structuresResponse.data.data");
+      console.log(structuresResponse.data.data);
+      setStructures(structuresResponse.data.data);
     };
 
     const fetchInvoices = async () => {
@@ -355,37 +383,37 @@ export default function Home() {
         jwt: session?.accessToken,
         query: "",
       };
-
       const invoiceResponse = await getAllInvoices(apiParams);
-      console.log(invoiceResponse.data.data);
 
       setInvoices(invoiceResponse.data.data);
     };
 
     fetchProjects();
+    fetchStructures();
     fetchInvoices();
   }, [session]);
 
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
-        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
+        <div className="flex flex-col justify-between bg-white gap-0 p-4 md:p-8 rounded-lg">
           <div className="h-11">
             <h5 className="text-xl font-bold dark:text-white">
               Current Projects
             </h5>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 w-full">
-            <div className="flex flex-col bg-red-50 py-14 rounded-lg">
-              <div className="bg-red-100 p-5 rounded-full m-auto">
-                <p className="text-3xl text-red-800">{projectsNotStarted}</p>
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <div className="flex flex-col bg-gray-50 rounded-lg p-7">
+              <div className="bg-gray-200 p-5 rounded-full m-auto">
+                <p className="text-3xl text-gray-800">{projectsNotStarted}</p>
               </div>
-              <p className=" text-sm text-center text-red-800 font-semibold mt-2">
+              <p className=" text-sm text-center text-gray-800 font-semibold mt-2">
                 Not Started
               </p>
             </div>
-            <div className="flex flex-col bg-yellow-50 py-14 rounded-lg">
+
+            <div className="flex flex-col bg-yellow-50 rounded-lg p-7">
               <div className="bg-yellow-100 p-5 rounded-full m-auto">
                 <p className="text-3xl text-yellow-800">{projectsInProgress}</p>
               </div>
@@ -393,7 +421,17 @@ export default function Home() {
                 In Progress
               </p>
             </div>
-            <div className="flex flex-col bg-green-50 py-14 rounded-lg">
+
+            <div className="flex flex-col bg-red-50 rounded-lg p-7">
+              <div className="bg-red-100 p-5 rounded-full m-auto">
+                <p className="text-3xl text-red-800">0</p>
+              </div>
+              <p className=" text-sm text-center text-red-800 font-semibold mt-2">
+                Late
+              </p>
+            </div>
+
+            <div className="flex flex-col bg-green-50 rounded-lg p-7">
               <div className="bg-green-100 p-5 rounded-full m-auto">
                 <p className="text-3xl text-green-600">{projectsCompleted}</p>
               </div>
@@ -402,68 +440,29 @@ export default function Home() {
               </p>
             </div>
           </div>
-
-          <div className="flex gap-2 w-full justify-center mt-8 mb-4 rounded-lg">
-            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
-              <span className="flex w-2.5 h-2.5 bg-red-600 rounded-full me-1.5 flex-shrink-0"></span>
-              Not Started
-            </span>
-            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
-              <span className="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>
-              In Progress
-            </span>
-            <span className="flex items-center text-xs font-medium text-gray-900 dark:text-white me-3">
-              <span className="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>
-              Completed
-            </span>
-          </div>
         </div>
 
         <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
           <div className="flex justify-between h-11">
-            <h3 className="text-3xl font-bold dark:text-white">23</h3>
-            <div>
-              <span className="text-base font-semibold text-green-500">
-                12%
-              </span>
-            </div>
+            <h3 className="text-3xl font-bold dark:text-white">
+              {structures.length}
+            </h3>
           </div>
-          <p className="text-gray-500">Structures Inspected</p>
+          <p className="text-gray-500 mb-4">Weekly Inspections</p>
           <div className="w-full mt-auto">
-            <ApexChart
-              type="bar"
-              options={option}
-              series={series}
-              height={250}
-              width={"100%"}
-            />
-          </div>
-          {/* <FooterDateExport /> */}
-        </div>
-        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
-          <div className="flex justify-between h-11">
-            <h3 className="text-3xl font-bold dark:text-white">${totalSum}</h3>
-            <div>
-              <span
-                className={`text-base font-semibold ${
-                  percentageChange > 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {percentageChange.toFixed(2)}%
-              </span>
+            <div style={{ height: "300px" }}>
+              <ApexChart
+                type="bar"
+                options={options}
+                series={series}
+                height={"100%"}
+                width={"100%"}
+              />
             </div>
           </div>
-          <p className="text-gray-500">Revenue YTD</p>
-          <div ref={chartRef} className="w-full mt-auto">
-            <ApexChart
-              type="area"
-              options={revenueOption}
-              series={revenueSeries}
-              height={250}
-              width={"100%"}
-            />
-          </div>
-          {/* <FooterDateExport /> */}
+        </div>
+        <div className="bg-white gap-4 p-4 md:p-8 rounded-lg">
+          <RevenueChart invoices={invoices} />
         </div>
       </div>
 
