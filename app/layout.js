@@ -119,7 +119,7 @@ export default function RootLayout({ children }) {
               <Navbar.Collapse>
                 <TextInput
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search"
                   id="search-bar"
                   className="bg-gray-700 rounded-md text-center"
                 />

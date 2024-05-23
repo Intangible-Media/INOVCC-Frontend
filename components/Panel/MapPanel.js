@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo } from "../../utils/strings";
 import ActivityLog from "../ActivityLog";
+import AvatarImage from "../AvatarImage";
 import qs from "qs";
 import axios from "axios";
 
@@ -543,40 +544,42 @@ const StructureComments = ({ comments = [], editable = false }) => {
             <p className="text-gray-500">No comments have been made.</p>
           </div>
         )}
-        {allStructureComments.map((comment, index) => (
-          <li key={index} className="bg-white rounded-md border">
-            <div className="p-3">
-              <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                <div className="flex-shrink-0">
-                  {comment.attributes.author.data.attributes.picture.data && (
-                    <img
-                      className="w-10 h-10 rounded-full object-cover"
-                      src={ensureDomain(
+        {allStructureComments.map((comment, index) => {
+          console.log(comment);
+          return (
+            <li key={index} className="bg-white rounded-md border">
+              <div className="p-3">
+                <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                  <div className="flex-shrink-0">
+                    <AvatarImage
+                      customImage={
                         comment.attributes.author.data.attributes.picture.data
-                          .attributes.formats.thumbnail.url
-                      )}
-                      alt="something"
+                          ?.attributes.formats.thumbnail.url
+                      }
+                      customName={
+                        comment.attributes.author.data.attributes.firstName
+                      }
                     />
-                  )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
+                      {comment.attributes.author.data.attributes.firstName}{" "}
+                      {comment.attributes.author.data.attributes.lastName}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate dark:text-white">
-                    {comment.attributes.author.data.attributes.firstName}{" "}
-                    {comment.attributes.author.data.attributes.lastName}
+                <div className="mt-2">
+                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                    {comment.attributes.message}
                   </p>
                 </div>
               </div>
-              <div className="mt-2">
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                  {comment.attributes.message}
-                </p>
+              <div className="py-2 px-3 text-right border-t">
+                <a href="#">Reply</a>
               </div>
-            </div>
-            <div className="py-2 px-3 text-right border-t">
-              <a href="#">Reply</a>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
       {editable && (
         <>
@@ -735,11 +738,7 @@ const AddInspectorForm = ({
 
           <div className="flex gap-1 items-center mt-4 -space-x-4 rtl:space-x-reverse">
             {assignedInspectors.map((inspector, index) => {
-              const inspectorImage =
-                inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url ||
-                inspector.picture.formats.thumbnail.url ||
-                "/empty.png";
+              console.log(inspector);
               return (
                 <div key={index} className="relative group">
                   <button
@@ -762,10 +761,13 @@ const AddInspectorForm = ({
                       className="w-1.5 h-1.5"
                     />
                   </button>
-                  <img
-                    className="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
-                    src={ensureDomain(inspectorImage)}
-                    alt=""
+
+                  <AvatarImage
+                    customImage={
+                      inspector.attributes?.picture.data?.attributes.formats
+                        .thumbnail.url
+                    }
+                    customName={inspector.attributes.firstName}
                   />
                 </div>
               );
@@ -776,19 +778,14 @@ const AddInspectorForm = ({
         <>
           <div className="flex -space-x-4 rtl:space-x-reverse">
             {assignedInspectors.map((inspector, index) => {
-              const inspectorImage =
-                inspector.attributes?.picture.data.attributes.formats.thumbnail
-                  .url ||
-                inspector.picture.formats.thumbnail.url ||
-                "/empty.png";
-              return (
-                <img
-                  key={index}
-                  className="inline-block w-12 h-12 rounded-full ring-2 ring-white bg-cover object-cover"
-                  src={ensureDomain(inspectorImage)}
-                  alt=""
-                />
-              );
+              console.log(inspector);
+              <AvatarImage
+                customImage={
+                  inspector.attributes?.picture.data?.attributes.formats
+                    .thumbnail.url
+                }
+                customName={inspector.attributes.firstName}
+              />;
             })}
           </div>
           <div className="flex justify-end">

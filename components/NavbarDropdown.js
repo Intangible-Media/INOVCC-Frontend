@@ -1,27 +1,10 @@
 import { Dropdown, Avatar } from "flowbite-react";
 import { useSession, signOut } from "next-auth/react";
+import AvatarImage from "../components/AvatarImage";
 
 export default function NavbarDropdown() {
   const { data: session } = useSession();
   const userImage = null;
-  const AvatarImage = () => {
-    return (
-      <>
-        {userImage ? (
-          <Avatar
-            alt="User settings"
-            img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-            rounded
-          />
-        ) : (
-          <Avatar
-            placeholderInitials={session?.user.firstName.slice(0, 1)}
-            rounded
-          />
-        )}
-      </>
-    );
-  };
 
   return (
     <Dropdown arrowIcon={false} inline label={<AvatarImage />}>

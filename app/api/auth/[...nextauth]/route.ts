@@ -2,13 +2,12 @@ import NextAuth, { Session, User as NextAuthUser } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
-import qs from "qs";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  // add other user properties here
+  picture?: string; // Added picture field
 }
 
 interface ExtendedUser extends User {
@@ -49,31 +48,36 @@ const handler = NextAuth({
               password: credentials.password,
             }
           );
-      
+
           const userId = loginResponse.data.user.id;
-      
+
           if (userId) {
-            // Step 2: Fetch detailed user information, including role
+            // Step 2: Fetch detailed user information, including role and picture
             const userDetailsResponse = await axios.get(
-              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/${userId}?populate=role`,
+              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/users/${userId}?populate=role,picture`, // Populate role and picture
               {
                 headers: {
                   Authorization: `Bearer ${loginResponse.data.jwt}`,
                 },
               }
             );
-      
+
+            // Extract picture URL if it exists
+            const pictureUrl = userDetailsResponse.data.picture.url;
+            console.log("USER INFORMATION", userDetailsResponse.data.picture.url)
+
             // Combine login response and detailed user information as needed
-            const userWithRole = {
+            const userWithRoleAndPicture = {
               ...loginResponse.data,
               user: {
                 ...loginResponse.data.user,
                 role: userDetailsResponse.data.role, // Assuming Strapi v4 structure
+                picture: pictureUrl ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${pictureUrl}` : null, // Ensure full URL
               },
             };
-      
-            console.log("response", userWithRole);
-            return userWithRole;
+
+            console.log("response", userWithRoleAndPicture);
+            return userWithRoleAndPicture;
           } else {
             return null;
           }
@@ -84,7 +88,6 @@ const handler = NextAuth({
           throw new Error(errorMessage);
         }
       },
-      
     }),
   ],
   callbacks: {
@@ -106,6 +109,9 @@ const handler = NextAuth({
         }
         if (user.user.role) {
           extendedToken.role = user.user.role.name;
+        }
+        if (user.user.picture) {
+          extendedToken.user.picture = user.user.picture; // Add picture to token
         }
       }
       return extendedToken;

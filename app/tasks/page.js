@@ -9,6 +9,7 @@ import {
   Dropdown,
   Label,
   TextInput,
+  Spinner,
   Textarea,
 } from "flowbite-react";
 import ActivityLog from "../../components/ActivityLog";
@@ -21,7 +22,10 @@ import Link from "next/link";
 import { formatReadableDate, formatAbbreviatedDate } from "../../utils/strings";
 import { createTask, uploadFiles } from "../../utils/api/tasks";
 import { getAllUsers } from "../../utils/api/users";
+import dynamic from "next/dynamic";
 import qs from "qs";
+
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const UrgencyBadge = ({ urgency }) => {
   const urgencyMap = {
@@ -46,6 +50,7 @@ const UrgencyBadge = ({ urgency }) => {
 const CreateTaskModal = () => {
   const { data: session } = useSession();
   const [openModal, setOpenModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -101,6 +106,7 @@ const CreateTaskModal = () => {
   };
 
   const handleSubmit = async (e) => {
+    setIsLoading(true);
     e.preventDefault();
     try {
       const apiParams = {
@@ -136,7 +142,8 @@ const CreateTaskModal = () => {
         images: [],
         assignedUser: null,
       }); // Reset form
-      setOpenModal(false); // Close the modal on successful submission
+      // setOpenModal(false); // Close the modal on successful submission
+      setIsLoading(false);
     } catch (error) {
       console.error(
         "Error submitting form:",
@@ -152,11 +159,29 @@ const CreateTaskModal = () => {
       >
         Add Task
       </Button>
-      <Modal show={openModal} onClose={() => setOpenModal(false)}>
+      <Modal
+        show={openModal}
+        onClose={() => setOpenModal(false)}
+        className="relative"
+      >
+        {isLoading && (
+          <div className="flex justify-center absolute top-0 left-0 right-0 bottom-0 bg-white z-50 rounded-lg">
+            <div className="flex flex-col gap-3 justify-center m-auto">
+              <div className="m-auto">
+                <Spinner
+                  aria-label="Extra large spinner example"
+                  size="xl"
+                  className="m-auto"
+                />
+              </div>
+              <h3>Creating Your Task</h3>
+            </div>
+          </div>
+        )}
+
         <Modal.Header>Create a Task</Modal.Header>
         <Modal.Body>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            {/* Existing form fields */}
             <div>
               <div className="mb-2 block">
                 <Label htmlFor="title" value="Title" />
@@ -266,11 +291,15 @@ export default function Page({ params }) {
   const [openModal, setOpenModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [myTasks, setMyTasks] = useState([]);
 
   useEffect(() => {
     const query = qs.stringify({
       populate: {
         documents: {
+          populate: "*",
+        },
+        assigned: {
           populate: "*",
         },
       },
@@ -289,6 +318,14 @@ export default function Page({ params }) {
 
     fetchTasks();
   }, [session]);
+
+  useEffect(() => {
+    setMyTasks(
+      tasks.filter(
+        (task) => task.attributes.assigned.data.id === session?.user.id
+      )
+    );
+  }, [tasks]);
 
   const createActivityLog = async ({ taskId }) => {
     console.log("instide the activity loag");
@@ -327,13 +364,214 @@ export default function Page({ params }) {
     }
   };
 
+  const series = [44, 55, 13, 43, 22];
+
+  const lineChartSeries = [
+    {
+      name: "Sample Data",
+      data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
+    },
+  ];
+
+  const options = {
+    chart: {
+      type: "donut",
+      height: "100%",
+      width: "100%",
+      parentHeightOffset: 0,
+      offsetX: 18,
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    labels: [], // No labels
+    legend: {
+      show: false,
+    },
+    tooltip: {
+      enabled: false,
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "0%",
+        },
+      },
+    },
+
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: 200,
+          },
+          legend: {
+            show: false,
+          },
+        },
+      },
+    ],
+  };
+
+  const lineChartOptions = {
+    chart: {
+      height: "100%",
+      width: "100%",
+      parentHeightOffset: 0,
+      toolbar: {
+        show: false,
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      curve: "smooth",
+    },
+    xaxis: {
+      show: false,
+      categories: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+      ],
+      labels: {
+        show: false,
+      },
+
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      },
+    },
+    yaxis: {
+      labels: {
+        show: false,
+      },
+    },
+    grid: {
+      show: false,
+    },
+    tooltip: {
+      enabled: false,
+    },
+    legend: {
+      show: false,
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: "100%",
+          },
+          legend: {
+            show: false,
+          },
+        },
+      },
+    ],
+  };
+
   return (
-    <div className="flex flex-col justify-between py-6">
-      <section className="flex justify-between items-center mb-5">
+    <div className="flex gap-4 flex-col justify-between py-6">
+      <section className="flex justify-between items-center">
         <CreateTaskModal />
       </section>
 
-      <section className="overflow-x-auto bg-transparent">
+      <section className="bg-white p-6 rounded-lg">
+        <div className="grid grid-cols-4 gap-3 w-full">
+          <div className="flex bg-gray-50 gap-4 rounded-lg p-6">
+            <div className="bg-gray-200 p-3 rounded-full">
+              <p className="text-2xl text-gray-800">55</p>
+            </div>
+            <p className="self-center text-sm text-center text-gray-800 font-semibold mt-2">
+              Total Tasks
+            </p>
+          </div>
+
+          <div className="flex bg-yellow-50 gap-4 rounded-lg p-6">
+            <div className="bg-yellow-100 p-3 rounded-full">
+              <p className="text-2xl text-yellow-800">12</p>
+            </div>
+            <p className="self-center text-sm text-center text-yellow-800 font-semibold mt-2">
+              Urgent Tasks
+            </p>
+          </div>
+
+          <div className="flex bg-red-50 gap-4 rounded-lg p-6">
+            <div className="bg-red-100 p-3 rounded-full">
+              <p className="text-2xl text-red-800">18</p>
+            </div>
+            <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
+              Not Opened
+            </p>
+          </div>
+
+          <div className="flex bg-green-50 gap-4 rounded-lg p-6">
+            <div className="bg-green-100 p-3 rounded-full">
+              <p className="text-2xl text-green-600">3</p>
+            </div>
+            <p className="self-center text-sm text-center text-green-600 font-semibold mt-2">
+              Late Tasks
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-x-auto bg-white p-6 rounded-lg">
+        <h5 className="text-xl font-bold dark:text-white mb-3">My Tasks</h5>
+        <Table hoverable>
+          <Table.Head>
+            <Table.HeadCell>Task Name</Table.HeadCell>
+            <Table.HeadCell>Task Description</Table.HeadCell>
+            <Table.HeadCell>Urgency</Table.HeadCell>
+            <Table.HeadCell>Due Date</Table.HeadCell>
+            <Table.HeadCell>Completed</Table.HeadCell>
+          </Table.Head>
+          <Table.Body className="divide-y">
+            {myTasks.map((task, index) => (
+              <Table.Row
+                key={index}
+                className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                onClick={() => {
+                  setOpenModal(true);
+                  setSelectedTask(task);
+                  createActivityLog({ taskId: task.id });
+                }}
+              >
+                <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                  {task.attributes.title}
+                </Table.Cell>
+                <Table.Cell className="font-medium text-gray-900 dark:text-white">
+                  {task.attributes.description.slice(0, 30) + "..."}
+                </Table.Cell>
+                <Table.Cell>
+                  <UrgencyBadge urgency={task.attributes.urgency} />
+                </Table.Cell>
+                <Table.Cell>
+                  {`${formatAbbreviatedDate(task.attributes.dueDate).month} ${
+                    formatAbbreviatedDate(task.attributes.dueDate).day
+                  }`}
+                </Table.Cell>
+                <Table.Cell>{task.attributes.isComplete}</Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      </section>
+
+      <section className="overflow-x-auto bg-white p-6 rounded-lg">
+        <h5 className="text-xl font-bold dark:text-white mb-3">All Tasks</h5>
         <Table hoverable>
           <Table.Head>
             <Table.HeadCell>Task Name</Table.HeadCell>
