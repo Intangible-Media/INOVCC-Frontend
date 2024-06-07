@@ -202,6 +202,33 @@ export default function RootLayout({ children }) {
                 </li>
                 <li>
                   <Link
+                    href="/schedules"
+                    className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                      "schedules"
+                    )}`}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M20 4H18V3C18 2.447 17.552 2 17 2C16.448 2 16 2.447 16 3V4H13V3C13 2.447 12.552 2 12 2C11.448 2 11 2.447 11 3V4H8V3C8 2.447 7.552 2 7 2C6.448 2 6 2.447 6 3V4H4C2.897 4 2 4.897 2 6V20C2 21.103 2.897 22 4 22H20C21.103 22 22 21.103 22 20V6C22 4.897 21.103 4 20 4ZM4 20V10H10C10.552 10 11 9.553 11 9C11 8.447 10.552 8 10 8H4V6H6C6 6.553 6.448 7 7 7C7.552 7 8 6.553 8 6H11C11 6.553 11.448 7 12 7C12.552 7 13 6.553 13 6H16C16 6.553 16.448 7 17 7C17.552 7 18 6.553 18 6H20V8H19C18.448 8 18 8.447 18 9C18 9.553 18.448 10 19 10H20L20.001 20H4Z"
+                        fill="#4B5563"
+                      />
+                      <path
+                        d="M12.515 10.005L10.859 11.682C10.84 11.698 10.817 11.704 10.799 11.722C10.78 11.741 10.773 11.766 10.756 11.786L7.288 15.297C7.104 15.484 7 15.737 7 16V18C7 18.553 7.448 19 8 19H10C10.263 19 10.516 18.896 10.703 18.712L14.214 15.244C14.234 15.227 14.259 15.221 14.278 15.202C14.296 15.184 14.302 15.161 14.318 15.142L15.999 13.481C16.958 12.522 16.958 10.96 15.999 10.002C15.04 9.041 13.479 9.041 12.515 10.005ZM9.589 17H9V16.41L11.521 13.858L12.142 14.479L9.589 17ZM14.589 12.062L13.564 13.074L12.926 12.435L13.933 11.415C14.113 11.235 14.405 11.235 14.584 11.415C14.763 11.595 14.765 11.887 14.589 12.062Z"
+                        fill="#4B5563"
+                      />
+                    </svg>
+
+                    {!isCollapsed && <span className="ml-3">Schedules</span>}
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/tasks"
                     className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
                       "tasks"

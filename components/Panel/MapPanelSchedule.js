@@ -4,7 +4,7 @@ import { Label, Dropdown, Button, FileInput } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
 import { updateStructure } from "../../utils/api/structures";
-import { useInspection } from "../../context/InspectionContext";
+import { getInspection } from "../../utils/api/inspections";
 import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo } from "../../utils/strings";
@@ -13,9 +13,9 @@ import AvatarImage from "../AvatarImage";
 import qs from "qs";
 import axios from "axios";
 
-export default function MapPanel({ structure }) {
+export default function MapPanelSchedule({ structure, unSelectStructure }) {
   const { data: session, loading } = useSession();
-  const { inspection, setInspection } = useInspection();
+  const [inspection, setInspection] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPanel, setCurrentPanel] = useState("overview");
   const [updatedStructure, setUpdatedStructure] = useState(structure);
@@ -81,32 +81,30 @@ export default function MapPanel({ structure }) {
       // Assuming response.data.data is the updated structure object
       const newlyUpdatedStructure = response.data.data;
 
-      console.log(newlyUpdatedStructure);
-
       // Update the list of structures within the current inspection
-      const newlyUpdatedStructuresList = inspection.structures.data.map(
-        (currentStructure) => {
-          if (currentStructure.id === newlyUpdatedStructure.id) {
-            // Exclude 'images' from both current and updated structure attributes before merging
-            // Merge attributes, prioritizing values from the updated structure
-            return {
-              ...currentStructure,
-              attributes: {
-                ...currentStructure.attributes,
-                ...newlyUpdatedStructure.attributes,
-              },
-            };
-          }
-          // For structures that don't match the ID, return them unchanged
-          return currentStructure;
-        }
-      );
+      // const newlyUpdatedStructuresList = inspection.structures.data.map(
+      //   (currentStructure) => {
+      //     if (currentStructure.id === newlyUpdatedStructure.id) {
+      //       // Exclude 'images' from both current and updated structure attributes before merging
+      //       // Merge attributes, prioritizing values from the updated structure
+      //       return {
+      //         ...currentStructure,
+      //         attributes: {
+      //           ...currentStructure.attributes,
+      //           ...newlyUpdatedStructure.attributes,
+      //         },
+      //       };
+      //     }
+      //     // For structures that don't match the ID, return them unchanged
+      //     return currentStructure;
+      //   }
+      // );
 
-      // Update inspection state with the new list of structures
-      setInspection({
-        ...inspection,
-        structures: { data: newlyUpdatedStructuresList },
-      });
+      // // Update inspection state with the new list of structures
+      // setInspection({
+      //   ...inspection,
+      //   structures: { data: newlyUpdatedStructuresList },
+      // });
 
       setIsLoading(false);
       return newlyUpdatedStructure;
@@ -118,10 +116,13 @@ export default function MapPanel({ structure }) {
 
   return (
     <>
-      <div className="flex justify-between px-8 pt-5 pb-2 w-full">
-        <div className="flex flex-col gap-2">
-          <h4 className="leading-none text-xs font-medium text-gray-500">
-            {inspection?.name || ""}
+      <div className="flex justify-between px-8 pt-8 pb-2 w-full">
+        <div className="flex flex-col gap-3">
+          <h4
+            className="leading-none text-xs font-medium text-dark-blue-700"
+            onClick={() => unSelectStructure()}
+          >
+            Back
           </h4>
           <h3 className="text-base leading-none font-medium">
             {structure?.attributes.mapSection || ""}{" "}
@@ -526,7 +527,6 @@ const StructureComments = ({ comments = [], editable = false }) => {
           }
         );
 
-        console.log(response.data.data);
         setAllStructureComments(response.data.data);
       } catch (error) {
         console.error("Error fetching comments", error);
@@ -545,7 +545,6 @@ const StructureComments = ({ comments = [], editable = false }) => {
           </div>
         )}
         {allStructureComments.map((comment, index) => {
-          console.log(comment);
           return (
             <li key={index} className="bg-white rounded-md border">
               <div className="p-3">
@@ -738,7 +737,6 @@ const AddInspectorForm = ({
 
           <div className="flex gap-1 items-center mt-4 -space-x-4 rtl:space-x-reverse">
             {assignedInspectors.map((inspector, index) => {
-              console.log("inspector", inspector);
               return (
                 <div key={index} className="relative group">
                   <button
@@ -763,8 +761,11 @@ const AddInspectorForm = ({
                   </button>
 
                   <AvatarImage
-                    customImage={inspector.picture?.url}
-                    customName={inspector.firstName}
+                    customImage={
+                      inspector.attributes?.picture.data?.attributes.formats
+                        .thumbnail.url
+                    }
+                    customName={inspector.attributes.firstName}
                   />
                 </div>
               );
@@ -775,12 +776,12 @@ const AddInspectorForm = ({
         <>
           <div className="flex -space-x-4 rtl:space-x-reverse">
             {assignedInspectors.map((inspector, index) => {
-              console.log(inspector);
               <AvatarImage
                 customImage={
-                  inspector?.picture?.data?.attributes.formats.thumbnail.url
+                  inspector.attributes?.picture.data?.attributes.formats
+                    .thumbnail.url
                 }
-                customName={inspector.firstName}
+                customName={inspector.attributes.firstName}
               />;
             })}
           </div>

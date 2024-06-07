@@ -7,7 +7,16 @@ export default function NavbarDropdown() {
   const userImage = null;
 
   return (
-    <Dropdown arrowIcon={false} inline label={<AvatarImage />}>
+    <Dropdown
+      arrowIcon={false}
+      inline
+      label={
+        <AvatarImage
+          customImage={session?.user.picture}
+          customName={session?.user.firstName}
+        />
+      }
+    >
       <Dropdown.Header>
         <span className="block text-sm">{`${session?.user.firstName} ${session?.user.lastName}`}</span>
         <span className="block truncate text-sm font-medium">

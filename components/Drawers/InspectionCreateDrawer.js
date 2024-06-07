@@ -17,7 +17,6 @@ import {
   createInspection,
   updateInspection,
   deleteInspection,
-  uploadFiles as uploadInspectionFiles,
 } from "../../utils/api/inspections";
 import {
   Button,
@@ -28,11 +27,9 @@ import {
   Select,
   Spinner,
 } from "flowbite-react";
-import { useInspection } from "../../context/InspectionContext";
 
 const InspectionDrawer = ({ btnText }) => {
   const { showAlert } = useAlert();
-  const { inspection, setInspection } = useInspection();
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -57,22 +54,12 @@ const InspectionDrawer = ({ btnText }) => {
   const [newInspection, setNewInspection] = useState({
     name: "",
     structures: [],
+    documents: [],
     client: null,
   });
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
-
-  useEffect(() => {
-    if (inspection) {
-      setNewInspection({
-        name: inspection.name || "",
-        structures: inspection.structures || [],
-        documents: inspection.documents || [],
-        client: inspection.client || 1,
-      });
-    }
-  }, [inspection]);
 
   useEffect(() => {
     const fetchAllClients = async () => {
@@ -135,7 +122,7 @@ const InspectionDrawer = ({ btnText }) => {
     const payload = {
       data: {
         name: newInspection.name,
-        client: newInspection.client.data.id,
+        client: newInspection.client.id,
       },
     };
 
@@ -147,22 +134,9 @@ const InspectionDrawer = ({ btnText }) => {
     };
 
     try {
-      if (inspection && inspection.id) {
-        // Update logic here
-        const response = await updateInspection(apiParams);
-        const updatedInspection = {
-          ...inspection,
-          ...response.data.data.attributes,
-          client: newInspection.client,
-        };
-
-        showAlert("API call successful!", "success", 5000);
-        setInspection(updatedInspection);
-      } else {
-        // Creation logic here
-        const response = await createInspection(apiParams);
-        router.push(`/inspections/${response.data.data.id}`);
-      }
+      // Creation logic here
+      const response = await createInspection(apiParams);
+      router.push(`/inspections/${response.data.data.id}`);
 
       setIsLoadingInspection(false);
     } catch (error) {
@@ -189,7 +163,7 @@ const InspectionDrawer = ({ btnText }) => {
   const createAndUploadStructure = async () => {
     const payload = {
       data: {
-        inspection: inspection?.id,
+        inspection: newInspection?.id,
         mapSection: structure.name,
         status: "Not Inspected",
         type: structure.type, // One of the enumeration options
@@ -216,13 +190,6 @@ const InspectionDrawer = ({ btnText }) => {
       ) {
         await uploadDocumentsAndImages(response.data.data.id);
       }
-
-      setInspection({
-        ...inspection,
-        structures: {
-          data: [...inspection?.structures.data, response.data.data],
-        },
-      });
 
       setStructure({
         name: "",
@@ -347,30 +314,8 @@ const InspectionDrawer = ({ btnText }) => {
    * @param {File[]} files - An array of new document File objects to be associated with the inspection.
    */
 
-  const updateInspectionDocuments = async (files) => {
-    console.log("files", files);
-    console.log("inspection Id", inspection.id);
-
-    try {
-      const apiParams = {
-        jwt: session?.accessToken,
-        files: files,
-        inspectionId: inspection.id,
-        fieldName: "documents",
-      };
-      const uploadedDocuments = await uploadInspectionFiles(
-        apiParams.jwt,
-        apiParams.files,
-        apiParams.inspectionId,
-        apiParams.fieldName
-      );
-
-      console.log(uploadedDocuments);
-
-      setInspection({ ...inspection, documents: { data: files } });
-    } catch (error) {
-      console.error(error);
-    }
+  const updateInspectionDocuments = (files) => {
+    setNewInspection({ ...newInspection, documents: files });
   };
 
   /**
@@ -427,29 +372,6 @@ const InspectionDrawer = ({ btnText }) => {
     return result;
   };
 
-  const ElipseIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-    >
-      <path
-        d="M9.99992 5.5C10.9204 5.5 11.6666 4.82843 11.6666 4C11.6666 3.17157 10.9204 2.5 9.99992 2.5C9.07944 2.5 8.33325 3.17157 8.33325 4C8.33325 4.82843 9.07944 5.5 9.99992 5.5Z"
-        fill="#1F2A37"
-      />
-      <path
-        d="M9.99992 11.5C10.9204 11.5 11.6666 10.8284 11.6666 10C11.6666 9.17157 10.9204 8.5 9.99992 8.5C9.07944 8.5 8.33325 9.17157 8.33325 10C8.33325 10.8284 9.07944 11.5 9.99992 11.5Z"
-        fill="#1F2A37"
-      />
-      <path
-        d="M9.99992 17.5C10.9204 17.5 11.6666 16.8284 11.6666 16C11.6666 15.1716 10.9204 14.5 9.99992 14.5C9.07944 14.5 8.33325 15.1716 8.33325 16C8.33325 16.8284 9.07944 17.5 9.99992 17.5Z"
-        fill="#1F2A37"
-      />
-    </svg>
-  );
-
   return (
     <div>
       <Button
@@ -497,7 +419,7 @@ const InspectionDrawer = ({ btnText }) => {
             </Breadcrumb.Item>
             <Breadcrumb.Item href="/">Inspection</Breadcrumb.Item>
             <Breadcrumb.Item href="/">
-              {inspection?.name ? inspection?.name : "Map Name Here"}
+              {newInspection?.name ? newInspection?.name : "Map Name Here"}
             </Breadcrumb.Item>
           </Breadcrumb>
 
@@ -520,10 +442,10 @@ const InspectionDrawer = ({ btnText }) => {
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspection?.name === "" ? (
+                  {newInspection?.name === "" ? (
                     <span>&quot;Map Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspection?.name}&quot;</span>
+                    <span>&quot;{newInspection?.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -558,15 +480,19 @@ const InspectionDrawer = ({ btnText }) => {
                 <Select
                   id="client"
                   required
-                  defaultValue={inspection?.client.data.id || ""}
+                  defaultValue={"empty"}
                   onChange={(e) => {
                     console.log(e.target.value);
                     setNewInspection({
                       ...newInspection,
-                      client: { data: findClientById(clients, e.target.value) },
+                      client: findClientById(clients, e.target.value),
                     });
                   }}
                 >
+                  <option key={"select-client"} value={"empty"}>
+                    Select a Client
+                  </option>
+
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.attributes.name}
@@ -575,7 +501,7 @@ const InspectionDrawer = ({ btnText }) => {
                 </Select>
               </div>
 
-              {inspection && (
+              {/* {inspection && (
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between">
                     <Label className="text-xs" htmlFor="inspectionName">
@@ -607,7 +533,7 @@ const InspectionDrawer = ({ btnText }) => {
 
                   <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
                     <div className="rounded-md w-full  overflow-auto">
-                      {inspection?.structures.data.map((structure, index) => (
+                      {newInspection.structures.data.map((structure, index) => (
                         <div
                           key={index}
                           className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
@@ -696,10 +622,10 @@ const InspectionDrawer = ({ btnText }) => {
                     </Label>
                   </div>
                 </div>
-              )}
+              )} */}
 
               <ImageCardGrid
-                files={inspection?.documents.data || []}
+                files={newInspection.documents || []}
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
@@ -753,7 +679,7 @@ const InspectionDrawer = ({ btnText }) => {
             </div>
           </div>
 
-          {inspection && (
+          {/* {inspection && (
             <div
               className={`absolute inset-0 transition-transform duration-500 transform ${
                 formView === "structure"
@@ -776,10 +702,10 @@ const InspectionDrawer = ({ btnText }) => {
                 <div className="flex flex-col gap-2">
                   <h3 className="leading-tight text-2xl font-medium">
                     Edit{" "}
-                    {inspection?.name === "" ? (
+                    {newInspection?.name === "" ? (
                       <span>&quot;Structure Name Here&quot;</span>
                     ) : (
-                      <span>&quot;{inspection?.name}&quot;</span>
+                      <span>&quot;{newInspection?.name}&quot;</span>
                     )}
                   </h3>
                   <p className="text-xs">
@@ -916,7 +842,7 @@ const InspectionDrawer = ({ btnText }) => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

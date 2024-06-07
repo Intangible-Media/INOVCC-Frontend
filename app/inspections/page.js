@@ -8,7 +8,7 @@ import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import axios from "axios";
 import InspectionTable from "../../components/InspectionTable";
 import InspectionModal from "../../components/Modals/InspectionModal";
-import InspectionDrawer from "../../components/Drawers/InspectionDrawer";
+import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import ActivityLog from "../../components/ActivityLog";
 import { GoPlus } from "react-icons/go";
@@ -168,7 +168,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="grid grid-cols-1 my-4">
-        <InspectionDrawer />
+        <InspectionCreateDrawer />
       </div>
 
       {favoriteInspections.length > 0 && (

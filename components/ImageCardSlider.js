@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Checkbox, Button, FileInput, Label } from "flowbite-react";
+import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { useSession } from "next-auth/react";
 import { PlusIcon } from "../public/icons/intangible-icons";
@@ -18,6 +18,7 @@ const ImageSlider = ({
   const [activeImage, setActiveImage] = useState(null);
   const [uploadImage, setUploadImage] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [loadingImage, setLoadingImage] = useState(false);
   const [uploadedImageObj, setUploadedImageObj] = useState(null);
   const [addGeoTag, setAddGeoTag] = useState(false);
   const [images, setImages] = useState(propImages);
@@ -98,33 +99,34 @@ const ImageSlider = ({
   };
 
   const handleImageSubmit = async () => {
+    if (!uploadedImage) return;
     try {
-      if (uploadedImage) {
-        const files = [uploadedImageObj];
-        const fileUrl = URL.createObjectURL(files[0]);
+      setLoadingImage(true);
+      const files = [uploadedImageObj];
+      const fileUrl = URL.createObjectURL(files[0]);
 
-        const response = await uploadFiles(
-          session.accessToken,
-          files,
-          structureId,
-          "images"
-        );
+      const response = await uploadFiles(
+        session.accessToken,
+        files,
+        structureId,
+        "images"
+      );
 
-        setImages({
-          data: [
-            ...images.data,
-            {
-              ...uploadedImageObj,
-              id: Date.now(),
-              attributes: { url: fileUrl },
-            },
-          ],
-        }); // Update the images state with the new image
+      setImages({
+        data: [
+          ...images.data,
+          {
+            ...uploadedImageObj,
+            id: Date.now(),
+            attributes: { url: fileUrl },
+          },
+        ],
+      }); // Update the images state with the new image
 
-        setUploadImage(false);
-        setUploadedImage(null);
-        setUploadedImageObj(null);
-      }
+      setUploadImage(false);
+      setUploadedImage(null);
+      setUploadedImageObj(null);
+      setLoadingImage(false);
     } catch (error) {
       console.error(error);
     }
@@ -243,6 +245,7 @@ const ImageSlider = ({
                   src={uploadedImage}
                   className="w-full h-full object-cover object-center"
                 />
+
                 {addGeoTag && (
                   <div className="absolute right-3 bottom-20">
                     {/* Flexbox for centering */}
@@ -257,8 +260,18 @@ const ImageSlider = ({
                     </div>
                   </div>
                 )}
+
+                {loadingImage && (
+                  <div className="flex absolute right-0 bottom-0 left-0 top-0 bg-white bg-opacity-95 z-40 gap-3 text-center justify-center">
+                    <div className="flex flex-col m-auto gap-3">
+                      <Spinner />
+                      <p>Loading Your Image</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+
             <div className="bg-white flex justify-between p-4 absolute bottom-0 left-0 right-0">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -322,6 +335,7 @@ const ImageSlider = ({
             </div>
           )}
         </div>
+
         {editable && (
           <div className="flex justify-between mt-4">
             <a className="text-sm leading-none font-medium" href="#">
