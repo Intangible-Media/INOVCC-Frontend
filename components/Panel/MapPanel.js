@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Label, Dropdown, Button, FileInput } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
-import { updateStructure } from "../../utils/api/structures";
+import { updateStructure, getStructure } from "../../utils/api/structures";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
@@ -12,6 +12,7 @@ import ActivityLog from "../ActivityLog";
 import AvatarImage from "../AvatarImage";
 import qs from "qs";
 import axios from "axios";
+import DirectionsComponent from "../DirectionsComponent";
 
 export default function MapPanel({ structure }) {
   const { data: session, loading } = useSession();
@@ -56,63 +57,57 @@ export default function MapPanel({ structure }) {
   const submitStructure = async () => {
     setIsLoading(true);
 
-    const { images, ...updatedStructureWithoutImages } =
-      updatedStructure.attributes;
-
-    const payload = {
-      data: {
-        ...updatedStructureWithoutImages,
-        inspectors: updatedStructure.attributes.inspectors.data?.map(
-          (inspector) => inspector.id
-        ),
-      },
-    };
-
-    const apiParams = {
-      jwt: session.accessToken,
-      payload: payload,
-      id: updatedStructure.id,
-      query: "",
-    };
-
     try {
-      const response = await updateStructure(apiParams);
+      const { images, inspectors, status, ...attributesWithoutImages } =
+        updatedStructure.attributes;
 
-      // Assuming response.data.data is the updated structure object
+      // Check if the status is changing to "Inspected"
+      const newAttributes = {
+        ...attributesWithoutImages,
+        inspectors: inspectors.data?.map((inspector) => inspector.id),
+      };
+
+      if (status === "Inspected") {
+        newAttributes.inspectionDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }
+
+      const payload = { data: newAttributes };
+
+      console.log(payload);
+
+      const apiParams = {
+        jwt: session.accessToken,
+        payload,
+        id: updatedStructure.id,
+        query: "",
+      };
+
+      const response = await updateStructure(apiParams);
       const newlyUpdatedStructure = response.data.data;
 
       console.log(newlyUpdatedStructure);
 
-      // Update the list of structures within the current inspection
       const newlyUpdatedStructuresList = inspection.structures.data.map(
-        (currentStructure) => {
-          if (currentStructure.id === newlyUpdatedStructure.id) {
-            // Exclude 'images' from both current and updated structure attributes before merging
-            // Merge attributes, prioritizing values from the updated structure
-            return {
-              ...currentStructure,
-              attributes: {
-                ...currentStructure.attributes,
-                ...newlyUpdatedStructure.attributes,
-              },
-            };
-          }
-          // For structures that don't match the ID, return them unchanged
-          return currentStructure;
-        }
+        (structure) =>
+          structure.id === newlyUpdatedStructure.id
+            ? {
+                ...structure,
+                attributes: {
+                  ...structure.attributes,
+                  ...newlyUpdatedStructure.attributes,
+                },
+              }
+            : structure
       );
 
-      // Update inspection state with the new list of structures
       setInspection({
         ...inspection,
         structures: { data: newlyUpdatedStructuresList },
       });
-
-      setIsLoading(false);
-      return newlyUpdatedStructure;
     } catch (error) {
       console.error(error);
-      setIsLoading(false); // Ensure loading state is reset even if the request fails
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -213,10 +208,33 @@ export default function MapPanel({ structure }) {
                         fill="#312E8E"
                       />
                     </svg>
+                    <DirectionsComponent
+                      destinationLongitude={structure.attributes.longitude}
+                      destinationLatitude={structure.attributes.latitude}
+                    />
+                  </li>
+                  <li className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M8.00032 1.33325C6.5863 1.3347 5.23062 1.87712 4.23076 2.84148C3.23089 3.80584 2.66851 5.11338 2.667 6.47719C2.66485 7.57743 3.03235 8.64874 3.71447 9.53063C3.72736 9.55225 3.74161 9.57309 3.75713 9.59304L7.43143 14.3886C7.49756 14.4748 7.58373 14.5449 7.68302 14.5931C7.78231 14.6414 7.89196 14.6666 8.00317 14.6666C8.11437 14.6666 8.22402 14.6414 8.32331 14.5931C8.4226 14.5449 8.50877 14.4748 8.5749 14.3886L12.2464 9.59304C12.2619 9.57333 12.2761 9.55271 12.289 9.53131C12.9701 8.64883 13.3366 7.57733 13.3336 6.47719C13.3321 5.11338 12.7697 3.80584 11.7699 2.84148C10.77 1.87712 9.41434 1.3347 8.00032 1.33325ZM11.1015 8.76795C11.0819 8.79283 11.0641 8.81896 11.0481 8.84614L8.00032 12.8241L4.95322 8.84614C4.93678 8.81887 4.91874 8.79254 4.89917 8.76727C4.37311 8.11178 4.08816 7.3061 4.08922 6.47719C4.08922 5.47673 4.50128 4.51725 5.23475 3.80983C5.96823 3.1024 6.96303 2.70497 8.00032 2.70497C9.03761 2.70497 10.0324 3.1024 10.7659 3.80983C11.4994 4.51725 11.9114 5.47673 11.9114 6.47719C11.9126 7.30633 11.6277 8.11228 11.1015 8.76795Z"
+                        fill="#312E8E"
+                      />
+                      <path
+                        d="M8.00032 3.81743C7.43774 3.81743 6.8878 3.97833 6.42004 4.27978C5.95227 4.58123 5.58769 5.0097 5.3724 5.511C5.15711 6.01229 5.10079 6.5639 5.21054 7.09608C5.32029 7.62825 5.5912 8.11708 5.989 8.50076C6.3868 8.88444 6.89363 9.14572 7.4454 9.25158C7.99717 9.35744 8.56909 9.30311 9.08884 9.09546C9.60859 8.88782 10.0528 8.53619 10.3654 8.08503C10.6779 7.63388 10.8448 7.10346 10.8448 6.56086C10.8438 5.83354 10.5438 5.13626 10.0106 4.62196C9.47737 4.10767 8.75442 3.81834 8.00032 3.81743ZM8.00032 7.93258C7.71903 7.93258 7.44406 7.85213 7.21018 7.7014C6.9763 7.55068 6.79401 7.33644 6.68636 7.08579C6.57872 6.83515 6.55055 6.55934 6.60543 6.29325C6.66031 6.02717 6.79576 5.78275 6.99466 5.59091C7.19356 5.39907 7.44698 5.26843 7.72286 5.2155C7.99874 5.16257 8.2847 5.18974 8.54458 5.29356C8.80446 5.39738 9.02658 5.5732 9.18285 5.79878C9.33913 6.02435 9.42254 6.28956 9.42254 6.56086C9.42254 6.92466 9.2727 7.27356 9.00598 7.53081C8.73926 7.78806 8.37752 7.93258 8.00032 7.93258Z"
+                        fill="#312E8E"
+                      />
+                    </svg>
                     <span className="leading-none font-medium text-xs text-gray-900">
                       {structureAddress}
                     </span>
                   </li>
+
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -280,8 +298,9 @@ export default function MapPanel({ structure }) {
                 </h4>
                 <AddInspectorForm
                   currentInspectors={
-                    updatedStructure.attributes.inspectors?.data
+                    updatedStructure.attributes.inspectors?.data || []
                   }
+                  structure={structure}
                   setUpdatedStructure={setUpdatedStructure}
                   updatedStructure={updatedStructure}
                   addForm={false}
@@ -455,8 +474,9 @@ export default function MapPanel({ structure }) {
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
                       currentInspectors={
-                        updatedStructure.attributes.inspectors?.data
+                        updatedStructure.attributes.inspectors?.data || []
                       }
+                      structure={structure}
                       setUpdatedStructure={setUpdatedStructure}
                       updatedStructure={updatedStructure}
                     />
@@ -526,7 +546,7 @@ const StructureComments = ({ comments = [], editable = false }) => {
           }
         );
 
-        console.log(response.data.data);
+        // console.log(response.data.data);
         setAllStructureComments(response.data.data);
       } catch (error) {
         console.error("Error fetching comments", error);
@@ -545,7 +565,6 @@ const StructureComments = ({ comments = [], editable = false }) => {
           </div>
         )}
         {allStructureComments.map((comment, index) => {
-          console.log(comment);
           return (
             <li key={index} className="bg-white rounded-md border">
               <div className="p-3">
@@ -627,6 +646,7 @@ const StructureComments = ({ comments = [], editable = false }) => {
 };
 
 const AddInspectorForm = ({
+  structure,
   currentInspectors,
   setUpdatedStructure,
   updatedStructure,
@@ -634,78 +654,99 @@ const AddInspectorForm = ({
 }) => {
   const { data: session } = useSession();
   const [availableInspectors, setAvailableInspectors] = useState([]);
-  const [assignedInspectors, setAssignedInspectors] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [assignedInspectors, setAssignedInspectors] = useState([
+    ...currentInspectors,
+  ]);
+  const [structureInspectors, setStructureInspectors] = useState([]);
 
-  // Mock function to simulate fetching users
-  // Replace this with your actual getAllUsers function
-  const fetchUsers = async () => {
-    const query = qs.stringify(
-      {
-        populate: "*",
-      },
-      {
-        encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const query = qs.stringify({ populate: "*" }, { encodeValuesOnly: true });
+      const apiParams = { jwt: session?.accessToken, query };
+
+      try {
+        const response = await getAllUsers(apiParams);
+        const filteredUsers = response.data.filter(
+          (user) =>
+            !currentInspectors.some((inspector) => inspector.id === user.id)
+        );
+        setAvailableInspectors(filteredUsers);
+      } catch (error) {
+        console.error("Error fetching users", error);
       }
-    );
-
-    const apiParams = {
-      jwt: session?.accessToken,
-      query: query,
     };
 
-    try {
-      const response = await getAllUsers(apiParams);
+    const fetchStructure = async () => {
+      if (!session) return;
 
-      const filteredUsers = response.data.filter((user) => {
-        return !currentInspectors.some((inspector) => inspector.id === user.id);
-      });
+      const query = qs.stringify(
+        {
+          populate: {
+            inspectors: {
+              populate: {
+                picture: "*",
+              },
+              fields: ["firstName", "lastName"],
+            },
+          },
+        },
+        { encodeValuesOnly: true }
+      );
+      const apiParams = { jwt: session.accessToken, id: structure.id, query };
 
-      setAvailableInspectors(filteredUsers);
-    } catch (error) {
-      console.error("Error fetching users", error);
-    }
-  };
+      try {
+        const response = await getStructure(apiParams);
+        setStructureInspectors(response.data.data.attributes.inspectors.data);
+      } catch (error) {
+        console.error("Error fetching structure", error);
+      }
+    };
+
+    fetchUsers();
+    fetchStructure();
+  }, [session, currentInspectors, structure.id]);
+
+  useEffect(() => {
+    setUpdatedStructure((prev) => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        inspectors: { data: assignedInspectors },
+      },
+    }));
+  }, [assignedInspectors, setUpdatedStructure]);
 
   const updateStructureInspectors = async () => {
     const payload = {
-      data: {
-        inspectors: assignedInspectors.map((inspector) => inspector.id),
-      },
+      data: { inspectors: assignedInspectors.map((inspector) => inspector.id) },
     };
-
     const apiParams = {
       jwt: session.accessToken,
-      payload: payload,
+      payload,
       id: updatedStructure.id,
-      query: "",
     };
 
     try {
       const response = await updateStructure(apiParams);
-
       return response.data;
     } catch (error) {
       console.error(error);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-    setAssignedInspectors([...currentInspectors]);
-  }, []);
+  const handleAssignInspector = (user) => {
+    setAssignedInspectors((prev) => [...prev, user]);
+    setAvailableInspectors((prev) =>
+      prev.filter((inspector) => inspector.id !== user.id)
+    );
+  };
 
-  useEffect(() => {
-    setUpdatedStructure({
-      ...updatedStructure,
-      attributes: {
-        ...updatedStructure.attributes,
-        inspectors: {
-          data: assignedInspectors,
-        },
-      },
-    });
-  }, [assignedInspectors]);
+  const handleRemoveInspector = (user) => {
+    setAssignedInspectors((prev) =>
+      prev.filter((inspector) => inspector.id !== user.id)
+    );
+    setAvailableInspectors((prev) => [...prev, user]);
+  };
 
   return (
     <>
@@ -720,14 +761,7 @@ const AddInspectorForm = ({
               {availableInspectors.map((user) => (
                 <Dropdown.Item
                   key={user.id}
-                  onClick={() => {
-                    setAssignedInspectors([...assignedInspectors, user]);
-                    setAvailableInspectors(
-                      availableInspectors.filter(
-                        (inspector) => inspector.id !== user.id
-                      )
-                    );
-                  }}
+                  onClick={() => handleAssignInspector(user)}
                   className="w-full"
                 >
                   {user.username || user.attributes.username}
@@ -737,52 +771,42 @@ const AddInspectorForm = ({
           </div>
 
           <div className="flex gap-1 items-center mt-4 -space-x-4 rtl:space-x-reverse">
-            {assignedInspectors.map((inspector, index) => {
-              console.log("inspector", inspector);
-              return (
-                <div key={index} className="relative group">
-                  <button
-                    className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100"
-                    onClick={() => {
-                      setAssignedInspectors(
-                        assignedInspectors.filter(
-                          (user) => inspector.id !== user.id
-                        )
-                      );
-                      setAvailableInspectors([
-                        ...availableInspectors,
-                        inspector,
-                      ]);
-                    }}
-                  >
-                    <img
-                      src="/icons/x-icon.png"
-                      alt=""
-                      className="w-1.5 h-1.5"
-                    />
-                  </button>
-
-                  <AvatarImage
-                    customImage={inspector.picture?.url}
-                    customName={inspector.firstName}
-                  />
-                </div>
-              );
-            })}
+            {assignedInspectors.map((inspector) => (
+              <div key={inspector.id} className="relative group">
+                <button
+                  className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100"
+                  onClick={() => handleRemoveInspector(inspector)}
+                >
+                  <img src="/icons/x-icon.png" alt="" className="w-1.5 h-1.5" />
+                </button>
+                <AvatarImage
+                  customImage={
+                    inspector.picture?.url ||
+                    inspector.attributes?.picture.data?.attributes.url
+                  }
+                  customName={
+                    inspector.firstName || inspector.attributes?.firstName
+                  }
+                />
+              </div>
+            ))}
           </div>
         </>
       ) : (
         <>
           <div className="flex -space-x-4 rtl:space-x-reverse">
-            {assignedInspectors.map((inspector, index) => {
-              console.log(inspector);
+            {assignedInspectors.map((inspector) => (
               <AvatarImage
+                key={inspector.id}
                 customImage={
-                  inspector?.picture?.data?.attributes.formats.thumbnail.url
+                  inspector?.picture?.data?.attributes?.formats?.thumbnail
+                    ?.url || inspector.attributes?.picture.data?.attributes.url
                 }
-                customName={inspector.firstName}
-              />;
-            })}
+                customName={
+                  inspector.firstName || inspector.attributes?.firstName
+                }
+              />
+            ))}
           </div>
           <div className="flex justify-end">
             <a

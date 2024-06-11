@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getInspection } from "../utils/api/inspections";
 import { useSession } from "next-auth/react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import qs from "qs";
 
 const InspectionContext = createContext();
@@ -15,10 +15,12 @@ export const InspectionProvider = ({ children }) => {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [inspection, setInspection] = useState(null);
-  const inspectionId = pathname.split("/");
+  const inspectionId = pathname.split("/").pop();
 
   const fetchInspection = async () => {
     if (!session) return;
+
+    console.log("This is the context");
 
     const query = qs.stringify(
       {
@@ -43,7 +45,6 @@ export const InspectionProvider = ({ children }) => {
                   picture: "*", // Populate the 'picture' relation
                 },
                 fields: [
-                  // Specify fields you want from 'contacts'
                   "firstName",
                   "lastName",
                   "email",
@@ -66,7 +67,7 @@ export const InspectionProvider = ({ children }) => {
 
     const apiParams = {
       jwt: session?.accessToken,
-      id: inspectionId[inspectionId.length - 1],
+      id: inspectionId,
       query: query,
     };
 
@@ -91,7 +92,9 @@ export const InspectionProvider = ({ children }) => {
   }, [session]);
 
   return (
-    <InspectionContext.Provider value={{ inspection, setInspection }}>
+    <InspectionContext.Provider
+      value={{ inspection, setInspection, refreshInspection: fetchInspection }}
+    >
       {children}
     </InspectionContext.Provider>
   );

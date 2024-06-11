@@ -1,13 +1,157 @@
-import React, { useState, useEffect } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
-import { deleteFile } from "../utils/api/media";
 import { useSession } from "next-auth/react";
-import { PlusIcon } from "../public/icons/intangible-icons";
-import { ensureDomain } from "../utils/strings";
+import { useState, useCallback } from "react";
+import { deleteFile } from "../utils/api/media";
 import { uploadFiles } from "../utils/api/structures";
+import { ensureDomain } from "../utils/strings";
+import { useInspection } from "../context/InspectionContext";
+
+export const useImageUpload = (
+  session,
+  structureId,
+  addGeoTag,
+  longitude,
+  latitude
+) => {
+  const { inspection, refreshInspection } = useInspection();
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploadedImageObj, setUploadedImageObj] = useState(null);
+  const [loadingImage, setLoadingImage] = useState(false);
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    setUploadedImageObj(file);
+    if (file) {
+      setUploadedImage(URL.createObjectURL(file));
+    }
+  };
+
+  const processImageForFinal = useCallback(
+    (file, callback) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          if (addGeoTag) {
+            const fontSize = 100;
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = "white";
+            ctx.textAlign = "right"; // Align text to the right
+            ctx.textBaseline = "top"; // Align text to the top
+            ctx.shadowColor = "black"; // Color of the shadow
+            ctx.shadowOffsetX = 2; // Horizontal distance of the shadow
+            ctx.shadowOffsetY = 2; // Vertical distance of the shadow
+            ctx.shadowBlur = 4; // Blurriness of the shadow
+
+            const padding = 10; // Padding from the edge
+
+            // Draw text at the top right corner
+            ctx.fillText(
+              `Longitude: ${longitude}`,
+              canvas.width - padding,
+              padding
+            );
+            ctx.fillText(
+              `Latitude: ${latitude}`,
+              canvas.width - padding,
+              padding + fontSize + 5 // Additional spacing between lines
+            );
+          }
+
+          canvas.toBlob((blob) => {
+            const finalFile = new File([blob], file.name, {
+              type: "image/png",
+            });
+            callback(finalFile);
+          }, "image/png");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
+    [addGeoTag, longitude, latitude]
+  );
+
+  const handleImageSubmit = async (setImages, images) => {
+    if (!uploadedImage) return;
+    try {
+      setLoadingImage(true);
+      processImageForFinal(uploadedImageObj, async (finalFile) => {
+        const response = await uploadFiles(
+          session.accessToken,
+          [finalFile],
+          structureId,
+          "images"
+        );
+        const newImage = {
+          id: Date.now(),
+          attributes: { url: URL.createObjectURL(finalFile) },
+        };
+        console.log("images", images);
+        console.log("data below", {
+          data: [...images.data, newImage],
+        });
+        setImages({ data: [...images.data, newImage] });
+        setUploadedImage(null);
+        setUploadedImageObj(null);
+        setLoadingImage(false);
+        refreshInspection();
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return {
+    uploadedImage,
+    loadingImage,
+    handleImageUpload,
+    handleImageSubmit,
+  };
+};
+
+export const useImageActions = (session, images, setImages, setActiveImage) => {
+  const handleDelete = async (id) => {
+    if (!session) return console.error("Not authenticated");
+    try {
+      await deleteFile({ id, jwt: session.accessToken });
+      setImages({ data: images.data.filter((image) => image.id !== id) });
+      setActiveImage(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const downloadImage = async (file) => {
+    const url = ensureDomain(file.attributes?.url);
+
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectURL = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectURL;
+      a.download = file.attributes?.name || "downloaded-image.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectURL); // Clean up the object URL
+    } catch (error) {
+      console.error("Error downloading the image", error);
+    }
+  };
+
+  return { handleDelete, downloadImage };
+};
 
 const ImageSlider = ({
-  images: propImages,
+  images: propImages = [],
   structureId = null,
   limit = true,
   longitude = 0,
@@ -17,151 +161,37 @@ const ImageSlider = ({
   const { data: session } = useSession();
   const [activeImage, setActiveImage] = useState(null);
   const [uploadImage, setUploadImage] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [loadingImage, setLoadingImage] = useState(false);
-  const [uploadedImageObj, setUploadedImageObj] = useState(null);
   const [addGeoTag, setAddGeoTag] = useState(false);
-  const [images, setImages] = useState(propImages);
+  const [images, setImages] = useState({ data: propImages.data || [] });
 
-  const processImageForFinal = (file, setFinalImage) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const { uploadedImage, loadingImage, handleImageUpload, handleImageSubmit } =
+    useImageUpload(session, structureId, addGeoTag, longitude, latitude);
 
-        if (addGeoTag) {
-          const fontSize = canvas.width * 0.1; // 10% of the width
-          ctx.font = `${fontSize}px Arial`;
-          ctx.fillStyle = "white";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "bottom";
-
-          const textLongitude = `Lon: ${longitude}`;
-          const textLatitude = `Lat: ${latitude}`;
-          const textX = 10; // Margin from the left edge
-          const textY = canvas.height - 10; // Margin from the bottom edge
-
-          // Draw geo-tag text at the bottom left for the final image
-          ctx.fillText(textLongitude, textX, textY - fontSize); // Adjust Y for space between lines
-          ctx.fillText(textLatitude, textX, textY);
-        }
-
-        // Use `setFinalImage` callback to update the state or handle the final image
-        setFinalImage(canvas.toDataURL("image/png"));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const downloadImage = (file) => {
-    console.log(file); // Debugging
-    const url = ensureDomain(file.attributes?.url);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.attributes?.name || "downloaded-image.png";
-
-    console.log(a); // Debugging
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0]; // Store the file
-    setUploadedImageObj(file);
-    if (file) {
-      // Create a URL for the file
-      const fileUrl = URL.createObjectURL(file);
-      // Use this URL to display the image
-      setUploadedImage(fileUrl);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!session) return console.error("Not authenticated");
-
-    try {
-      const response = await deleteFile({ id, jwt: session.accessToken });
-      console.log(response); // Debugging
-      const updatedImages = images.data.filter((image) => image.id !== id);
-      setImages({ data: updatedImages });
-      setActiveImage(null);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleImageSubmit = async () => {
-    if (!uploadedImage) return;
-    try {
-      setLoadingImage(true);
-      const files = [uploadedImageObj];
-      const fileUrl = URL.createObjectURL(files[0]);
-
-      const response = await uploadFiles(
-        session.accessToken,
-        files,
-        structureId,
-        "images"
-      );
-
-      setImages({
-        data: [
-          ...images.data,
-          {
-            ...uploadedImageObj,
-            id: Date.now(),
-            attributes: { url: fileUrl },
-          },
-        ],
-      }); // Update the images state with the new image
-
-      setUploadImage(false);
-      setUploadedImage(null);
-      setUploadedImageObj(null);
-      setLoadingImage(false);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const { handleDelete, downloadImage } = useImageActions(
+    session,
+    images,
+    setImages,
+    setActiveImage
+  );
 
   const exitModal = (event) => {
-    if (event.target.id === "active-image-modal") {
-      setActiveImage(null);
-    }
-
-    if (event.target.id === "upload-image-modal") {
-      setUploadImage(false);
-    }
+    if (event.target.id === "active-image-modal") setActiveImage(null);
+    if (event.target.id === "upload-image-modal") setUploadImage(false);
   };
 
   return (
     <>
-      {/* Your existing JSX with a modification to use local `images` state instead of the prop directly */}
       {activeImage && (
         <div
           id="active-image-modal"
           className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-10"
           onClick={exitModal}
         >
-          <div
-            className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative"
-            onClick={(e) => setActiveImage(activeImage)}
-          >
-            <div className="relative w-full h-full">
-              {/* Ensure parent div covers the image size */}
-              <img
-                src={`${ensureDomain(activeImage.attributes.url)}`}
-                className="w-full h-full object-cover object-center"
-              />
-            </div>
+          <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
+            <img
+              src={ensureDomain(activeImage.attributes.url)}
+              className="w-full h-full object-cover object-center"
+            />
             <div className="flex justify-between bg-white p-4 absolute bottom-0 left-0 right-0">
               <Button
                 className="bg-dark-blue-700 hover:bg-dark-blue-800 w-36"
@@ -172,7 +202,6 @@ const ImageSlider = ({
               <Button
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log(activeImage);
                   handleDelete(activeImage.id);
                 }}
               >
@@ -191,26 +220,50 @@ const ImageSlider = ({
         >
           <div className="aspect-square flex bg-white rounded-lg overflow-hidden relative">
             {uploadedImage && (
-              <div
-                className="flex bg-red-500 p-0.5 px-2 rounded-full top-2 right-2 absolute z-50 cursor-pointer text-white"
-                onClick={() => {
-                  setUploadedImage(null);
-                  setUploadedImageObj(null);
-                }}
-              >
-                X
-              </div>
+              <>
+                <div
+                  className="flex bg-red-500 p-0.5 px-2 rounded-full top-2 right-2 absolute z-50 cursor-pointer text-white"
+                  onClick={() => {
+                    setUploadedImage(null);
+                  }}
+                >
+                  X
+                </div>
+                <div className="relative w-full h-full">
+                  <img
+                    src={uploadedImage}
+                    className="w-full h-full object-cover object-center"
+                  />
+                  {addGeoTag && (
+                    <div className="absolute right-3 bottom-20">
+                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
+                        Longitude: {longitude}
+                      </p>
+                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
+                        Latitude: {latitude}
+                      </p>
+                    </div>
+                  )}
+                  {loadingImage && (
+                    <div className="flex absolute right-0 bottom-0 left-0 top-0 bg-white bg-opacity-95 z-40 gap-3 text-center justify-center">
+                      <div className="flex flex-col m-auto gap-3">
+                        <Spinner />
+                        <p>Loading Your Image</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {!uploadedImage && (
               <Label
                 htmlFor="dropzone-file-34343"
-                className="flex justify-center bg-gray-100 w-full h-full items-center overflow-hiddenw-full cursor-pointer flex-col"
+                className="flex justify-center bg-gray-100 w-full h-full items-center overflow-hidden cursor-pointer flex-col"
               >
                 <div className="flex flex-col items-center justify-center pb-6 pt-5">
                   <svg
                     className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 20 16"
@@ -223,9 +276,14 @@ const ImageSlider = ({
                       d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                     />
                   </svg>
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
                     <span className="font-semibold">
                       Drag and drop or upload here
+                    </span>
+                  </p>
+                  <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="">
+                      Recomend images larger than 800 x 800
                     </span>
                   </p>
                 </div>
@@ -233,43 +291,9 @@ const ImageSlider = ({
                   id="dropzone-file-34343"
                   className="hidden"
                   type="file"
-                  onChange={(event) => handleImageUpload(event)} // Handle the file input change
+                  onChange={handleImageUpload}
                 />
               </Label>
-            )}
-
-            {uploadedImage && (
-              <div className="relative w-full h-full">
-                {/* Ensure parent div covers the image size */}
-                <img
-                  src={uploadedImage}
-                  className="w-full h-full object-cover object-center"
-                />
-
-                {addGeoTag && (
-                  <div className="absolute right-3 bottom-20">
-                    {/* Flexbox for centering */}
-                    <div>
-                      {/* Additional div for text grouping if needed */}
-                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
-                        Longitude: {longitude}
-                      </p>
-                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
-                        Latitude: {latitude}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {loadingImage && (
-                  <div className="flex absolute right-0 bottom-0 left-0 top-0 bg-white bg-opacity-95 z-40 gap-3 text-center justify-center">
-                    <div className="flex flex-col m-auto gap-3">
-                      <Spinner />
-                      <p>Loading Your Image</p>
-                    </div>
-                  </div>
-                )}
-              </div>
             )}
 
             <div className="bg-white flex justify-between p-4 absolute bottom-0 left-0 right-0">
@@ -284,12 +308,9 @@ const ImageSlider = ({
                   Add Geotag
                 </Label>
               </div>
-
               <Button
                 className="bg-dark-blue-700 hover:bg-dark-blue-800 w-36"
-                onClick={() => {
-                  handleImageSubmit();
-                }}
+                onClick={() => handleImageSubmit(setImages, images)}
               >
                 Save
               </Button>
@@ -303,7 +324,6 @@ const ImageSlider = ({
           {images.data && images.data.length > 0 ? (
             images.data.map((image, index) => {
               if (limit && index >= 6) return null;
-
               if (limit && index === 5)
                 return (
                   <div className="flex-shrink-0 w-full" key={index}>
@@ -314,15 +334,14 @@ const ImageSlider = ({
                     </div>
                   </div>
                 );
-
               return (
                 <div
                   className="flex-shrink-0 w-full"
                   key={index}
-                  onClick={(e) => setActiveImage(image)}
+                  onClick={() => setActiveImage(image)}
                 >
                   <img
-                    src={`${ensureDomain(image.attributes.url)}`}
+                    src={ensureDomain(image.attributes.url)}
                     alt="travel image"
                     className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
                   />

@@ -5,22 +5,59 @@ import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import qs from "qs";
 import { getAllTeams } from "../../utils/api/teams";
+import { getAllStructure } from "../../utils/api/structures";
 import { off } from "process";
 import Link from "next/link";
+import DirectionsComponent from "../../components/DirectionsComponent";
+import { useRouter } from "next/navigation";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../components/MapBox"), {
   ssr: false,
 });
 
+const iconMap = {
+  red: "/location-red.png",
+  yellow: "/location-yellow.png",
+  drkgreen: "/location-dark.png",
+  green: "/location-green.png",
+};
+
+const loadIcon = (color) => iconMap[color] || "/location-red.png";
+
+const getColorBasedOnStatus = (status) => {
+  switch (status.toLowerCase()) {
+    case "uploaded":
+      return "drkgreen";
+    case "inspected":
+      return "green";
+    case "not inspected":
+      return "yellow";
+    default:
+      return "red";
+  }
+};
+
+const getInspectionColor = (status) => {
+  switch (status.toLowerCase()) {
+    case "uploaded":
+      return "text-white bg-green-800";
+    case "inspected":
+      return "text-green-800 bg-green-100";
+    case "not inspected":
+      return "text-yellow-800 bg-yellow-100";
+    default:
+      return "text-red-800 bg-red-100";
+  }
+};
+
 export default function Page({ params }) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [teams, setTeams] = useState([]);
+  const [structures, setStructures] = useState([]);
 
   const today = new Date().toISOString().split("T")[0];
-
-  console.log(today);
-  console.log(typeof today);
 
   const teamsQuery = qs.stringify(
     {
@@ -51,7 +88,17 @@ export default function Page({ params }) {
       setTeams(teams.data.data);
     };
 
+    const fetchStructures = async () => {
+      const structures = await getAllStructure({
+        jwt: session.accessToken,
+        query: "populate=inspection",
+      });
+      console.log(structures.data.data);
+      setStructures(structures.data.data);
+    };
+
     fetchTeams();
+    fetchStructures();
   }, [session]);
 
   const ProgressCard = ({ team }) => {
@@ -69,12 +116,17 @@ export default function Page({ params }) {
     const chartOptions = {
       chart: {
         type: "radialBar",
-        offsetY: -9,
+        offsetY: -20,
       },
       plotOptions: {
         radialBar: {
+          dataLabels: {
+            name: {
+              color: "#172554",
+            },
+          },
           hollow: {
-            size: "70%",
+            size: "65%",
           },
         },
       },
@@ -82,34 +134,122 @@ export default function Page({ params }) {
     };
 
     return (
-      <Link href={`/schedules/${team.attributes.name}`}>
-        <div className="bg-white shadow-sm rounded-lg p-6 aspect-square overflow-hidden">
-          {/* <h2 className="text-xl font-bold mb-4">{team.attributes.name}</h2> */}
-          <div className="flex justify-center items-center">
-            <ApexChart
-              type="radialBar"
-              options={chartOptions}
-              series={[progress]}
-              height={270}
-              width={270}
-            />
-          </div>
+      <div
+        className="bg-white hover:bg-gray-50 rounded-lg p-4 aspect-square overflow-hidden border cursor-pointer"
+        onClick={() => router.push(`/schedules/${team.attributes.name}`)}
+      >
+        {/* <h2 className="text-xl font-bold mb-4">{team.attributes.name}</h2> */}
+        <div className="flex justify-center items-center">
+          <ApexChart
+            type="radialBar"
+            options={chartOptions}
+            series={[progress]}
+            height={230}
+            width={230}
+          />
         </div>
-      </Link>
+      </div>
     );
   };
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      <section className="grid grid-cols-5 p-0 rounded-md gap-4">
-        <h5 class="text-xl font-bold dark:text-white mb-3">
-          Today's Schedules
-        </h5>
-      </section>
-      <section className="grid grid-cols-5 p-0 rounded-md gap-4">
-        {teams.map((team, index) => (
-          <ProgressCard key={index} team={team} />
-        ))}
+      <section className="grid grid-cols-8 p-0 rounded-md gap-4">
+        <div className=" col-span-3 bg-white shadow-sm gap-4 p-4 md:p-6 rounded-lg">
+          <h5 className="text-xl font-bold dark:text-white mb-3">
+            Todays Structures
+          </h5>
+          <div className="flex flex-col justify-between gap-6 h-[600px]">
+            <div className="im-snapping overflow-scroll w-full h-full">
+              {structures.map((structure, index) => (
+                <div
+                  key={`${structure.id}-${index}`}
+                  className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 py-4 mb-0 w-full"
+                  onClick={() => {
+                    router.push(
+                      `/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`
+                    );
+                  }}
+                >
+                  <div className="flex">
+                    <img
+                      src={loadIcon(
+                        getColorBasedOnStatus(structure.attributes.status)
+                      )}
+                      style={{ height: 27 }}
+                    />
+                    <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                      <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                        {structure.attributes.mapSection}
+                        <span className="flex items-center font-light ml-1">
+                          {` / ${structure.attributes.type}`}
+                        </span>
+                      </h5>
+                      <DirectionsComponent />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                      <span
+                        className={`${getInspectionColor(
+                          structure.attributes.status
+                        )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+                      >
+                        {structure.attributes.status}
+                      </span>
+                    </p>
+
+                    {/* <EditIcon /> */}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col col-span-5 gap-3">
+          <div className="shadow-sm bg-white gap-4 p-4 md:p-6 rounded-lg w-full h-fit flex justify-around">
+            <div>
+              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
+                23
+              </p>
+              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
+                Pull Boxs
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
+                65
+              </p>
+              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
+                Standard Vault
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
+                26
+              </p>
+              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
+                Wood Poles
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
+                26
+              </p>
+              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
+                Wood Poles
+              </p>
+            </div>
+          </div>
+          <div className="shadow-sm bg-white p-4 md:p-6 rounded-lg w-full h-max">
+            <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
+            <div className="grid grid-cols-4  gap-4 ">
+              {teams.map((team, index) => (
+                <ProgressCard key={index} team={team} />
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

@@ -18,10 +18,12 @@ import ProtectedContent from "../../../components/ProtectedContent";
 import { getLocationDetails } from "../../../utils/api/mapbox";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import AvatarImage from "../../../components/AvatarImage";
 import {
   CheckMark,
   FavoriteIcon,
   PlusIcon,
+  StarSm,
 } from "../../../public/icons/intangible-icons";
 import {
   downloadFilesAsZip,
@@ -29,6 +31,7 @@ import {
   ensureDomain,
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
+import { AddFavorite } from "../../../public/icons/intangible-icons";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -679,10 +682,11 @@ export default function Page(props) {
               inspection={inspection}
               setInspection={setInspection}
               btnText={"Edit Inspection"}
+              showIcon={true}
             />
           </ProtectedContent>
-          <Button className="bg-dark-blue-700 text-white shrink-0 self-start">
-            Add to Favorites <FavoriteIcon />
+          <Button className="bg-dark-blue-700 text-white shrink-0 self-start flex gap-3">
+            <p className="mr-4">Add to Favorites</p> <StarSm />
           </Button>
         </div>
       </div>
@@ -985,16 +989,15 @@ export default function Page(props) {
                 key={`${inspector.id}-${index}`}
                 className="alternate-bg flex gap-4 align-middle border-t py-1"
               >
-                {inspector.attributes.picture.data && (
-                  <img
-                    className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover"
-                    src={`${ensureDomain(
-                      inspector.attributes.picture.data.attributes.formats
-                        .thumbnail.url
-                    )}`}
-                    alt="Inspector Picture"
-                  />
-                )}
+                <AvatarImage
+                  customImage={
+                    inspector.attributes?.picture?.data?.attributes.formats
+                      .thumbnail.url
+                  }
+                  customName={
+                    inspector.firstName || inspector.attributes?.firstName
+                  }
+                />
                 <div className="flex flex-col gap-1 align-middle justify-center">
                   <p className="leading-none text-sm font-medium">
                     {`${inspector.attributes.firstName} ${inspector.attributes.lastName}`}
