@@ -10,6 +10,7 @@ import { off } from "process";
 import Link from "next/link";
 import DirectionsComponent from "../../components/DirectionsComponent";
 import { useRouter } from "next/navigation";
+import StructureTypesNumbers from "../../components/StructureTypesNumbers";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../components/MapBox"), {
@@ -207,40 +208,7 @@ export default function Page({ params }) {
           </div>
         </div>
         <div className="flex flex-col col-span-5 gap-3">
-          <div className="shadow-sm bg-white gap-4 p-4 md:p-6 rounded-lg w-full h-fit flex justify-around">
-            <div>
-              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
-                23
-              </p>
-              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
-                Pull Boxs
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
-                65
-              </p>
-              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
-                Standard Vault
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
-                26
-              </p>
-              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
-                Wood Poles
-              </p>
-            </div>
-            <div>
-              <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
-                26
-              </p>
-              <p className="font-light text-gray-500 dark:text-gray-400 text-center">
-                Wood Poles
-              </p>
-            </div>
-          </div>
+          <StructureTypesNumbers structures={structures} />
           <div className="shadow-sm bg-white p-4 md:p-6 rounded-lg w-full h-max">
             <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
             <div className="grid grid-cols-4  gap-4 ">
