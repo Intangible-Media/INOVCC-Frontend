@@ -18,7 +18,7 @@ export default function StructureTypesNumbers({ structures }) {
   return (
     <div className="shadow-sm bg-white gap-4 p-4 md:p-6 rounded-lg w-full h-fit flex justify-around">
       {sortedStructures.map((structuresGroup, index) => (
-        <div>
+        <div key={index}>
           <p className="mb-2 text-3xl font-extrabold md:text-4xl text-center">
             {structuresGroup.count}
           </p>

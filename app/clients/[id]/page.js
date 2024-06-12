@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Avatar, Button } from "flowbite-react";
 import { getClient } from "../../../utils/api/clients";
+import { getAllStructure } from "../../../utils/api/structures";
 import { useSession } from "next-auth/react";
 import { ensureDomain } from "../../../utils/strings";
 import FooterDateExport from "../../../components/Cards/FooterDateExport";
@@ -13,6 +14,7 @@ import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ClientDrawer from "../../../components/Drawers/ClientDrawer";
 import { useClient } from "../../../context/ClientContext";
+import StructureTypesNumbers from "../../../components/StructureTypesNumbers";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -20,6 +22,7 @@ export default function Page({ params }) {
   const { data: session } = useSession();
   const { client: clientData, setClient: setClientData } = useClient();
   const [client, setClient] = useState(null);
+  const [structures, setStructures] = useState([]);
 
   console.log(clientData);
 
@@ -94,8 +97,9 @@ export default function Page({ params }) {
   ];
 
   useEffect(() => {
+    if (!session) return;
+
     const fetchClient = async () => {
-      if (!session) return;
       try {
         const query = qs.stringify({
           populate: {
@@ -141,7 +145,47 @@ export default function Page({ params }) {
       }
     };
 
+    const fetchStructures = async () => {
+      try {
+        const query = qs.stringify(
+          {
+            populate: {
+              inspection: {
+                populate: {
+                  client: {
+                    filters: {
+                      id: {
+                        // Adjust 'date' to the appropriate attribute you want to filter on
+                        $eq: params.id,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          {
+            encodeValuesOnly: true, // This option ensures that only the values are encoded
+          }
+        );
+
+        const apiParams = {
+          jwt: session?.accessToken,
+          query: query,
+        };
+
+        const response = await getAllStructure(apiParams);
+
+        //console.log(response.data.data);
+
+        setStructures(response.data.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     fetchClient();
+    fetchStructures();
   }, [session]);
 
   const ClientLogo = ({ client, children, size = "lg" }) => {
@@ -349,6 +393,10 @@ export default function Page({ params }) {
             />
           )}
         </div>
+      </section>
+
+      <section className="grid grid-cols-1 w-full mt-4 gap-4">
+        <StructureTypesNumbers structures={structures} />
       </section>
 
       <section className="grid grid-cols-1 w-full mt-4 gap-4">

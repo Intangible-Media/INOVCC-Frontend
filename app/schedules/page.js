@@ -11,6 +11,7 @@ import Link from "next/link";
 import DirectionsComponent from "../../components/DirectionsComponent";
 import { useRouter } from "next/navigation";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
+import { Button } from "flowbite-react";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../components/MapBox"), {
@@ -137,7 +138,7 @@ export default function Page({ params }) {
     return (
       <div
         className="bg-white hover:bg-gray-50 rounded-lg p-4 aspect-square overflow-hidden border cursor-pointer"
-        onClick={() => router.push(`/schedules/${team.attributes.name}`)}
+        onClick={() => router.push(`/schedules/${team.id}`)}
       >
         {/* <h2 className="text-xl font-bold mb-4">{team.attributes.name}</h2> */}
         <div className="flex justify-center items-center">
@@ -155,12 +156,18 @@ export default function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
+      <section className="grid grid-cols-1">
+        <Button className="bg-dark-blue-700 text-white w-full shrink-0 self-start">
+          <p className="mr-3">{"Schedule Structure"}</p>
+        </Button>
+      </section>
+
       <section className="grid grid-cols-8 p-0 rounded-md gap-4">
         <div className=" col-span-3 bg-white shadow-sm gap-4 p-4 md:p-6 rounded-lg">
           <h5 className="text-xl font-bold dark:text-white mb-3">
             Todays Structures
           </h5>
-          <div className="flex flex-col justify-between gap-6 h-[600px]">
+          <div className="flex flex-col justify-between gap-6 h-[700px]">
             <div className="im-snapping overflow-scroll w-full h-full">
               {structures.map((structure, index) => (
                 <div
@@ -209,7 +216,7 @@ export default function Page({ params }) {
         </div>
         <div className="flex flex-col col-span-5 gap-3">
           <StructureTypesNumbers structures={structures} />
-          <div className="shadow-sm bg-white p-4 md:p-6 rounded-lg w-full h-max">
+          <div className="shadow-sm bg-white p-4 md:p-6 rounded-lg w-full h-full">
             <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
             <div className="grid grid-cols-4  gap-4 ">
               {teams.map((team, index) => (
