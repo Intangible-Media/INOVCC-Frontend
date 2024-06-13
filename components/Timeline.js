@@ -58,9 +58,6 @@ const HorizontalTimeline = ({ structures }) => {
             left: `${calculatePosition(structure.attributes.inspectionDate)}%`,
           }}
         >
-          <Popover content={content} trigger="hover">
-            <Button>Popover hover</Button>
-          </Popover>
           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
           {/* <div className="mt-2 text-center">
             <h3 className="text-sm font-semibold text-dark-blue-700">
