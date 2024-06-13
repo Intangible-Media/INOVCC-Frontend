@@ -32,7 +32,7 @@ const HorizontalTimeline = ({ structures }) => {
         </h3>
       </div>
       <div className="px-3 py-2">
-        <p>And here's some amazing content. It's very engaging. Right?</p>
+        <p>And heres some amazing content. Its very engaging. Right?</p>
       </div>
     </div>
   );
