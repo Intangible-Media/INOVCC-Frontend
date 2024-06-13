@@ -26,8 +26,6 @@ const MapboxMap = ({
   useEffect(() => {
     if (map.current) return; // Initialize map only once
 
-    console.log("Initializing map...");
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/standard-beta",
@@ -37,11 +35,9 @@ const MapboxMap = ({
     });
 
     map.current.on("style.load", () => {
-      console.log("Map style loaded");
       map.current.setFog({});
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
       const padding = isPhone ? { bottom: 400 } : { right: 400 };
-      console.log(isPhone);
       // map.current.easeTo({ padding: padding });
 
       // Add traffic layer and zoom event
@@ -50,7 +46,6 @@ const MapboxMap = ({
     });
 
     // return () => {
-    //   console.log("Removing map...");
     //   map.current.remove();
     // };
   }, [lng, lat, style, zoom]);
@@ -60,7 +55,6 @@ const MapboxMap = ({
     if (coordinates.length === 0) return;
 
     const executeMapOperations = () => {
-      console.log("Adding markers...");
       coordinates.forEach(([lng, lat]) => {
         new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map.current);
       });

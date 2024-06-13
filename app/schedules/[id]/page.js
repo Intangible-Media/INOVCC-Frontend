@@ -21,7 +21,6 @@ const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
 });
 
 export default function Page({ params }) {
-  console.log(params.id);
   const { data: session } = useSession();
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
@@ -33,7 +32,11 @@ export default function Page({ params }) {
   const [activeCoordinate, setActiveCoordinate] = useState([78.0421, 27.1751]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [team, setTeam] = useState(null);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(
+    new Date(convertToLongDateFormat(new Date()))
+  );
+
+  console.log(structures);
 
   const coordinates = structures.map((structure) => [
     structure.attributes.longitude,
@@ -339,10 +342,10 @@ export default function Page({ params }) {
             </Timeline.Content>
           </Timeline.Item>
         </Timeline> */}
-        <h3 className="text-xl font-bold dark:text-white mb-8">
+        <h3 className="text-xl font-bold dark:text-white mb-6">
           Inspections Timeline
         </h3>
-        <Timeline events={events} />
+        <Timeline structures={structures} />
       </section>
     </div>
   );
