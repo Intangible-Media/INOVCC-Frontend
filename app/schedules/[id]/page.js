@@ -14,6 +14,10 @@ import { useRouter } from "next/navigation";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import Timeline from "../../../components/Timeline";
 import { DownloadOutlineIcon } from "../../../public/icons/intangible-icons";
+import {
+  convertInspectionsToZipArgs,
+  downloadFilesAsZipWithSubfolders,
+} from "../../../utils/strings";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
@@ -59,8 +63,13 @@ export default function Page({ params }) {
   ).length;
 
   const cannotInspectStructuresCount = structures.filter(
-    (structure) => structure.attributes.status === "Cannot Inspect"
+    (structure) => structure.attributes.status === "Uninspectable"
   ).length;
+
+  const inspectedStructures = structures.filter((structure) => {
+    const statuses = ["Inspected", "Uploaded", "Uninspectable"];
+    return statuses.includes(structure.attributes.status);
+  });
 
   const loadIcon = (color) => iconMap[color] || "/location-red.png";
 
@@ -109,6 +118,12 @@ export default function Page({ params }) {
 
   const formattedDate = convertToLongDateFormat(date);
 
+  const downloadForUpload = () => {
+    console.log("you are inside the function");
+    const zipArgs = convertInspectionsToZipArgs(structures);
+    downloadFilesAsZipWithSubfolders(zipArgs, "inspections.zip");
+  };
+
   useEffect(() => {
     if (!session) return;
 
@@ -130,6 +145,9 @@ export default function Page({ params }) {
           },
           inspection: {
             fields: ["name"],
+          },
+          images: {
+            populate: "*",
           },
         },
       },
@@ -181,32 +199,15 @@ export default function Page({ params }) {
     </div>
   );
 
-  const events = [
-    { title: "Event 1", time: "08:30" },
-    { title: "Event 2", time: "10:15" },
-    { title: "Event 3", time: "13:45" },
-    { title: "Event 4", time: "16:00" },
-    { title: "Event 5", time: "18:30" },
-  ];
-
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
       <h1 className="leading-tight text-2xl font-medium">
         {team?.attributes.name || "Team Name"}
       </h1>
-      {/* <section className="grid grid-cols-1 p-6 bg-white rounded-md gap-0 shadow-sm">
-        <div className="flex justify-between">
-          <div className="flex"></div>
-          <div className="flex gap-3">
-            <Button className="bg-dark-blue-700 text-white shrink-0 self-start w-auto">
-              <p className="">{"Download"}</p>
-            </Button>
-          </div>
-        </div>
-      </section> */}
-      <section className="grid grid-cols-2 p-0 bg-white rounded-md gap-0 h-[600px] shadow-sm">
-        <div className="flex flex-col justify-between p-6 gap-3 h-[600px]">
-          <div className="flex flex-col bg-white p-0 rounded-lg gap-3">
+
+      <section className="grid grid-cols-1 md:grid-cols-2 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-sm ">
+        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 max-h-[450px] md:h-[550px] order-2 md:order-1">
+          <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden md:flex">
             <div className="grid grid-cols-3 gap-3 w-full">
               <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
                 <div className="bg-yellow-100 p-2.5 rounded-full">
@@ -225,7 +226,7 @@ export default function Page({ params }) {
                   </p>
                 </div>
                 <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
-                  Cannot Open
+                  Uninspectable
                 </p>
               </div>
               <div className="flex bg-green-50 gap-4 rounded-lg p-4">
@@ -294,13 +295,16 @@ export default function Page({ params }) {
               className="w-full"
               onSelectedDateChanged={(date) => setDate(date)}
             />
-            <Button className="bg-dark-blue-700 text-white">
+            <Button
+              className="bg-dark-blue-700 text-white"
+              onClick={downloadForUpload}
+            >
               <DownloadOutlineIcon />
             </Button>
           </div>
         </div>
 
-        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-full">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full order-1 md:order-2">
           <MapboxMap
             lng={
               selectedStructure?.attributes.longitude ||
@@ -319,33 +323,12 @@ export default function Page({ params }) {
         </div>
       </section>
       <section className="p-6 bg-white rounded-md shadow-sm">
-        {/* <Timeline horizontal Time>
-          <Timeline.Item>
-            <Timeline.Point />
-            <Timeline.Content>
-              <Timeline.Time>February 2022</Timeline.Time>
-              <Timeline.Title>FD523456</Timeline.Title>
-            </Timeline.Content>
-          </Timeline.Item>
-          <Timeline.Item>
-            <Timeline.Point />
-            <Timeline.Content>
-              <Timeline.Time>March 2022</Timeline.Time>
-              <Timeline.Title>FDS43652</Timeline.Title>
-            </Timeline.Content>
-          </Timeline.Item>
-          <Timeline.Item>
-            <Timeline.Point />
-            <Timeline.Content>
-              <Timeline.Time>April 2022</Timeline.Time>
-              <Timeline.Title>FDS43243</Timeline.Title>
-            </Timeline.Content>
-          </Timeline.Item>
-        </Timeline> */}
         <h3 className="text-xl font-bold dark:text-white mb-6">
           Inspections Timeline
         </h3>
-        <Timeline structures={structures} />
+        <div className=" overflow-scroll">
+          <Timeline structures={inspectedStructures} />
+        </div>
       </section>
     </div>
   );

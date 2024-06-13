@@ -121,6 +121,72 @@ export const downloadFilesAsZip = async (files, zipFilename) => {
 };
 
 /**
+ * Converts an array of inspection objects into an array of objects suitable for downloadFilesAsZipWithSubfolders function.
+ *
+ * @param {Array.<{attributes: {mapSection: string, images: {data: Array.<{attributes: {url: string, name: string}}>}}}>} inspections - The array of inspection objects.
+ * @returns {Array.<{name: string, files: Array.<{url: string, name: string}>}>} The formatted array of objects.
+ */
+export const convertInspectionsToZipArgs = (inspections) => {
+  return inspections.map((inspection) => {
+    const { mapSection, images } = inspection.attributes;
+    const files =
+      images?.data?.map((image) => ({
+        url: ensureDomain(image.attributes.url),
+        name: image.attributes.name,
+      })) || [];
+
+    return {
+      name: mapSection,
+      files,
+    };
+  });
+};
+
+/**
+ * Downloads multiple sets of files as a single ZIP file. Each set of files is placed in its own subfolder within the ZIP.
+ *
+ * @param {Array.<{name: string, files: Array.<{url: string, name: string}>}>} items - An array of objects where each object contains a 'name' for the subfolder and an array of 'files' to be included in that subfolder.
+ * @param {string} [zipFilename="files.zip"] - The name to use for the ZIP file. Defaults to 'files.zip' if not specified.
+ */
+export const downloadFilesAsZipWithSubfolders = async (
+  items,
+  zipFilename = "files.zip"
+) => {
+  const zip = new JSZip();
+
+  for (const { name, files } of items) {
+    const folder = zip.folder(name);
+
+    for (const { url, name: fileName } of files) {
+      try {
+        const response = await fetch(url);
+        const data = await response.blob();
+        folder.file(fileName, data, { binary: true });
+      } catch (error) {
+        console.error(
+          "Error downloading or adding file to zip",
+          fileName,
+          error
+        );
+      }
+    }
+  }
+
+  zip.generateAsync({ type: "blob" }).then((content) => {
+    const objectUrl = URL.createObjectURL(content);
+
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = zipFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(objectUrl);
+  });
+};
+
+/**
  * Checks if a given file name represents an image based on its extension.
  *
  * @param {string} fileName - The name of the file to check.
