@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Popover } from "flowbite-react";
-import { useState } from "react";
 import { ensureDomain } from "../utils/strings";
 
 const formatTime = (time) => {
@@ -71,7 +70,7 @@ const Tooltip = ({ children, structure }) => {
   return (
     <div className="relative flex flex-col items-center group">
       {children}
-      <div className="absolute bottom-0 flex flex-col items-center hidden mb-3 group-hover:flex rounded-md">
+      <div className="absolute bottom-0 flex flex-col items-center hidden mb-3 group-hover:flex rounded-md z-50">
         <span className="relative z-10 p-4 text-xs leading-none text-white whitespace-no-wrap bg-white shadow-lg rounded-md">
           <div className="w-64 text-sm text-gray-500 dark:text-gray-400">
             <div className="border-b border-gray-200 pb-2 dark:border-gray-600 dark:bg-gray-700">
@@ -90,15 +89,35 @@ const Tooltip = ({ children, structure }) => {
   );
 };
 
+const getHours = (isSmallScreen) => {
+  if (isSmallScreen) {
+    return [0, 3, 6, 9, 12, 15, 18, 21];
+  }
+  return Array.from({ length: 24 }, (_, i) => i);
+};
+
 const HorizontalTimeline = ({ structures }) => {
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 500);
+    };
+
+    handleResize(); // Check initial screen size
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const hours = getHours(isSmallScreen);
 
   return (
-    <div className="relative flex items-center w-full h-16 min-w-[1100px]">
+    <div className="relative flex items-center w-full h-16 overflow-x-auto overflow-y-visible">
       <div className="absolute top-[20px] w-full border-t border-gray-300"></div>
-      {hours.map((hour) => (
+      {hours.map((hour, index) => (
         <div
-          key={hour}
+          key={index}
           className="absolute flex flex-col items-center"
           style={{ left: `${(hour / 24) * 100}%` }}
         >
@@ -113,12 +132,15 @@ const HorizontalTimeline = ({ structures }) => {
           key={index}
           className="absolute flex flex-col items-center top-[15px]"
           style={{
-            left: `${calculatePosition(structure.attributes.inspectionDate)}%`,
+            left: `${Math.min(
+              calculatePosition(structure.attributes.inspectionDate),
+              100
+            )}%`,
           }}
         >
           <Tooltip key={index} structure={structure}>
             <div
-              className={`w-3 h-3 ${
+              className={`w-2 h-2 md:w-3 md:h-3 ${
                 structure.attributes.status === ("Inspected" || "Uploaded")
                   ? "bg-green-500"
                   : "bg-red-500"

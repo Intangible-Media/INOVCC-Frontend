@@ -326,9 +326,7 @@ export default function Page({ params }) {
         <h3 className="text-xl font-bold dark:text-white mb-6">
           Inspections Timeline
         </h3>
-        <div className=" overflow-scroll">
-          <Timeline structures={inspectedStructures} />
-        </div>
+        <Timeline structures={inspectedStructures} />
       </section>
     </div>
   );
