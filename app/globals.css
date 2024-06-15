@@ -487,6 +487,14 @@ input[type="date"] {
   background-color: #F9FAFB;
 }
 
+.shorten-text {
+  text-overflow: ellipsis;
+
+  /* Required for text-overflow to do anything */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 @keyframes slideOutAndHide {
   0% {
     transform: translateX(0);

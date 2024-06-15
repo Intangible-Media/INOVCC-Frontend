@@ -11,6 +11,8 @@ import { AlertProvider } from "../context/AlertContext";
 import { HiInformationCircle } from "react-icons/hi";
 import NavbarDropdown from "../components/NavbarDropdown";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import SearchBar from "../components/SearchBar";
 import "./globals.css";
 import path from "path";
 
@@ -25,6 +27,7 @@ export const useBackgroundClass = (searchString) => {
   const [backgroundClass, setBackgroundClass] = useState("");
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const url = `${pathname}?${searchParams}`;
@@ -113,12 +116,7 @@ export default function RootLayout({ children }) {
                 <Navbar.Toggle />
               </div>
               <Navbar.Collapse>
-                <TextInput
-                  type="text"
-                  placeholder="Search"
-                  id="search-bar"
-                  className="bg-gray-700 rounded-md text-center md:w-[500px]"
-                />
+                <SearchBar />
                 <ul className="pt-4 mt-4 space-y-2 font-medium border-gray-300 dark:border-gray-700 w-full md:hidden">
                   <li>
                     <Link

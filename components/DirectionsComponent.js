@@ -1,4 +1,4 @@
-const DirectionsComponent = ({ destinationLongitude, destinationLatitude }) => {
+const DirectionsComponent = ({ destinationLatitude, destinationLongitude }) => {
   const googleMapsLink = `https://www.google.com/maps/?q=${destinationLatitude},${destinationLongitude}`;
 
   return (
