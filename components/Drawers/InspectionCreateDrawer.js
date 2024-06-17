@@ -4,6 +4,7 @@ import { createStructure } from "../../utils/api/structures";
 import React, { useState, useRef, useEffect } from "react";
 import DirectionsComponent from "../DirectionsComponent";
 import { getAllClients } from "../../utils/api/clients";
+import { updateUser } from "../../utils/api/users";
 import { useParams, useRouter } from "next/navigation";
 import { MdLocationPin } from "react-icons/md";
 import { useSession } from "next-auth/react";
@@ -123,6 +124,7 @@ const InspectionDrawer = ({ btnText }) => {
       data: {
         name: newInspection.name,
         client: newInspection.client.id,
+        favorited_by: [session.user.id],
       },
     };
 
@@ -136,6 +138,11 @@ const InspectionDrawer = ({ btnText }) => {
     try {
       // Creation logic here
       const response = await createInspection(apiParams);
+
+      console.log(response.data);
+
+      //const addedToFavorites = await addToFavorite(response.data.data.id);
+
       router.push(`/inspections/${response.data.data.id}`);
 
       setIsLoadingInspection(false);
@@ -147,6 +154,30 @@ const InspectionDrawer = ({ btnText }) => {
       setIsLoadingInspection(false);
     }
   };
+
+  // const addToFavorite = async (inspectionId, jwt) => {
+  //   if (!session) return;
+
+  //   const apiParams = {
+  //     jwt: jwt,
+  //     id: inspectionId,
+  //     payload: {
+  //       data: {
+  //         favorited_by: [inspectionId],
+  //       },
+  //     },
+  //     query: "populate=favorite_inspections",
+  //   };
+
+  //   console.log(apiParams);
+
+  //   try {
+  //     const response = await updateInspection(apiParams);
+  //     console.log("Added to favorites", response.data);
+  //   } catch (error) {
+  //     console.error("Error adding to favorites", error);
+  //   }
+  // };
 
   /**
    * Asynchronously creates a new structure entry in the database. After successful creation,
@@ -624,13 +655,13 @@ const InspectionDrawer = ({ btnText }) => {
                 </div>
               )} */}
 
-              <ImageCardGrid
+              {/* <ImageCardGrid
                 files={newInspection.documents || []}
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}
                 editMode={true}
-              />
+              /> */}
 
               <div className="flex flex-col gap-4">
                 <Label className="text-xs" htmlFor="inspectionName">

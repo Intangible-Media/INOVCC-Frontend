@@ -113,7 +113,7 @@ const HorizontalTimeline = ({ structures }) => {
   const hours = getHours(isSmallScreen);
 
   return (
-    <div className="relative flex items-center w-full h-16 overflow-x-auto overflow-y-visible">
+    <div className="relative flex items-center w-full h-16">
       <div className="absolute top-[20px] w-full border-t border-gray-300"></div>
       {hours.map((hour, index) => (
         <div

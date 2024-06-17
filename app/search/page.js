@@ -236,7 +236,7 @@ export default function Page({ searchParams }) {
   return (
     <div className="my-6">
       <h1 className="leading-tight text-2xl font-medium">
-        {resultsNumber} Results for "{searchParams.search}"
+        {resultsNumber} Results for &ldquo;{searchParams.search}&ldquo;
       </h1>
 
       <div className="flex flex-col gap-6 my-4">
@@ -390,7 +390,7 @@ export default function Page({ searchParams }) {
                     }}
                     className="w-full h-full bg-cover bg-center"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70 hover:opacity-100 transition duration-75"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex gap-2 justify-between">
                       <p className="text-white shorten-text">{image.name}</p>

@@ -108,6 +108,9 @@ export default function Page(props) {
   const query = qs.stringify(
     {
       populate: {
+        favorited_by: {
+          populate: "*",
+        },
         structures: {
           populate: {
             inspectors: {
