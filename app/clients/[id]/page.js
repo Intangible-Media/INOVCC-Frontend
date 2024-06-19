@@ -15,6 +15,7 @@ import ActivityLog from "../../../components/ActivityLog";
 import ClientDrawer from "../../../components/Drawers/ClientDrawer";
 import { useClient } from "../../../context/ClientContext";
 import StructureTypesNumbers from "../../../components/StructureTypesNumbers";
+import RevenueChart from "../../../components/Charts/RevenueChart";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -137,7 +138,7 @@ export default function Page({ params }) {
 
         const response = await getClient(apiParams);
 
-        //console.log(response.data.data);
+        console.log(response.data.data);
 
         setClient(response.data.data);
       } catch (error) {
@@ -172,9 +173,6 @@ export default function Page({ params }) {
               structures: {
                 populate: {
                   team: {
-                    populate: "*",
-                  },
-                  invoices: {
                     populate: "*",
                   },
                   inspectors: {
@@ -334,25 +332,9 @@ export default function Page({ params }) {
           <FooterDateExport className="mt-auto" />
         </div>
         <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-0 p-4 md:p-8 rounded-lg">
-          <div className="flex justify-between h-11">
-            <h3 className="text-3xl font-bold dark:text-white">$495,999</h3>
-            <div>
-              <span className="text-base font-semibold text-green-500">
-                12%
-              </span>
-            </div>
-          </div>
-          <p className="text-gray-500">Products Inspected</p>
           <div className="w-full mt-auto">
-            <ApexChart
-              type="area"
-              options={optionAlt}
-              series={seriesAlt}
-              height={250}
-              width={"100%"}
-            />
+            <RevenueChart invoices={client?.attributes.invoices.data || []} />
           </div>
-          <FooterDateExport className="mt-auto" />
         </div>
 
         <div className="flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-4 md:p-8 rounded-lg">
