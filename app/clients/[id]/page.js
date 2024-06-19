@@ -149,23 +149,52 @@ export default function Page({ params }) {
       try {
         const query = qs.stringify(
           {
-            populate: {
-              inspection: {
-                populate: {
-                  client: {
-                    filters: {
+            filters: {
+              $and: [
+                {
+                  inspection: {
+                    client: {
                       id: {
-                        // Adjust 'date' to the appropriate attribute you want to filter on
-                        $eq: params.id,
+                        $eq: params.id, // Ensure the client id matches the given params.id
                       },
                     },
                   },
                 },
+              ],
+            },
+            populate: {
+              inspection: {
+                populate: {
+                  client: true, // Populate client details if needed
+                },
+              },
+              // Add other fields you want to populate if necessary
+              structures: {
+                populate: {
+                  team: {
+                    populate: "*",
+                  },
+                  invoices: {
+                    populate: "*",
+                  },
+                  inspectors: {
+                    populate: "*",
+                  },
+                  images: {
+                    populate: "*",
+                  },
+                  notes: {
+                    populate: "*",
+                  },
+                },
+              },
+              documents: {
+                populate: "*",
               },
             },
           },
           {
-            encodeValuesOnly: true, // This option ensures that only the values are encoded
+            encodeValuesOnly: true, // Ensure only the values are encoded
           }
         );
 
@@ -176,7 +205,7 @@ export default function Page({ params }) {
 
         const response = await getAllStructure(apiParams);
 
-        //console.log(response.data.data);
+        console.log(response.data.data);
 
         setStructures(response.data.data);
       } catch (error) {

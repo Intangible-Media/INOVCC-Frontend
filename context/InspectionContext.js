@@ -33,6 +33,9 @@ export const InspectionProvider = ({ children }) => {
               images: {
                 populate: "*",
               },
+              team: {
+                populate: "*",
+              },
               notes: {
                 populate: "*",
               },

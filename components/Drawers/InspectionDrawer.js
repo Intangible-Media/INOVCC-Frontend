@@ -632,7 +632,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                       ))}
                     </div>
                   </div>
-
+                  {/* 
                   <div className="flex bg-gray-100 h-60 w-full items-center justify-center rounded-lg overflow-hidden">
                     <Label
                       htmlFor="dropzone-file"
@@ -664,7 +664,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                       </div>
                       <FileInput id="dropzone-file" className="hidden" />
                     </Label>
-                  </div>
+                  </div> */}
                 </div>
               )}
 

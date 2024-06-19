@@ -494,56 +494,60 @@ export default function MapPanel({ structure }) {
                       }}
                     />
                   </div>
-                  {!updatedStructure.attributes.inspectionDate && (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-xs" htmlFor="structureStatus">
-                          Inspection Team
-                        </Label>
-                        <select
-                          id="structureStatus"
-                          className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
-                          defaultValue={""}
-                          onChange={(e) => {
-                            setUpdatedStructure({
-                              ...updatedStructure,
-                              attributes: {
-                                ...updatedStructure.attributes,
-                                team: e.target.value,
-                              },
-                            });
-                          }}
-                        >
-                          {teams.map((team, index) => (
-                            <option key={index} value={team.id}>
-                              {team.attributes.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex flex-col w-full">
-                        <label
-                          className="text-xs mb-2"
-                          htmlFor="structureLatitude"
-                        >
-                          Schedule For Inspection
-                        </label>
-                        <Datepicker
-                          title="Flowbite Datepicker"
-                          className="w-full bg-white"
-                          onSelectedDateChanged={(date) =>
-                            setUpdatedStructure({
-                              ...updatedStructure,
-                              attributes: {
-                                ...updatedStructure.attributes,
-                                scheduleForInspection: date,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                    </>
-                  )}
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs" htmlFor="structureStatus">
+                        Inspection Team
+                      </Label>
+                      <select
+                        id="structureStatus"
+                        className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                        defaultValue={
+                          updatedStructure.attributes.team.data.id || ""
+                        }
+                        onChange={(e) => {
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              team: e.target.value,
+                            },
+                          });
+                        }}
+                      >
+                        <option key="no-team" value={null}>
+                          Choose a Team
+                        </option>
+                        {teams.map((team, index) => (
+                          <option key={index} value={team.id}>
+                            {team.attributes.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col w-full">
+                      <label
+                        className="text-xs mb-2"
+                        htmlFor="structureLatitude"
+                      >
+                        Schedule For Inspection
+                      </label>
+                      <Datepicker
+                        title="Flowbite Datepicker"
+                        className="w-full bg-white"
+                        onSelectedDateChanged={(date) =>
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              scheduleForInspection: date,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  </>
+
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
                       currentInspectors={
