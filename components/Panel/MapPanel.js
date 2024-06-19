@@ -14,7 +14,7 @@ import AvatarImage from "../AvatarImage";
 import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
-
+//  fdsfds
 export default function MapPanel({ structure }) {
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
@@ -503,7 +503,7 @@ export default function MapPanel({ structure }) {
                         id="structureStatus"
                         className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
                         defaultValue={
-                          updatedStructure.attributes.team.data.id || ""
+                          updatedStructure.attributes.team.data?.id || "none"
                         }
                         onChange={(e) => {
                           setUpdatedStructure({
@@ -515,7 +515,7 @@ export default function MapPanel({ structure }) {
                           });
                         }}
                       >
-                        <option key="no-team" value={null}>
+                        <option key="no-team" value={"none"}>
                           Choose a Team
                         </option>
                         {teams.map((team, index) => (
