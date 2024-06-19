@@ -56,22 +56,11 @@ export default function FavoriteInspectionCard({ inspection }) {
   return (
     <div className="inline-block rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-200 ease-in-out">
       <div className="w-80 max-w-xs  bg-white p-6">
-        <div className="flex justify-between">
-          <div className="flex flex-col">
-            <h6 className="font-bold text-xl">{inspection.attributes.name}</h6>
+        <div className="flex justify-between gap-2">
+          <h6 className="font-bold text-xl shorten-text">
+            {inspection.attributes.name}
+          </h6>
 
-            <select
-              value={selectedStructureType} // Set the value to the state variable
-              onChange={handleChange} // Update state when the selection changes
-              className="block py-2.5 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-            >
-              <option value="">All</option>
-              <option value="US">United States</option>
-              <option value="CA">Canada</option>
-              <option value="FR">France</option>
-              <option value="DE">Germany</option>
-            </select>
-          </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"

@@ -121,14 +121,15 @@ export const downloadFilesAsZip = async (files, zipFilename) => {
 };
 
 /**
- * Converts an array of inspection objects into an array of objects suitable for downloadFilesAsZipWithSubfolders function.
+ * Converts an array of structure objects into an array of objects suitable for downloadFilesAsZipWithSubfolders function.
  *
  * @param {Array.<{attributes: {mapSection: string, images: {data: Array.<{attributes: {url: string, name: string}}>}}}>} inspections - The array of inspection objects.
  * @returns {Array.<{name: string, files: Array.<{url: string, name: string}>}>} The formatted array of objects.
  */
-export const convertInspectionsToZipArgs = (inspections) => {
-  return inspections.map((inspection) => {
-    const { mapSection, images } = inspection.attributes;
+export const convertInspectionsToZipArgs = (structures) => {
+  console.log("this isthe structures", structures);
+  return structures.map((structure) => {
+    const { mapSection, images } = structure.attributes;
     const files =
       images?.data?.map((image) => ({
         url: ensureDomain(image.attributes.url),
@@ -160,19 +161,26 @@ export const downloadFilesAsZipWithSubfolders = async (
     for (const { url, name: fileName } of files) {
       try {
         const response = await fetch(url);
+
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
         const data = await response.blob();
+
+        console.log("FileBlob", data);
+
         folder.file(fileName, data, { binary: true });
       } catch (error) {
         console.error(
-          "Error downloading or adding file to zip",
-          fileName,
+          `Error downloading or adding file to zip: ${fileName}`,
           error
         );
       }
     }
   }
 
-  zip.generateAsync({ type: "blob" }).then((content) => {
+  try {
+    const content = await zip.generateAsync({ type: "blob" });
     const objectUrl = URL.createObjectURL(content);
 
     const a = document.createElement("a");
@@ -183,7 +191,55 @@ export const downloadFilesAsZipWithSubfolders = async (
     document.body.removeChild(a);
 
     URL.revokeObjectURL(objectUrl);
+  } catch (error) {
+    console.error("Error generating ZIP file", error);
+  }
+};
+
+// Function to download a file
+export const downloadFileAlt = async (url, dest) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+  const buffer = await response.buffer();
+  await fs.outputFile(dest, buffer);
+};
+
+// Main function to create the zip archive
+export const createZipArchive = async (items) => {
+  const baseDir = path.join(process.cwd(), "temp_downloads");
+  await fs.ensureDir(baseDir);
+
+  for (const item of items) {
+    const folderPath = path.join(baseDir, item.name);
+    await fs.ensureDir(folderPath);
+
+    for (const file of item.files) {
+      const filePath = path.join(folderPath, file.name);
+      await downloadFileAlt(file.url, filePath);
+    }
+  }
+
+  const zipPath = path.join(process.cwd(), "files.zip");
+  const output = fs.createWriteStream(zipPath);
+  const archive = archiver("zip", {
+    zlib: { level: 9 },
   });
+
+  output.on("close", () => {
+    console.log(`Zip file created successfully: ${zipPath}`);
+  });
+
+  archive.on("error", (err) => {
+    throw err;
+  });
+
+  archive.pipe(output);
+
+  archive.directory(baseDir, false);
+  await archive.finalize();
+
+  await fs.remove(baseDir);
+  return zipPath;
 };
 
 /**

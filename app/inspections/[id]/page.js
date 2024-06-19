@@ -27,11 +27,14 @@ import {
 } from "../../../public/icons/intangible-icons";
 import {
   downloadFilesAsZip,
+  downloadFilesAsZipWithSubfolders,
+  convertInspectionsToZipArgs,
   isImage,
   ensureDomain,
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
 import { AddFavorite } from "../../../public/icons/intangible-icons";
+import { format } from "path";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -151,6 +154,8 @@ export default function Page(props) {
       encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
     }
   );
+
+  const addToFavorite = () => {};
 
   /**
    * This function takes an array of files and returns an array of URLs.
@@ -894,7 +899,7 @@ export default function Page(props) {
             <button
               className="text-sm text-gray-500 font-medium"
               onClick={(e) => {
-                downloadFilesAsZip(
+                downloadFilesAsZipWithSubfolders(
                   getArrayOfUrls(inspectionDocuments),
                   `${inspection?.name} Documents`
                 );
@@ -954,29 +959,27 @@ export default function Page(props) {
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button
               className="text-sm text-gray-500 font-medium"
-              onClick={(e) => {
+              onClick={async (e) => {
                 const assetsToDownload = [];
-                const zipFileName = `All Assets`;
+                const zipFileName = `Steven's test ${new Date()}`;
 
-                structures.filter((structure) => {
-                  const structureImages = structure.attributes.images.data;
-                  if (structureImages) {
-                    for (let image of structureImages) {
-                      assetsToDownload.push(image);
-                    }
-                  }
-                });
+                const formattedStructures =
+                  convertInspectionsToZipArgs(structures);
 
-                downloadFilesAsZip(
-                  getArrayOfUrls(assetsToDownload),
+                console.log("formattedStructures", formattedStructures);
+
+                const response = await downloadFilesAsZipWithSubfolders(
+                  formattedStructures,
                   zipFileName
                 );
+
+                console.log(response);
               }}
             >
               Download All
             </button>
             <button className="flex align-middle text-sm font-semibold">
-              Add Documents <PlusIcon />
+              Add Image <PlusIcon />
             </button>
           </div>
         </div>
