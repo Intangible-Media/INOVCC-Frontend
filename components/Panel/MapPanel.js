@@ -44,6 +44,10 @@ export default function MapPanel({ structure }) {
   }, [structure.attributes.longitude, structure.attributes.latitude]); // dependencies
 
   useEffect(() => {
+    console.log(updatedStructure);
+  }, [updatedStructure]);
+
+  useEffect(() => {
     const fetchTeams = async () => {
       const apiParams = {
         jwt: session.accessToken,
@@ -500,10 +504,10 @@ export default function MapPanel({ structure }) {
                         Inspection Team
                       </Label>
                       <select
-                        id="structureStatus"
+                        id="structureInspectionTeam"
                         className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
                         defaultValue={
-                          updatedStructure.attributes?.team.data?.id || "none"
+                          updatedStructure.attributes?.team?.data?.id || "none"
                         }
                         onChange={(e) => {
                           setUpdatedStructure({
@@ -515,9 +519,7 @@ export default function MapPanel({ structure }) {
                           });
                         }}
                       >
-                        <option key="no-team" value={"none"}>
-                          Choose a Team
-                        </option>
+                        <option value={"none"}>Choose a Team</option>
                         {teams.map((team, index) => (
                           <option key={index} value={team.id}>
                             {team.attributes.name}
