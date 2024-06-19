@@ -121,7 +121,7 @@ export default function Page({ params }) {
   const downloadForUpload = () => {
     console.log("you are inside the function");
     const zipArgs = convertInspectionsToZipArgs(structures);
-    downloadFilesAsZipWithSubfolders(zipArgs, "inspections.zip");
+    downloadFilesAsZipWithSubfolders(zipArgs, `${new Date()}-inspections.zip`);
   };
 
   useEffect(() => {
@@ -206,7 +206,7 @@ export default function Page({ params }) {
       </h1>
 
       <section className="grid grid-cols-1 md:grid-cols-2 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-sm ">
-        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 max-h-[450px] md:h-[550px] order-2 md:order-1">
+        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 max-h-[550px] md:h-[550px] order-2 md:order-1">
           <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden md:flex">
             <div className="grid grid-cols-3 gap-3 w-full">
               <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
@@ -241,6 +241,7 @@ export default function Page({ params }) {
               </div>
             </div>
           </div>
+
           <div className="im-snapping overflow-scroll w-full h-full">
             {structures.map((structure, index) => (
               <div

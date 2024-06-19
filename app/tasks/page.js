@@ -488,7 +488,7 @@ export default function Page({ params }) {
         <CreateTaskModal />
       </section>
 
-      <section className="bg-white p-6 rounded-lg">
+      {/* <section className="bg-white p-6 rounded-lg">
         <div className="grid grid-cols-4 gap-3 w-full">
           <div className="flex bg-gray-50 gap-4 rounded-lg p-6">
             <div className="bg-gray-200 p-3 rounded-full">
@@ -526,7 +526,7 @@ export default function Page({ params }) {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="overflow-x-auto bg-white p-6 rounded-lg">
         <h5 className="text-xl font-bold dark:text-white mb-3">My Tasks</h5>

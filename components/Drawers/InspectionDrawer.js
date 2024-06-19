@@ -115,7 +115,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         try {
           const response = await getAllClients(apiParams);
           setClients(response.data.data);
-          console.log("Clients", response.data.data);
         } catch (error) {
           console.error("Error fetching clients:", error);
         }
@@ -135,8 +134,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
 
   const submitInspection = async () => {
     setIsLoadingInspection(true); // Assume you have a state to manage loading
-
-    console.log("Submitting inspection", newInspection);
 
     const payload = {
       data: {
@@ -289,8 +286,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           },
         }
       );
-
-      //console.log(`${fieldName} uploaded successfully`, uploadResponse.data);
     } catch (error) {
       console.error(`Error uploading ${fieldName}:`, error);
     }
@@ -354,9 +349,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
    */
 
   const updateInspectionDocuments = async (files) => {
-    console.log("files", files);
-    console.log("inspection Id", inspection.id);
-
     try {
       const apiParams = {
         jwt: session?.accessToken,
@@ -370,9 +362,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         apiParams.inspectionId,
         apiParams.fieldName
       );
-
-      console.log(uploadedDocuments);
-
       setInspection({ ...inspection, documents: { data: files } });
     } catch (error) {
       console.error(error);
@@ -424,12 +413,10 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
    * ];
    *
    * const client = findClientById(clients, 2);
-   * console.log(client);
    * // Output: { id: 2, attributes: { name: 'Phoenix Gas & Power' } }
    */
   const findClientById = (clientArray, id) => {
     const result = clientArray.find((client) => client.id == id);
-    console.log("Client Result", result);
     return result;
   };
 
@@ -544,7 +531,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                   required
                   defaultValue={inspection?.client.data.id || ""}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     setNewInspection({
                       ...newInspection,
                       client: { data: findClientById(clients, e.target.value) },

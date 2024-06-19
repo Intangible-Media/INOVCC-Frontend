@@ -973,7 +973,7 @@ export default function Page(props) {
                   zipFileName
                 );
 
-                console.log(response);
+                // console.log(response);
               }}
             >
               Download All

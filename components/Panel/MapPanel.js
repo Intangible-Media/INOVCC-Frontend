@@ -1,9 +1,10 @@
 import ImageCardSlider from "../ImageCardSlider";
 import { useEffect, useState, useMemo } from "react";
-import { Label, Dropdown, Button, FileInput } from "flowbite-react";
+import { Label, Dropdown, Button, FileInput, Datepicker } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
 import { updateStructure, getStructure } from "../../utils/api/structures";
+import { getAllTeams } from "../../utils/api/teams";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
@@ -21,6 +22,8 @@ export default function MapPanel({ structure }) {
   const [currentPanel, setCurrentPanel] = useState("overview");
   const [updatedStructure, setUpdatedStructure] = useState(structure);
   const [structureAddress, setStructureAddress] = useState("");
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   useEffect(() => {
     const getStructureAddress = async () => {
@@ -39,6 +42,25 @@ export default function MapPanel({ structure }) {
 
     getStructureAddress().then((address) => setStructureAddress(address));
   }, [structure.attributes.longitude, structure.attributes.latitude]); // dependencies
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const apiParams = {
+        jwt: session.accessToken,
+        query: "",
+      };
+
+      try {
+        const response = await getAllTeams(apiParams);
+        console.log(response.data.data);
+        setTeams(response.data.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchTeams();
+  }, [session]);
 
   const activePanelClasses = (panelTab) => {
     if (panelTab === currentPanel)
@@ -64,6 +86,7 @@ export default function MapPanel({ structure }) {
       // Check if the status is changing to "Inspected"
       const newAttributes = {
         ...attributesWithoutImages,
+        status: status,
         inspectors: inspectors.data?.map((inspector) => inspector.id),
       };
 
@@ -471,6 +494,56 @@ export default function MapPanel({ structure }) {
                       }}
                     />
                   </div>
+                  {!updatedStructure.attributes.inspectionDate && (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-xs" htmlFor="structureStatus">
+                          Inspection Team
+                        </Label>
+                        <select
+                          id="structureStatus"
+                          className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                          defaultValue={""}
+                          onChange={(e) => {
+                            setUpdatedStructure({
+                              ...updatedStructure,
+                              attributes: {
+                                ...updatedStructure.attributes,
+                                team: e.target.value,
+                              },
+                            });
+                          }}
+                        >
+                          {teams.map((team, index) => (
+                            <option key={index} value={team.id}>
+                              {team.attributes.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col w-full">
+                        <label
+                          className="text-xs mb-2"
+                          htmlFor="structureLatitude"
+                        >
+                          Schedule For Inspection
+                        </label>
+                        <Datepicker
+                          title="Flowbite Datepicker"
+                          className="w-full bg-white"
+                          onSelectedDateChanged={(date) =>
+                            setUpdatedStructure({
+                              ...updatedStructure,
+                              attributes: {
+                                ...updatedStructure.attributes,
+                                scheduleForInspection: date,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
                       currentInspectors={

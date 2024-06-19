@@ -196,52 +196,6 @@ export const downloadFilesAsZipWithSubfolders = async (
   }
 };
 
-// Function to download a file
-export const downloadFileAlt = async (url, dest) => {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-  const buffer = await response.buffer();
-  await fs.outputFile(dest, buffer);
-};
-
-// Main function to create the zip archive
-export const createZipArchive = async (items) => {
-  const baseDir = path.join(process.cwd(), "temp_downloads");
-  await fs.ensureDir(baseDir);
-
-  for (const item of items) {
-    const folderPath = path.join(baseDir, item.name);
-    await fs.ensureDir(folderPath);
-
-    for (const file of item.files) {
-      const filePath = path.join(folderPath, file.name);
-      await downloadFileAlt(file.url, filePath);
-    }
-  }
-
-  const zipPath = path.join(process.cwd(), "files.zip");
-  const output = fs.createWriteStream(zipPath);
-  const archive = archiver("zip", {
-    zlib: { level: 9 },
-  });
-
-  output.on("close", () => {
-    console.log(`Zip file created successfully: ${zipPath}`);
-  });
-
-  archive.on("error", (err) => {
-    throw err;
-  });
-
-  archive.pipe(output);
-
-  archive.directory(baseDir, false);
-  await archive.finalize();
-
-  await fs.remove(baseDir);
-  return zipPath;
-};
-
 /**
  * Checks if a given file name represents an image based on its extension.
  *

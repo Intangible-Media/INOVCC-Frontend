@@ -53,11 +53,27 @@ const getInspectionColor = (status) => {
   }
 };
 
+function convertToLongDateFormat(dateString) {
+  // Create a Date object from the input date string
+  const dateObject = new Date(dateString);
+
+  // Format the date object to "Month Day, Year" format
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
+    dateObject
+  );
+
+  return formattedDate;
+}
+
 export default function Page({ params }) {
   const { data: session } = useSession();
   const router = useRouter();
   const [teams, setTeams] = useState([]);
   const [structures, setStructures] = useState([]);
+  const [date, setDate] = useState(
+    new Date(convertToLongDateFormat(new Date()))
+  );
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -78,6 +94,30 @@ export default function Page({ params }) {
     }
   );
 
+  const structureQuery = qs.stringify(
+    {
+      filters: {
+        scheduleForInspection: {
+          $eq: date,
+        },
+      },
+      populate: {
+        team: {
+          fields: ["name"],
+        },
+        inspection: {
+          fields: ["name"],
+        },
+        images: {
+          populate: "*",
+        },
+      },
+    },
+    {
+      encodeValuesOnly: true,
+    }
+  );
+
   useEffect(() => {
     if (!session) return;
 
@@ -93,7 +133,7 @@ export default function Page({ params }) {
     const fetchStructures = async () => {
       const structures = await getAllStructure({
         jwt: session.accessToken,
-        query: "populate=inspection",
+        query: structureQuery,
       });
       console.log(structures.data.data);
       setStructures(structures.data.data);
@@ -156,11 +196,11 @@ export default function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      <section className="grid grid-cols-1">
+      {/* <section className="grid grid-cols-1">
         <Button className="bg-dark-blue-700 text-white w-full shrink-0 self-start">
           <p className="mr-3">{"Schedule Structure"}</p>
         </Button>
-      </section>
+      </section> */}
 
       <section className="grid grid-cols-8 p-0 rounded-md gap-4">
         <div className=" col-span-3 bg-white shadow-sm gap-4 p-4 md:p-6 rounded-lg">
