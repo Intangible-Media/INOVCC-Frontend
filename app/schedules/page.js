@@ -11,7 +11,7 @@ import Link from "next/link";
 import DirectionsComponent from "../../components/DirectionsComponent";
 import { useRouter } from "next/navigation";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
-import { Button } from "flowbite-react";
+import { Button, Progress } from "flowbite-react";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../components/MapBox"), {
@@ -144,52 +144,58 @@ export default function Page({ params }) {
   }, [session]);
 
   const ProgressCard = ({ team }) => {
-    const structures = team.attributes.structures.data || [];
-    const totalStructures = structures.length;
+    const router = useRouter();
 
-    const totalInspectedStructures = structures.filter(
-      (structure) => structure.attributes.status === "Inspected"
-    ).length;
+    // const structures = team.attributes.structures.data || [];
 
-    const progress = totalStructures
-      ? (totalInspectedStructures / totalStructures) * 100
+    const totalTeamStructures = structures.filter(
+      (structure) => structure.attributes.team.data.id === team.id
+    );
+
+    const teamScheduledStructuresInspected = structures.filter((structure) => {
+      if (
+        structure.attributes.team.data.id === team.id &&
+        structure.attributes.status === "Inspected"
+      ) {
+        return structure;
+      }
+    });
+
+    const teamScheduledStructuresNotInspected = structures.filter(
+      (structure) => {
+        if (
+          structure.attributes.team.data.id === team.id &&
+          structure.attributes.status !== "Inspected"
+        ) {
+          return structure;
+        }
+      }
+    );
+
+    const progress = totalTeamStructures.length
+      ? (teamScheduledStructuresInspected.length / totalTeamStructures.length) *
+        100
       : 0;
-
-    const chartOptions = {
-      chart: {
-        type: "radialBar",
-        offsetY: -20,
-      },
-      plotOptions: {
-        radialBar: {
-          dataLabels: {
-            name: {
-              color: "#172554",
-            },
-          },
-          hollow: {
-            size: "65%",
-          },
-        },
-      },
-      labels: [team.attributes.name],
-    };
 
     return (
       <div
-        className="bg-white hover:bg-gray-50 rounded-lg p-4 aspect-square overflow-hidden border cursor-pointer"
+        className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
         onClick={() => router.push(`/schedules/${team.id}`)}
       >
-        {/* <h2 className="text-xl font-bold mb-4">{team.attributes.name}</h2> */}
-        <div className="flex justify-center items-center">
-          <ApexChart
-            type="radialBar"
-            options={chartOptions}
-            series={[progress]}
-            height={230}
-            width={230}
-          />
+        <div className="flex flex-col gap-2">
+          <h4 className="leading-none font-medium text-md">
+            {team.attributes.name}
+          </h4>
+          <div className="flex gap-3">
+            <p className=" text-xs">{totalTeamStructures.length} Total</p>
+            <p className=" text-xs">
+              {teamScheduledStructuresNotInspected.length} Remaining
+            </p>
+          </div>
         </div>
+        {totalTeamStructures.length > 0 && (
+          <Progress progress={progress} textLabel="" size="md" color="blue" />
+        )}
       </div>
     );
   };
@@ -202,12 +208,53 @@ export default function Page({ params }) {
         </Button>
       </section> */}
 
-      <section className="grid grid-cols-8 p-0 rounded-md gap-4">
-        <div className=" col-span-3 bg-white shadow-sm gap-4 p-4 md:p-6 rounded-lg">
+      <section className="grid grid-col md:grid-cols-8 p-0 rounded-md gap-4">
+        <div className="flex flex-col col-span-5 gap-3">
+          <StructureTypesNumbers structures={structures} />
+          <div className="shadow-sm border-gray-300 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
+            <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
+            <div className="grid grid-cols-3 gap-4">
+              {teams.map((team, index) => {
+                const teamScheduledStructures = structures.filter(
+                  (structure) => {
+                    return structure.attributes.team.data.id === team.id;
+                  }
+                );
+
+                if (teamScheduledStructures.length > 0) {
+                  return (
+                    <ProgressCard key={index} team={team} showEmpty={false} />
+                  );
+                }
+              })}
+            </div>
+
+            <h6 className=" text-xs text-gray-400 border-b border-gray-300 mt-6 mb-4 pb-2">
+              Not Scheduled Teams
+            </h6>
+            <div className="grid grid-cols-3 gap-4">
+              {teams.map((team, index) => {
+                const teamScheduledStructures = structures.filter(
+                  (structure) => {
+                    return structure.attributes.team.data.id === team.id;
+                  }
+                );
+
+                if (teamScheduledStructures.length === 0) {
+                  return (
+                    <ProgressCard key={index} team={team} showEmpty={false} />
+                  );
+                }
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-span-5 md:col-span-3 bg-white shadow-sm gap-4 p-4 md:p-6 rounded-lg">
           <h5 className="text-xl font-bold dark:text-white mb-3">
             Todays Structures
           </h5>
-          <div className="flex flex-col justify-between gap-6 h-[700px]">
+          <div className="flex flex-col justify-between gap-6 h-fit1 md:h-[700px]">
             <div className="im-snapping overflow-scroll w-full h-full">
               {structures.map((structure, index) => (
                 <div
@@ -250,17 +297,6 @@ export default function Page({ params }) {
                     {/* <EditIcon /> */}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col col-span-5 gap-3">
-          <StructureTypesNumbers structures={structures} />
-          <div className="shadow-sm bg-white p-4 md:p-6 rounded-lg w-full h-full">
-            <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
-            <div className="grid grid-cols-4  gap-4 ">
-              {teams.map((team, index) => (
-                <ProgressCard key={index} team={team} />
               ))}
             </div>
           </div>

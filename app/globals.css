@@ -495,6 +495,20 @@ input[type="date"] {
   overflow: hidden;
 }
 
+.schedule-team-charts {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+
+@media (min-width: 900px) {
+  .schedule-team-charts {
+    width: 100px;
+    height: 100px;
+    background-color: red;
+  }
+}
+
 @keyframes slideOutAndHide {
   0% {
     transform: translateX(0);
