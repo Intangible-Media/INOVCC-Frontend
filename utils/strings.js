@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 /**
  * Initiates a download of an image file from a Blob or File object.
@@ -155,21 +156,25 @@ export const downloadFilesAsZipWithSubfolders = async (
 ) => {
   const zip = new JSZip();
 
-  for (const { name, files } of items) {
-    const folder = zip.folder(name);
+  for (let { name, files } of items) {
+    let folder = zip.folder(name.replace(/[\\/:*?"<>|]/g, ""));
+    const santitizedName = name.replace(/[\\/:*?"<>|]/g, "");
+    console.log("Created folder:", santitizedName);
 
     for (const { url, name: fileName } of files) {
       try {
         const response = await fetch(url);
 
-        if (!response.ok)
+        if (!response.ok) {
+          console.error("THERE WAS A ERROR");
           throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const data = await response.blob();
+        console.log("Fetched file:", fileName);
 
-        console.log("FileBlob", data);
-
-        folder.file(fileName, data, { binary: true });
+        folder.file(fileName, data);
+        console.log("Added file to folder:", fileName, "in folder:", name);
       } catch (error) {
         console.error(
           `Error downloading or adding file to zip: ${fileName}`,
@@ -181,16 +186,8 @@ export const downloadFilesAsZipWithSubfolders = async (
 
   try {
     const content = await zip.generateAsync({ type: "blob" });
-    const objectUrl = URL.createObjectURL(content);
-
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = zipFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    URL.revokeObjectURL(objectUrl);
+    saveAs(content, zipFilename);
+    console.log("ZIP file generated and download initiated:", zipFilename);
   } catch (error) {
     console.error("Error generating ZIP file", error);
   }

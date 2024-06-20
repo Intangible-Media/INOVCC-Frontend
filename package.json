@@ -13,6 +13,7 @@
     "@tmcw/togeojson": "^5.8.1",
     "apexcharts": "^3.44.0",
     "axios": "^1.6.1",
+    "file-saver": "^2.0.5",
     "flowbite": "^2.1.1",
     "flowbite-react": "^0.6.4",
     "fs": "^0.0.1-security",

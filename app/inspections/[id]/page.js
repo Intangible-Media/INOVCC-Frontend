@@ -969,11 +969,10 @@ export default function Page(props) {
                 console.log("formattedStructures", formattedStructures);
 
                 const response = await downloadFilesAsZipWithSubfolders(
-                  formattedStructures,
-                  zipFileName
+                  formattedStructures
                 );
 
-                // console.log(response);
+                console.log(response);
               }}
             >
               Download All
