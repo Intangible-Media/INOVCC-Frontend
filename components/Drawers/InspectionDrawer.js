@@ -9,6 +9,7 @@ import { MdLocationPin } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
 import { HiHome } from "react-icons/hi";
+import Papa from "papaparse";
 import { useAlert } from "../../context/AlertContext";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
@@ -34,11 +35,14 @@ import {
   AddFavorite,
   StarSm,
 } from "../../public/icons/intangible-icons";
-import { useInspection } from "../../context/InspectionContext";
+import {
+  useInspection,
+  fetchInspection,
+} from "../../context/InspectionContext";
 
 const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const { showAlert } = useAlert();
-  const { inspection, setInspection } = useInspection();
+  const { inspection, setInspection, refreshInspection } = useInspection();
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -420,6 +424,193 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     return result;
   };
 
+  const bulkCreateStructures = async (data) => {
+    if (!session) return;
+    const { jwt, structures } = data;
+    const requests = structures.map((structure) =>
+      axios.post(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures`,
+        { data: structure },
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      )
+    );
+
+    try {
+      const allStructureRequest = await axios.all(requests);
+      // runs and updates the page with all the structures
+      refreshInspection();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const CsvUpload = () => {
+    const [uploadedStructures, setUploadedStructures] = useState([]);
+    const [duplicateWarning, setDuplicateWarning] = useState(false);
+
+    const handleFileUpload = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data.map((item) => ({
+              mapSection: item.name,
+              type: item.type,
+              inspection: inspection?.id,
+              isDuplicate: false,
+            }));
+            checkForDuplicates(data);
+          },
+        });
+      }
+    };
+
+    const checkForDuplicates = (uploadedData) => {
+      const existingNames = inspection?.structures.data.map(
+        (structure) => structure.attributes.mapSection
+      );
+      const updatedData = uploadedData.map((item) => {
+        if (existingNames.includes(item.mapSection)) {
+          item.isDuplicate = true;
+          setDuplicateWarning(true);
+        }
+        return item;
+      });
+      setUploadedStructures(updatedData);
+    };
+
+    const handleBulkCreate = async () => {
+      const jwt = "your-jwt-token-here"; // Replace with your JWT token
+      try {
+        const validStructures = uploadedStructures.filter(
+          (structure) => !structure.isDuplicate
+        );
+        await bulkCreateStructures({ jwt, structures: validStructures });
+        console.log("Structures created successfully");
+      } catch (error) {
+        console.error("Error creating structures:", error);
+      }
+    };
+
+    const removeUploadedStructure = (index) => {
+      const updatedStructures = uploadedStructures.filter(
+        (_, i) => i !== index
+      );
+      setUploadedStructures(updatedStructures);
+      setDuplicateWarning(
+        updatedStructures.some((structure) => structure.isDuplicate)
+      );
+    };
+
+    return (
+      <>
+        {uploadedStructures.length === 0 && (
+          <div className="flex bg-gray-100 h-60 w-full items-center justify-center rounded-lg overflow-hidden">
+            <label
+              htmlFor="dropzone-file"
+              className="flex w-full h-full cursor-pointer flex-col items-center justify-center"
+            >
+              <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                <svg
+                  className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                  />
+                </svg>
+                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span className="font-semibold">Click to upload</span> or drag
+                  and drop
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  CSV (MAX. 800x400px)
+                </p>
+              </div>
+              <input
+                id="dropzone-file"
+                type="file"
+                className="hidden"
+                accept=".csv"
+                onChange={handleFileUpload}
+              />
+            </label>
+          </div>
+        )}
+        {uploadedStructures.length > 0 && (
+          <div>
+            <div className="flex justify-between mb-4">
+              <h3 className="font-medium text-gray-900 dark:text-white text-xs">
+                Uploaded Structures
+              </h3>
+              {duplicateWarning && (
+                <p className="font-medium dark:text-white text-xs text-red-500">
+                  Warning: Duplicate names found!
+                </p>
+              )}
+            </div>
+
+            <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
+              <div className="rounded-md w-full  overflow-auto">
+                {uploadedStructures.map((structure, index) => (
+                  <div
+                    key={index}
+                    className={`group flex flex-row cursor-pointer justify-between items-center border-0 border-b-2 border-gray-100 w-full p-4 mb-0 ${
+                      structure.isDuplicate ? "bg-red-100" : "bg-white"
+                    }`}
+                  >
+                    <div className="flex">
+                      <MdLocationPin
+                        className={`${getInspectionIconColor(
+                          structure.status || "Not Inspected"
+                        )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
+                        style={{ width: 40, height: 40 }}
+                      />
+                      <div className="flex flex-col justify-center pt-0 pb-0 pl-4 pr-4 leading-normal">
+                        <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                          {structure.mapSection}
+                          <span className="flex items-center font-light ml-1">
+                            / {structure.type}
+                          </span>
+                        </h5>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeUploadedStructure(index)}
+                      className="hidden group-hover:block ml-4 w-6 h-6 bg-red-500 text-white rounded-full"
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={handleBulkCreate}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Bulk Create Structures
+            </button>
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div>
       <Button
@@ -632,39 +823,8 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                       ))}
                     </div>
                   </div>
-                  {/* 
-                  <div className="flex bg-gray-100 h-60 w-full items-center justify-center rounded-lg overflow-hidden">
-                    <Label
-                      htmlFor="dropzone-file"
-                      className="flex w-full h-full cursor-pointer flex-col items-center justify-center"
-                    >
-                      <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                        <svg
-                          className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 20 16"
-                        >
-                          <path
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                          />
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-semibold">Click to upload</span>{" "}
-                          or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          SVG, PNG, JPG or GIF (MAX. 800x400px)
-                        </p>
-                      </div>
-                      <FileInput id="dropzone-file" className="hidden" />
-                    </Label>
-                  </div> */}
+
+                  <CsvUpload />
                 </div>
               )}
 

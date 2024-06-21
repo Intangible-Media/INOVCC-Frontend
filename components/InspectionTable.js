@@ -6,7 +6,7 @@ import { Dropdown } from "flowbite-react";
 import Link from "next/link";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const ITEMS_PER_PAGE = 5; // Define how many items you want per page
+const ITEMS_PER_PAGE = 10; // Define how many items you want per page
 
 const ElipseIcon = () => (
   <svg
@@ -448,30 +448,53 @@ export default function InspectionTable({ inspectionData }) {
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                   key={`${inspection.id}-${index}`}
                 >
-                  <Table.Cell className="font-medium text-gray-900 dark:text-white">
-                    {highlightMatch(inspection.attributes.name, searchQuery)}
+                  <Table.Cell className="font-medium text-dark-blue-700 hover:underline dark:text-white">
+                    <Link href={`/inspections/${inspection.id}`}>
+                      {highlightMatch(inspection.attributes.name, searchQuery)}
+                    </Link>
                   </Table.Cell>
-                  <Table.Cell>
-                    {highlightMatch(
-                      inspection.attributes.client.data.attributes.name,
-                      searchQuery
-                    )}
+                  <Table.Cell className="text-dark-blue-700 hover:underline">
+                    <Link
+                      href={`/clients/${inspection.attributes.client.data.id}`}
+                    >
+                      {highlightMatch(
+                        inspection.attributes.client.data.attributes.name,
+                        searchQuery
+                      )}
+                    </Link>
                   </Table.Cell>
                   <Table.Cell className="text-left">
-                    {highlightMatch(
-                      inspection.attributes.structures.data.length,
-                      searchQuery
-                    )}
+                    <div className="flex gap-2">
+                      <div className="flex w-7 h-7 bg-gray-200 rounded-full text-gray-700">
+                        <p className="text-xs m-auto">
+                          {highlightMatch(
+                            inspection.attributes.structures.data.length,
+                            searchQuery
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex w-7 h-7 bg-green-100 rounded-full text-green-700">
+                        <p className="text-xs m-auto">
+                          {highlightMatch(
+                            inspection.attributes.structures.data.length,
+                            searchQuery
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex w-7 h-7 bg-yellow-100 rounded-full text-yellow-700">
+                        <p className="text-xs m-auto">
+                          {highlightMatch(
+                            inspection.attributes.structures.data.length,
+                            searchQuery
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   </Table.Cell>
 
                   <Table.Cell>
-                    {/* <span
-                      className={`${getInspectionProgressClasses(
-                        inspection
-                      )} inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-md`}
-                    >
-                      {getInspectionProgress(inspection)}%
-                    </span> */}
                     <Progress
                       progress={getInspectionProgress(inspection)}
                       textLabel=""

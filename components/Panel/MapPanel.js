@@ -3,7 +3,11 @@ import { useEffect, useState, useMemo } from "react";
 import { Label, Dropdown, Button, FileInput, Datepicker } from "flowbite-react";
 import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
-import { updateStructure, getStructure } from "../../utils/api/structures";
+import {
+  updateStructure,
+  getStructure,
+  deleteStructure,
+} from "../../utils/api/structures";
 import { getAllTeams } from "../../utils/api/teams";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
@@ -15,7 +19,12 @@ import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
 //  fdsfds
-export default function MapPanel({ structure }) {
+export default function MapPanel({
+  structure,
+  setActiveView,
+  setStructureSearch,
+  setSelectedStructure,
+}) {
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
   const [isLoading, setIsLoading] = useState(false);
@@ -135,6 +144,25 @@ export default function MapPanel({ structure }) {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const removeStructure = async (structure) => {
+    const apiParams = {
+      jwt: session.accessToken,
+      id: structure.id,
+      query: "",
+    };
+
+    setActiveView("overview");
+    setSelectedStructure(null);
+    setStructureSearch("");
+
+    try {
+      const response = await deleteStructure(apiParams);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -562,8 +590,14 @@ export default function MapPanel({ structure }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
                   {isLoading && <h1>Loading</h1>}
+                  <Button
+                    className=" bg-red-800 text-white mt-5"
+                    onClick={() => removeStructure(structure)}
+                  >
+                    Delete
+                  </Button>
                   <Button
                     className="bg-dark-blue-700 text-white mt-5"
                     onClick={() => submitStructure()}

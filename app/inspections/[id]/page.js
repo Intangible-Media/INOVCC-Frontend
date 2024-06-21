@@ -768,7 +768,12 @@ export default function Page(props) {
           </div>
 
           {activeView === "singleView" && (
-            <MapPanel structure={selectedStructure} />
+            <MapPanel
+              structure={selectedStructure}
+              setSelectedStructure={setSelectedStructure}
+              setActiveView={setActiveView}
+              setStructureSearch={setStructureSearch}
+            />
           )}
 
           {activeView === "overview" && (

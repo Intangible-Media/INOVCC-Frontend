@@ -24,6 +24,7 @@
     "next-connect": "^1.0.0",
     "next-iron-session": "^4.2.0",
     "openai": "^4.26.0",
+    "papaparse": "^5.4.1",
     "pdfmake": "^0.2.8",
     "qs": "^6.11.2",
     "react": "^18",

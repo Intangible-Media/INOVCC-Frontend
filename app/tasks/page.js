@@ -5,8 +5,6 @@ import {
   Modal,
   Button,
   Badge,
-  Checkbox,
-  Dropdown,
   Label,
   TextInput,
   Spinner,
@@ -16,12 +14,10 @@ import ActivityLog from "../../components/ActivityLog";
 import ImageCardGrid from "../../components/ImageCardGrid";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { getAllTasks } from "../../utils/api/tasks";
+import { getAllTasks, createTask, uploadFiles } from "../../utils/api/tasks";
 import { createActivity } from "../../utils/api/activities";
-import Link from "next/link";
-import { formatReadableDate, formatAbbreviatedDate } from "../../utils/strings";
-import { createTask, uploadFiles } from "../../utils/api/tasks";
 import { getAllUsers } from "../../utils/api/users";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import qs from "qs";
 
@@ -47,6 +43,13 @@ const UrgencyBadge = ({ urgency }) => {
   );
 };
 
+const formatAbbreviatedDate = (dateString) => {
+  const date = new Date(dateString);
+  const month = date.toLocaleString("default", { month: "short" });
+  const day = date.getDate();
+  return { month, day };
+};
+
 const CreateTaskModal = () => {
   const { data: session } = useSession();
   const [openModal, setOpenModal] = useState(false);
@@ -56,18 +59,15 @@ const CreateTaskModal = () => {
     description: "",
     isComplete: false,
     dueDate: "",
-    urgency: "",
+    urgency: "low",
     images: [],
+    assignedUser: null,
   });
   const [availableUsers, setAvailableUsers] = useState([]);
 
   const fetchUsers = async () => {
     try {
-      const userResponse = await getAllUsers({
-        jwt: session?.accessToken,
-        query: "",
-      });
-      console.log(userResponse.data);
+      const userResponse = await getAllUsers({ jwt: session?.accessToken });
       setAvailableUsers(userResponse.data);
     } catch (error) {
       console.error("Error fetching users:", error.response.data.error.message);
@@ -78,36 +78,22 @@ const CreateTaskModal = () => {
     if (session) fetchUsers();
   }, [session]);
 
-  const handleUserSelect = (user) => {
-    setFormData({ ...formData, assignedUser: user });
-  };
-
   const handleChange = (e) => {
-    const { name, type, checked, files } = e.target;
-    if (type === "file") {
-      setFormData((prev) => ({ ...prev, [name]: Array.from(files) }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : e.target.value,
-      }));
-    }
-  };
-
-  const handleImageUpload = async (taskId) => {
-    if (formData.images.length) {
-      await uploadFiles(
-        session?.accessToken,
-        formData.images,
-        taskId,
-        "documents"
-      );
-    }
+    const { name, type, value, checked, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "file"
+          ? Array.from(files)
+          : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
     try {
       const apiParams = {
         jwt: session?.accessToken,
@@ -120,37 +106,38 @@ const CreateTaskModal = () => {
             assigned: formData.assignedUser?.id,
           },
         },
-        query: "",
       };
 
-      // Assuming createTask is a function that you have defined or imported
       const taskResponse = await createTask(apiParams);
-
-      console.log(taskResponse.data);
-
       if (taskResponse.data && formData.images.length) {
-        await handleImageUpload(taskResponse.data.data.id);
+        await uploadFiles(
+          session?.accessToken,
+          formData.images,
+          taskResponse.data.data.id,
+          "documents"
+        );
       }
 
-      console.log("Task and files submitted successfully.");
       setFormData({
         title: "",
         description: "",
         isComplete: false,
         dueDate: "",
-        urgency: "",
+        urgency: "low",
         images: [],
         assignedUser: null,
-      }); // Reset form
-      // setOpenModal(false); // Close the modal on successful submission
-      setIsLoading(false);
+      });
+      setOpenModal(false);
     } catch (error) {
       console.error(
         "Error submitting form:",
         error.response.data.error.message
       );
+    } finally {
+      setIsLoading(false);
     }
   };
+
   return (
     <>
       <Button
@@ -167,13 +154,7 @@ const CreateTaskModal = () => {
         {isLoading && (
           <div className="flex justify-center absolute top-0 left-0 right-0 bottom-0 bg-white z-50 rounded-lg">
             <div className="flex flex-col gap-3 justify-center m-auto">
-              <div className="m-auto">
-                <Spinner
-                  aria-label="Extra large spinner example"
-                  size="xl"
-                  className="m-auto"
-                />
-              </div>
+              <Spinner aria-label="Loading" size="xl" className="m-auto" />
               <h3>Creating Your Task</h3>
             </div>
           </div>
@@ -183,9 +164,7 @@ const CreateTaskModal = () => {
         <Modal.Body>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div>
-              <div className="mb-2 block">
-                <Label htmlFor="title" value="Title" />
-              </div>
+              <Label htmlFor="title" value="Title" className="mb-2 block" />
               <TextInput
                 id="title"
                 name="title"
@@ -198,9 +177,11 @@ const CreateTaskModal = () => {
               />
             </div>
             <div>
-              <div className="mb-2 block">
-                <Label htmlFor="description" value="Description" />
-              </div>
+              <Label
+                htmlFor="description"
+                value="Description"
+                className="mb-2 block"
+              />
               <Textarea
                 id="description"
                 name="description"
@@ -211,25 +192,25 @@ const CreateTaskModal = () => {
               />
             </div>
             <div>
-              <div className="mb-2 block">
-                <Label htmlFor="dueDate" value="Due Date" />
-              </div>
+              <Label
+                htmlFor="dueDate"
+                value="Due Date"
+                className="mb-2 block"
+              />
               <TextInput
                 id="dueDate"
                 name="dueDate"
-                type="text"
+                type="date"
                 value={formData.dueDate}
                 onChange={handleChange}
               />
             </div>
             <div>
-              <div className="mb-2 block">
-                <Label htmlFor="urgency" value="Urgency" />
-              </div>
+              <Label htmlFor="urgency" value="Urgency" className="mb-2 block" />
               <select
                 id="urgency"
                 name="urgency"
-                defaultValue={formData.urgency || "low"}
+                value={formData.urgency}
                 onChange={handleChange}
                 className="form-select block w-full mt-1 rounded-md bg-gray-50 border-gray-300"
               >
@@ -240,44 +221,46 @@ const CreateTaskModal = () => {
               </select>
             </div>
             <div>
-              <div className="mb-2 block">
-                <Label htmlFor="images" value="Upload Images" />
-              </div>
+              <Label
+                htmlFor="images"
+                value="Upload Images"
+                className="mb-2 block"
+              />
               <input
                 type="file"
                 id="images"
                 name="images"
                 multiple
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-violet-50 file:text-violet-700
-                  hover:file:bg-violet-100"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
               />
             </div>
             <div className="mb-2 block">
               <Label value="Assign User" />
               <select
-                id="urgency"
-                name="urgency"
-                defaultValue={formData.urgency || "low"}
-                onChange={handleChange}
+                id="assignedUser"
+                name="assignedUser"
+                value={formData.assignedUser?.id || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    assignedUser: availableUsers.find(
+                      (user) => user.id === e.target.value
+                    ),
+                  }))
+                }
                 className="form-select block w-full mt-1 rounded-md bg-gray-50 border-gray-300"
               >
+                <option value="" disabled>
+                  Select User
+                </option>
                 {availableUsers.map((user) => (
-                  <option
-                    key={user.id}
-                    value={user.id}
-                    onClick={() => handleUserSelect(user)}
-                  >
+                  <option key={user.id} value={user.id}>
                     {user.firstName} {user.lastName}
                   </option>
                 ))}
               </select>
             </div>
-            {/* Submit button */}
             <Button type="submit">Submit</Button>
           </form>
         </Modal.Body>
@@ -286,7 +269,7 @@ const CreateTaskModal = () => {
   );
 };
 
-export default function Page({ params }) {
+const Page = ({ params }) => {
   const { data: session } = useSession();
   const [openModal, setOpenModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -296,23 +279,14 @@ export default function Page({ params }) {
   useEffect(() => {
     const query = qs.stringify({
       populate: {
-        documents: {
-          populate: "*",
-        },
-        assigned: {
-          populate: "*",
-        },
+        documents: { populate: "*" },
+        assigned: { populate: "*" },
       },
     });
 
     const fetchTasks = async () => {
       if (!session) return;
-      const response = await getAllTasks({
-        jwt: session?.accessToken,
-        query: query,
-      });
-
-      console.log(response.data.data);
+      const response = await getAllTasks({ jwt: session?.accessToken, query });
       setTasks(response.data.data);
     };
 
@@ -328,7 +302,6 @@ export default function Page({ params }) {
   }, [tasks]);
 
   const createActivityLog = async ({ taskId }) => {
-    console.log("instide the activity loag");
     const apiParams = {
       jwt: session?.accessToken,
       payload: {
@@ -340,146 +313,8 @@ export default function Page({ params }) {
           user: session?.user.id,
         },
       },
-      query: "",
     };
-    const response = await createActivity(apiParams);
-
-    console.log(response.data);
-
-    return response.data.data;
-  };
-
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        new Notification("Permission Granted!");
-      }
-    }
-  };
-
-  const sendNotification = () => {
-    if ("Notification" in window) {
-      new Notification("You have a new task assigned!");
-    }
-  };
-
-  const series = [44, 55, 13, 43, 22];
-
-  const lineChartSeries = [
-    {
-      name: "Sample Data",
-      data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
-    },
-  ];
-
-  const options = {
-    chart: {
-      type: "donut",
-      height: "100%",
-      width: "100%",
-      parentHeightOffset: 0,
-      offsetX: 18,
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    labels: [], // No labels
-    legend: {
-      show: false,
-    },
-    tooltip: {
-      enabled: false,
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: "0%",
-        },
-      },
-    },
-
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: 200,
-          },
-          legend: {
-            show: false,
-          },
-        },
-      },
-    ],
-  };
-
-  const lineChartOptions = {
-    chart: {
-      height: "100%",
-      width: "100%",
-      parentHeightOffset: 0,
-      toolbar: {
-        show: false,
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "smooth",
-    },
-    xaxis: {
-      show: false,
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-      ],
-      labels: {
-        show: false,
-      },
-
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
-    },
-    yaxis: {
-      labels: {
-        show: false,
-      },
-    },
-    grid: {
-      show: false,
-    },
-    tooltip: {
-      enabled: false,
-    },
-    legend: {
-      show: false,
-    },
-    responsive: [
-      {
-        breakpoint: 480,
-        options: {
-          chart: {
-            width: "100%",
-          },
-          legend: {
-            show: false,
-          },
-        },
-      },
-    ],
+    await createActivity(apiParams);
   };
 
   return (
@@ -487,46 +322,6 @@ export default function Page({ params }) {
       <section className="flex justify-between items-center">
         <CreateTaskModal />
       </section>
-
-      {/* <section className="bg-white p-6 rounded-lg">
-        <div className="grid grid-cols-4 gap-3 w-full">
-          <div className="flex bg-gray-50 gap-4 rounded-lg p-6">
-            <div className="bg-gray-200 p-3 rounded-full">
-              <p className="text-2xl text-gray-800">55</p>
-            </div>
-            <p className="self-center text-sm text-center text-gray-800 font-semibold mt-2">
-              Total Tasks
-            </p>
-          </div>
-
-          <div className="flex bg-yellow-50 gap-4 rounded-lg p-6">
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <p className="text-2xl text-yellow-800">12</p>
-            </div>
-            <p className="self-center text-sm text-center text-yellow-800 font-semibold mt-2">
-              Urgent Tasks
-            </p>
-          </div>
-
-          <div className="flex bg-red-50 gap-4 rounded-lg p-6">
-            <div className="bg-red-100 p-3 rounded-full">
-              <p className="text-2xl text-red-800">18</p>
-            </div>
-            <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
-              Not Opened
-            </p>
-          </div>
-
-          <div className="flex bg-green-50 gap-4 rounded-lg p-6">
-            <div className="bg-green-100 p-3 rounded-full">
-              <p className="text-2xl text-green-600">3</p>
-            </div>
-            <p className="self-center text-sm text-center text-green-600 font-semibold mt-2">
-              Late Tasks
-            </p>
-          </div>
-        </div>
-      </section> */}
 
       <section className="overflow-x-auto bg-white p-6 rounded-lg">
         <h5 className="text-xl font-bold dark:text-white mb-3">My Tasks</h5>
@@ -612,41 +407,33 @@ export default function Page({ params }) {
         </Table>
       </section>
 
-      <section>
+      {selectedTask && (
         <Modal show={openModal} onClose={() => setOpenModal(false)} size="7xl">
-          <Modal.Header>Terms of Service</Modal.Header>
+          <Modal.Header>Task Details</Modal.Header>
           <Modal.Body className="p-0">
             <section className="flex">
               <div className="w-full p-6">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {selectedTask && selectedTask.attributes.title}
+                  {selectedTask.attributes.title}
                 </h2>
                 <div className="max-h-24 h-24 overflow-auto mb-5">
                   <p className="text-gray-600 dark:text-gray-300">
-                    {selectedTask && selectedTask.attributes.description}
+                    {selectedTask.attributes.description}
                   </p>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 flex">
                   Urgency:{" "}
-                  {selectedTask && (
-                    <UrgencyBadge urgency={selectedTask.attributes.urgency} />
-                  )}
+                  <UrgencyBadge urgency={selectedTask.attributes.urgency} />
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Due Date: {selectedTask && selectedTask.attributes.dueDate}
+                  Due Date: {selectedTask.attributes.dueDate}
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Assigned By:{" "}
-                  {selectedTask && selectedTask.attributes.assignedBy}
+                  Assigned By: {selectedTask.attributes.assignedBy}
                 </p>
-
-                <div className=" mt-8">
+                <div className="mt-8">
                   <ImageCardGrid
-                    files={
-                      (selectedTask &&
-                        selectedTask.attributes.documents?.data) ||
-                      []
-                    }
+                    files={selectedTask.attributes.documents?.data || []}
                     background={"bg-white"}
                     editMode={false}
                     columns={3}
@@ -656,7 +443,7 @@ export default function Page({ params }) {
               </div>
               <div className="w-full p-6 bg-gray-100">
                 <ActivityLog
-                  id={selectedTask && selectedTask.id}
+                  id={selectedTask.id}
                   collection="tasks"
                   defaultExpanded={true}
                 />
@@ -669,7 +456,9 @@ export default function Page({ params }) {
             </Button>
           </Modal.Footer>
         </Modal>
-      </section>
+      )}
     </div>
   );
-}
+};
+
+export default Page;
