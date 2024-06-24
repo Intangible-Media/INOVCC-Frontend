@@ -170,7 +170,7 @@ export default function RevenueChart({
       type: "bar",
       stacked: true,
       toolbar: {
-        show: false,
+        show: true,
       },
       zoom: {
         enabled: true,
