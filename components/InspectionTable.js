@@ -38,6 +38,20 @@ export default function InspectionTable({ inspectionData }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedData, setPaginatedData] = useState([]);
 
+  const getInspectionStatusGroups = (inspection) => {
+    return {
+      uploaded: inspection.attributes.structures.data?.filter(
+        (structure) => structure.attributes.status === "Uploaded"
+      ).length,
+      inspected: inspection.attributes.structures.data?.filter(
+        (structure) => structure.attributes.status === "Inspected"
+      ).length,
+      notInspected: inspection.attributes.structures.data?.filter(
+        (structure) => structure.attributes.status === "Not Inspected"
+      ).length,
+    };
+  };
+
   const getInspectionProgress = (inspection) => {
     if (
       !inspection ||
@@ -51,7 +65,7 @@ export default function InspectionTable({ inspectionData }) {
     const totalStructures = inspection.attributes.structures.data.length;
     const inspectedStructuresCount =
       inspection.attributes.structures.data.filter(
-        (structure) => structure.attributes.status === "Inspected"
+        (structure) => structure.attributes.status === "Uploaded"
       ).length;
 
     if (totalStructures === 0) {
@@ -140,9 +154,9 @@ export default function InspectionTable({ inspectionData }) {
   };
 
   return (
-    <div className="mx-auto max-w-screen-2xl p-6">
+    <div className="mx-auto p-6">
       <div className="bg-white dark:bg-gray-800 relative sm:rounded-lg overflow-hidden">
-        <div className="border-b dark:border-gray-700">
+        <div className="flex justify-between border-b dark:border-gray-700">
           <div className="flex items-center justify-between space-x-4">
             <div className="flex-1 flex items-center space-x-3">
               <h5 className="text-xl font-bold dark:text-white mb-3">
@@ -151,44 +165,43 @@ export default function InspectionTable({ inspectionData }) {
             </div>
           </div>
           <div className="flex flex-col-reverse md:flex-row justify-between md:space-x-4 pb-4">
-            <div className="w-full lg:w-2/3 flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center">
-              <form className="w-full md:max-w-sm flex-1 md:mr-4">
-                <label
-                  htmlFor="default-search"
-                  className="text-sm font-medium text-gray-900 sr-only dark:text-white"
-                >
-                  Search
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg
-                      aria-hidden="true"
-                      className="w-4 h-4 text-gray-500 dark:text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    type="search"
-                    id="default-search"
-                    className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Search..."
-                    required=""
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                  />
+            <form className=" w-80 md:max-w-sm flex-1 md:mr-4">
+              <label
+                htmlFor="default-search"
+                className="text-sm font-medium text-gray-900 sr-only dark:text-white"
+              >
+                Search
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg
+                    aria-hidden="true"
+                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
                 </div>
-              </form>
-              <div className="flex items-center space-x-4 hidden">
+                <input
+                  type="search"
+                  id="default-search"
+                  className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                  placeholder="Search..."
+                  required=""
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </form>
+            {/* <div className="flex items-center space-x-4 hidden">
                 <div>
                   <Button
                     id="filterDropdownButton"
@@ -360,8 +373,7 @@ export default function InspectionTable({ inspectionData }) {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div> */}
           </div>
         </div>
         <div className="pb-3 flex flex-wrap hidden">
@@ -469,15 +481,7 @@ export default function InspectionTable({ inspectionData }) {
                         <p className="text-xs m-auto">
                           {highlightMatch(
                             inspection.attributes.structures.data.length,
-                            searchQuery
-                          )}
-                        </p>
-                      </div>
 
-                      <div className="flex w-7 h-7 bg-green-100 rounded-full text-green-700">
-                        <p className="text-xs m-auto">
-                          {highlightMatch(
-                            inspection.attributes.structures.data.length,
                             searchQuery
                           )}
                         </p>
@@ -486,7 +490,25 @@ export default function InspectionTable({ inspectionData }) {
                       <div className="flex w-7 h-7 bg-yellow-100 rounded-full text-yellow-700">
                         <p className="text-xs m-auto">
                           {highlightMatch(
-                            inspection.attributes.structures.data.length,
+                            getInspectionStatusGroups(inspection).notInspected,
+                            searchQuery
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex w-7 h-7 bg-green-100 rounded-full text-green-700">
+                        <p className="text-xs m-auto">
+                          {highlightMatch(
+                            getInspectionStatusGroups(inspection).inspected,
+                            searchQuery
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex w-7 h-7 bg-green-700 rounded-full text-white">
+                        <p className="text-xs m-auto">
+                          {highlightMatch(
+                            getInspectionStatusGroups(inspection).uploaded,
                             searchQuery
                           )}
                         </p>

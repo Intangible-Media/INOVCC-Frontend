@@ -258,7 +258,25 @@ export default function Home() {
         // borderRadiusWhenStacked: "last", // Apply border radius to the last bar when stacked
       },
     },
-    colors: ["#62C3F7", "#F762A4", "#F7F162"], // Example colors, you can adjust as needed
+    colors: [
+      "#6366F1",
+      "#10B981",
+      "#F59E0B",
+      "#EC4899",
+      "#F472B6",
+      "#0EA5E9",
+      "#3B82F6",
+      "#22C55E",
+      "#EF4444",
+      "#84CC16",
+      "#14B8A6",
+      "#E11D48",
+      "#06B6D4",
+      "#8B5CF6",
+      "#D946EF",
+      "#F97316",
+      "#EAB308",
+    ],
     grid: {
       show: false,
     },

@@ -205,7 +205,7 @@ export default function MapPanel({
         </span>
       </div>
 
-      <div className="im-tabs-header flex gap-3 border-b w-full px-8 justify-between">
+      <div className="im-tabs-header flex gap-3 border-b w-full px-8 justify-around">
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "overview"
@@ -216,27 +216,20 @@ export default function MapPanel({
         </div>
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "assets"
+            "field"
           )}`}
-          onClick={(e) => setCurrentPanel("assets")}
+          onClick={(e) => setCurrentPanel("field")}
         >
-          <h3 className="text-xs font-medium">Assets</h3>
+          <h3 className="text-xs font-medium">Field</h3>
         </div>
+
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "comments"
+            "admin"
           )}`}
-          onClick={(e) => setCurrentPanel("comments")}
+          onClick={(e) => setCurrentPanel("admin")}
         >
-          <h3 className="text-xs font-medium">Comments</h3>
-        </div>
-        <div
-          className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "edit"
-          )}`}
-          onClick={(e) => setCurrentPanel("edit")}
-        >
-          <h3 className="text-xs font-medium">Edit</h3>
+          <h3 className="text-xs font-medium">Admin</h3>
         </div>
       </div>
 
@@ -376,9 +369,20 @@ export default function MapPanel({
             </div>
           )}
 
-          {currentPanel === "assets" && (
+          {currentPanel === "field" && (
             <div id="assets-content" className="w-full">
-              <div className="flex flex-col px-8 py-6">
+              <div className="bg-gray-50">
+                <div className="flex flex-col px-8 pt-6 mb-2 w-full">
+                  <h4 className="leading-none font-medium text-sm mb-2">
+                    Comments
+                  </h4>
+                </div>
+                <div className="flex flex-col px-8 pb-6">
+                  <StructureComments editable={true} />
+                </div>
+              </div>
+
+              <div className="flex flex-col px-8 py-6 w-full">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Assets
                 </h4>
@@ -393,20 +397,7 @@ export default function MapPanel({
             </div>
           )}
 
-          {currentPanel === "comments" && (
-            <div id="inspectors-content" className="w-full bg-gray-50">
-              <div className="flex flex-col px-8 pt-6 mb-2">
-                <h4 className="leading-none font-medium text-sm mb-2">
-                  Comments
-                </h4>
-              </div>
-              <div className="flex flex-col px-8 pb-6">
-                <StructureComments editable={true} />
-              </div>
-            </div>
-          )}
-
-          {currentPanel === "edit" && (
+          {currentPanel === "admin" && (
             <div id="comments-content" className="w-full">
               <div className="flex flex-col px-8 pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>

@@ -5,7 +5,7 @@ const DirectionsComponent = ({ destinationLatitude, destinationLongitude }) => {
     <a
       href={googleMapsLink}
       target="_blank"
-      className="leading-tight text-xs text-blue-700 w-fit"
+      className="leading-tight text-xs text-dark-blue-700 w-fit"
     >
       Get Directions
     </a>

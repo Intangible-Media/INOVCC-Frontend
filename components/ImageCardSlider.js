@@ -1,10 +1,16 @@
+import { useState, useCallback, useEffect } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
-import { useSession } from "next-auth/react";
-import { useState, useCallback } from "react";
 import { deleteFile } from "../utils/api/media";
-import { uploadFiles } from "../utils/api/structures";
 import { ensureDomain } from "../utils/strings";
 import { useInspection } from "../context/InspectionContext";
+import { uploadFiles } from "../utils/api/structures";
+import { FaRegTrashCan } from "react-icons/fa6";
+import {
+  MdOutlineKeyboardArrowLeft,
+  MdOutlineKeyboardArrowRight,
+  MdOutlineSaveAlt,
+} from "react-icons/md";
+import { useSession } from "next-auth/react";
 
 export const useImageUpload = (
   session,
@@ -13,16 +19,29 @@ export const useImageUpload = (
   longitude,
   latitude
 ) => {
-  const { inspection, refreshInspection } = useInspection();
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [uploadedImageObj, setUploadedImageObj] = useState(null);
+  const { refreshInspection } = useInspection();
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadedImageObjs, setUploadedImageObjs] = useState([]);
   const [loadingImage, setLoadingImage] = useState(false);
 
+  useEffect(() => {
+    console.log(uploadedImages);
+  }, [uploadedImages]);
+
   const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    setUploadedImageObj(file);
-    if (file) {
-      setUploadedImage(URL.createObjectURL(file));
+    const files = Array.from(event.target.files);
+    setUploadedImageObjs(files);
+    if (files.length) {
+      setUploadedImages(
+        files.map((file) => {
+          console.log(file);
+          return {
+            type: file.type,
+            name: file.name,
+            url: URL.createObjectURL(file),
+          };
+        })
+      );
     }
   };
 
@@ -60,8 +79,8 @@ export const useImageUpload = (
             ctx.fillText(
               `Latitude: ${latitude}`,
               canvas.width - padding,
-              padding + fontSize + 5 // Additional spacing between lines
-            );
+              padding + fontSize + 5
+            ); // Additional spacing between lines
           }
 
           canvas.toBlob((blob) => {
@@ -79,37 +98,50 @@ export const useImageUpload = (
   );
 
   const handleImageSubmit = async (setImages, images) => {
-    if (!uploadedImage) return;
+    if (!uploadedImages.length) return;
     try {
       setLoadingImage(true);
-      processImageForFinal(uploadedImageObj, async (finalFile) => {
-        const response = await uploadFiles(
-          session.accessToken,
-          [finalFile],
-          structureId,
-          "images"
-        );
-        const newImage = {
-          id: Date.now(),
-          attributes: { url: URL.createObjectURL(finalFile) },
-        };
-        console.log("images", images);
-        console.log("data below", {
-          data: [...images.data, newImage],
-        });
-        setImages({ data: [...images.data, newImage] });
-        setUploadedImage(null);
-        setUploadedImageObj(null);
-        setLoadingImage(false);
-        refreshInspection();
-      });
+      const processedFiles = await Promise.all(
+        uploadedImageObjs.map((file) => {
+          if (file.type.startsWith("image/")) {
+            return new Promise((resolve) => {
+              processImageForFinal(file, resolve);
+            });
+          }
+          return Promise.resolve(file); // Return non-image files as they are
+        })
+      );
+
+      const response = await uploadFiles(
+        session.accessToken,
+        processedFiles,
+        structureId,
+        "images"
+      );
+
+      const newImages = processedFiles.map((file) => ({
+        id: Date.now(),
+        attributes: {
+          url: URL.createObjectURL(file),
+          type: file.type,
+          mime: file.type,
+        },
+      }));
+
+      setImages({ data: [...images.data, ...newImages] });
+      setUploadedImages([]);
+      setUploadedImageObjs([]);
+      setLoadingImage(false);
+      refreshInspection();
     } catch (error) {
       console.error(error);
+      setLoadingImage(false);
     }
   };
 
   return {
-    uploadedImage,
+    uploadedImages,
+    setUploadedImages,
     loadingImage,
     handleImageUpload,
     handleImageSubmit,
@@ -149,7 +181,6 @@ export const useImageActions = (session, images, setImages, setActiveImage) => {
 
   return { handleDelete, downloadImage };
 };
-
 const ImageSlider = ({
   images: propImages = [],
   structureId = null,
@@ -163,9 +194,15 @@ const ImageSlider = ({
   const [uploadImage, setUploadImage] = useState(false);
   const [addGeoTag, setAddGeoTag] = useState(false);
   const [images, setImages] = useState({ data: propImages.data || [] });
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const { uploadedImage, loadingImage, handleImageUpload, handleImageSubmit } =
-    useImageUpload(session, structureId, addGeoTag, longitude, latitude);
+  const {
+    uploadedImages,
+    setUploadedImages,
+    loadingImage,
+    handleImageUpload,
+    handleImageSubmit,
+  } = useImageUpload(session, structureId, addGeoTag, longitude, latitude);
 
   const { handleDelete, downloadImage } = useImageActions(
     session,
@@ -179,6 +216,16 @@ const ImageSlider = ({
     if (event.target.id === "upload-image-modal") setUploadImage(false);
   };
 
+  const nextImage = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % uploadedImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? uploadedImages.length - 1 : prevIndex - 1
+    );
+  };
+
   return (
     <>
       {activeImage && (
@@ -188,25 +235,49 @@ const ImageSlider = ({
           onClick={exitModal}
         >
           <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
-            <img
-              src={ensureDomain(activeImage.attributes.url)}
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="flex justify-between bg-white p-4 absolute bottom-0 left-0 right-0">
-              <Button
-                className="bg-dark-blue-700 hover:bg-dark-blue-800 w-36"
-                onClick={() => downloadImage(activeImage)}
-              >
-                Download
-              </Button>
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleDelete(activeImage.id);
-                }}
-              >
-                Delete
-              </Button>
+            {activeImage.attributes.mime.startsWith("image/") ? (
+              <img
+                src={ensureDomain(activeImage.attributes.url)}
+                className="w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
+                <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-14">
+                  <h6 className=" text-xl text-gray-400 font-medium">
+                    {activeImage.attributes.ext}
+                  </h6>
+                </div>
+                <h6 className="text-sm font-medium">
+                  {activeImage.attributes.name}
+                </h6>
+              </div>
+            )}
+
+            <div className="flex justify-between p-4 absolute bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#000000] bg-opacity-50">
+              <div className="flex justify-between w-full">
+                <button
+                  className="bg-tranparent p-0 hover:p-0 hover:bg-transparent cursor-pointer"
+                  onClick={() => handleDelete(activeImage.id)}
+                >
+                  <FaRegTrashCan
+                    className="p-0"
+                    color="white"
+                    size={19}
+                    style={{ padding: 0 }}
+                  />
+                </button>
+                <button
+                  className="bg-tranparent p-0 hover:p-0 hover:bg-transparent cursor-pointer"
+                  onClick={() => downloadImage(activeImage)}
+                >
+                  <MdOutlineSaveAlt
+                    className="p-0"
+                    color="white"
+                    size={25}
+                    style={{ padding: 0 }}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -218,45 +289,66 @@ const ImageSlider = ({
           className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-10"
           onClick={exitModal}
         >
-          <div className="aspect-square flex bg-white rounded-lg overflow-hidden relative">
-            {uploadedImage && (
-              <>
+          <div className="aspect-square flex bg-red-500 rounded-lg overflow-hidden relative">
+            {uploadedImages.length > 0 ? (
+              <div className="relative w-full h-full">
                 <div
-                  className="flex bg-red-500 p-0.5 px-2 rounded-full top-2 right-2 absolute z-50 cursor-pointer text-white"
+                  className="flex justify-center align-middle bg-red-700 hover:bg-red-800 w-7 h-7 rounded-full top-2 right-2 absolute z-50 cursor-pointer text-white text-xxs"
                   onClick={() => {
-                    setUploadedImage(null);
+                    setUploadedImages((prevImages) =>
+                      prevImages.filter((_, i) => i !== currentIndex)
+                    );
                   }}
                 >
-                  X
+                  <div className="m-auto">X</div>
                 </div>
-                <div className="relative w-full h-full">
+
+                {uploadedImages[currentIndex].type.startsWith("image/") ? (
                   <img
-                    src={uploadedImage}
+                    src={uploadedImages[currentIndex].url}
                     className="w-full h-full object-cover object-center"
                   />
-                  {addGeoTag && (
-                    <div className="absolute right-3 bottom-20">
-                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
-                        Longitude: {longitude}
-                      </p>
-                      <p className="text-white font-medium text-lg text-right drop-shadow-lg">
-                        Latitude: {latitude}
-                      </p>
+                ) : (
+                  <div className="flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800">
+                    <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-10">
+                      <h6 className=" text-base text-gray-400 font-medium">
+                        {uploadedImages[currentIndex].type.split("/")[1]}
+                      </h6>
                     </div>
-                  )}
-                  {loadingImage && (
-                    <div className="flex absolute right-0 bottom-0 left-0 top-0 bg-white bg-opacity-95 z-40 gap-3 text-center justify-center">
-                      <div className="flex flex-col m-auto gap-3">
-                        <Spinner />
-                        <p>Loading Your Image</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+                    <h6 className="text-sm font-medium">
+                      {uploadedImages[currentIndex].name}
+                    </h6>
+                  </div>
+                )}
 
-            {!uploadedImage && (
+                {addGeoTag && (
+                  <div className="absolute right-3 top-16">
+                    <p className="text-white font-medium text-lg text-right drop-shadow-lg">
+                      Longitude: {longitude}
+                    </p>
+                    <p className="text-white font-medium text-lg text-right drop-shadow-lg">
+                      Latitude: {latitude}
+                    </p>
+                  </div>
+                )}
+
+                {uploadedImages[currentIndex].type.startsWith("image/") && (
+                  <div className="absolute top-0 left-0 right-0 flex justify-between p-4 bg-gradient-to-t from-transparent to-[#000000] bg-opacity-50 ">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="agree"
+                        color="darkBlue"
+                        checked={addGeoTag}
+                        onChange={() => setAddGeoTag(!addGeoTag)}
+                      />
+                      <Label htmlFor="agree" className="flex text-white">
+                        Add Geotag
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
               <Label
                 htmlFor="dropzone-file-34343"
                 className="flex justify-center bg-gray-100 w-full h-full items-center overflow-hidden cursor-pointer flex-col"
@@ -291,30 +383,56 @@ const ImageSlider = ({
                   id="dropzone-file-34343"
                   className="hidden"
                   type="file"
+                  multiple
                   onChange={handleImageUpload}
                 />
               </Label>
             )}
 
-            <div className="bg-white flex justify-between p-4 absolute bottom-0 left-0 right-0">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="agree"
-                  color="darkBlue"
-                  checked={addGeoTag}
-                  onChange={() => setAddGeoTag(!addGeoTag)}
-                />
-                <Label htmlFor="agree" className="flex">
-                  Add Geotag
-                </Label>
+            {uploadedImages.length > 0 && (
+              <div className="flex justify-between p-4 absolute bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#000000] bg-opacity-50">
+                {uploadedImages.length > 1 && (
+                  <div className="flex gap-3">
+                    <button
+                      className="bg-tranparent p-0 hover:p-0 hover:bg-transparent"
+                      onClick={prevImage}
+                    >
+                      <MdOutlineKeyboardArrowLeft
+                        className="p-0"
+                        color="white"
+                        size={25}
+                        style={{ padding: 0 }}
+                      />
+                    </button>
+                    <button
+                      className="bg-tranparent p-0 hover:p-0 hover:bg-transparent"
+                      onClick={nextImage}
+                    >
+                      <MdOutlineKeyboardArrowRight
+                        className="p-0"
+                        color="white"
+                        size={25}
+                        style={{ padding: 0 }}
+                      />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex">
+                  <button
+                    className="flex gap-1 text-white"
+                    onClick={() => handleImageSubmit(setImages, images)}
+                  >
+                    <p className="m-auto">Save All</p>
+                    <MdOutlineSaveAlt
+                      size={15}
+                      color={"white"}
+                      style={{ margin: "auto" }}
+                    />
+                  </button>
+                </div>
               </div>
-              <Button
-                className="bg-dark-blue-700 hover:bg-dark-blue-800 w-36"
-                onClick={() => handleImageSubmit(setImages, images)}
-              >
-                Save
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -334,17 +452,36 @@ const ImageSlider = ({
                     </div>
                   </div>
                 );
+
+              if (image.attributes.mime.startsWith("image/")) {
+                return (
+                  <div
+                    className="flex-shrink-0 w-full cursor-pointer"
+                    key={index}
+                    onClick={() => setActiveImage(image)}
+                  >
+                    <img
+                      src={ensureDomain(image.attributes.url)}
+                      alt="travel image"
+                      className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
+                    />
+                  </div>
+                );
+              }
               return (
                 <div
-                  className="flex-shrink-0 w-full"
-                  key={index}
+                  className="group flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800 border border-gray-300 rounded-md p-4 relative overflow-hidden cursor-pointer"
                   onClick={() => setActiveImage(image)}
+                  key={index}
                 >
-                  <img
-                    src={ensureDomain(image.attributes.url)}
-                    alt="travel image"
-                    className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
-                  />
+                  <div className="flex flex-col justify-center ">
+                    <h6 className=" text-lg text-gray-400 font-medium">
+                      {image.attributes.ext}
+                    </h6>
+                  </div>
+                  <h6 className="text-xxs font-medium text-gray-500 shorten-text absolute -bottom-3 left-3 right-3 group-hover:bottom-3 transition-all duration-200">
+                    {image.attributes.name}
+                  </h6>
                 </div>
               );
             })
