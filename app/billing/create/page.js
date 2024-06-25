@@ -17,6 +17,7 @@ import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
 import Link from "next/link";
 import { FaCalendarDays } from "react-icons/fa6";
 import InvoiceHeading from "../../../components/Invoice/Heading";
+import { updateStructure } from "../../../utils/api/structures";
 import {
   camelCaseToTitleCase,
   titleCaseToKebabCase,
@@ -221,13 +222,18 @@ export default function Page({ params }) {
         },
         {
           status: {
-            $eq: "Inspected", // Filter structures by "inspected" status
+            $eq: "Uploaded", // Filter structures by "inspected" status
           },
         },
         {
-          inspectionDate: {
+          uploadDate: {
             $gte: startDate, // Start of the date range
             $lte: endDate, // End of the date range
+          },
+        },
+        {
+          billed: {
+            $eq: false,
           },
         },
       ],
@@ -300,38 +306,65 @@ export default function Page({ params }) {
   });
 
   const createInvoice = async () => {
-    if (session?.accessToken) {
-      if (!allValuesGreaterThanZero) {
-        console.log("Please fill out all the fields");
-        return;
-      }
+    if (!session) return;
 
-      try {
-        const invoiceData = {
-          data: {
-            name: `testing-${Date.now()}`,
-            client: selectedClientId,
-            structures: structures.map((structure) => structure.id),
-            paid: false,
-            pricing: inputValues,
+    if (!allValuesGreaterThanZero) {
+      console.log("Please fill out all the fields");
+      return;
+    }
+
+    try {
+      const invoiceData = {
+        data: {
+          name: `${client.name} - ${Date.now()}`,
+          client: selectedClientId,
+          structures: structures.map((structure) => structure.id),
+          paid: false,
+          pricing: inputValues,
+        },
+      };
+
+      const invoiceResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/invoices`,
+        invoiceData,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
           },
-        };
+        }
+      );
 
-        const invoiceResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/invoices`,
-          invoiceData,
-          {
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`,
-            },
-          }
-        );
+      const updateAllStructuresToBilled = async () => {
+        try {
+          const promises = structures.map((structure) => {
+            const payload = {
+              data: {
+                billed: true,
+              },
+            };
+            const apiParams = {
+              jwt: session.accessToken,
+              id: structure.id,
+              payload: payload,
+              query: "",
+            };
 
-        setShowSuccessAlert(true);
-        return invoiceResponse;
-      } catch (error) {
-        console.error("Error fetching data", error.response || error);
-      }
+            return updateStructure(apiParams); // Ensure this function returns a promise
+          });
+
+          await axios.all(promises);
+          console.log("All structures updated to billed successfully.");
+        } catch (error) {
+          console.error("Error updating structures:", error);
+        }
+      };
+
+      const updatedStructuresResponse = await updateAllStructuresToBilled();
+
+      setShowSuccessAlert(true);
+      return invoiceResponse;
+    } catch (error) {
+      console.error("Error fetching data", error.response || error);
     }
   };
 

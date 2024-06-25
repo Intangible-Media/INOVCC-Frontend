@@ -54,10 +54,10 @@ export default function FavoriteInspectionCard({ inspection }) {
   };
 
   return (
-    <div className="inline-block rounded-lg overflow-hidden shadow hover:shadow-lg transition-all duration-200 ease-in-out">
+    <div className="inline-block rounded-lg overflow-hidden transition-all duration-200 ease-in-out border border-gray-200">
       <div className="w-80 max-w-xs  bg-white p-6">
         <div className="flex justify-between gap-2">
-          <h6 className="font-bold text-lg text-dark-blue-700 hover:underline shorten-text capitalize">
+          <h6 className="font-bold text-base text-dark-blue-700 hover:underline shorten-text capitalize">
             {inspection.attributes.name}
           </h6>
 

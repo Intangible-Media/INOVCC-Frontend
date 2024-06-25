@@ -270,13 +270,13 @@ export default function Dashboard() {
         </div>
       </div> */}
 
-      <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-300 rounded-lg overflow-hidden bg-white p-4 md:p-6">
+      <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-200 rounded-md overflow-hidden bg-white p-4 md:p-6">
         <div className="flex bg-white gap-6 justify-between">
           <div>
-            <h3 className="text-xl font-bold dark:text-white">
+            <h3 className="text-xl font-bold dark:text-white mb-1">
               Structure Reports
             </h3>
-            <h6 className="text-sm font-normal text-gray-400">
+            <h6 className="text-sm font-light text-gray-400">
               Filter and download
             </h6>
           </div>

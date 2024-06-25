@@ -107,6 +107,10 @@ export default function MapPanel({
         newAttributes.inspectionDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }
 
+      if (status === "Uploaded") {
+        newAttributes.uploadDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }
+
       const payload = { data: newAttributes };
 
       console.log(payload);
@@ -469,10 +473,12 @@ export default function MapPanel({
                         });
                       }}
                     >
-                      <option value="Not Inspected">Not Inspected</option>
-                      <option value="Uploaded">Uploaded</option>
-                      <option value="Inspected">Inspected</option>
                       <option value="Cannot Locate">Cannot Locate</option>
+                      <option value="Not Inspected">Not Inspected</option>
+                      <option value="Inspected">Inspected</option>
+                      <option value="Uploaded">Uploaded</option>
+                      <option value="Urgent">Urgent</option>
+                      <option value="Nonbillable">Do Not Bill</option>
                     </select>
                   </div>
                   <div className="flex flex-col w-full">

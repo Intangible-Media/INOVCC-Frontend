@@ -488,6 +488,7 @@ export default function Page({ params }) {
 
       // Group structures by type
       const newGroupedStructures = groupByType(sortedStructures);
+      console.log(newGroupedStructures);
 
       // Update the state with the new grouped structures
       setGroupedStructures(newGroupedStructures);
@@ -669,7 +670,7 @@ export default function Page({ params }) {
                       border: [false, false, false, false],
                     },
                     {
-                      text: `$${item.unitPrice.toFixed(2)}`,
+                      text: `$${item.unitPrice}`,
                       style: "tableBody",
                       fillColor: "#ffffff",
                       border: [false, false, false, false],
@@ -712,7 +713,7 @@ export default function Page({ params }) {
       };
 
       // Example usage with dummy data for the invoice items
-      const invoiceItems = [
+      const invoiceItemsalt = [
         {
           description: "Web Development Services",
           quantity: 120,
@@ -721,6 +722,17 @@ export default function Page({ params }) {
         { description: "Web Hosting (Annual)", quantity: 1, unitPrice: 300.0 },
         // You can add more items as needed
       ];
+
+      const invoiceItems = Object.keys(newGroupedStructures).map((type) => {
+        console.log(newGroupedStructures[type].length);
+        return {
+          description: type,
+          quantity: newGroupedStructures[type].length,
+          unitPrice: clientPricing[type],
+        };
+      });
+
+      console.log(invoiceItems);
 
       docDefinition.content.push(createInvoiceTable(invoiceItems));
 

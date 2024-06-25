@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -135,7 +135,6 @@ export default function RevenueChart({
 }) {
   const [xaxisCategories, setXaxisCategories] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
-  const chartRef = useRef(null);
 
   useEffect(() => {
     const aggregationLevel = aggregation || "day";
@@ -250,16 +249,8 @@ export default function RevenueChart({
     ],
   };
 
-  const handleDownloadSVG = () => {
-    if (chartRef.current) {
-      const chart = chartRef.current.chart;
-      chart.exec("revenueChart", "downloadSVG");
-    }
-  };
-
   return (
     <ApexChart
-      ref={chartRef}
       type="bar"
       options={options}
       series={seriesData}
