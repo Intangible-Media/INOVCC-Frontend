@@ -13,6 +13,8 @@ import Papa from "papaparse";
 import { useAlert } from "../../context/AlertContext";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
+import { GoGear } from "react-icons/go";
+
 import axios from "axios";
 import {
   createInspection,
@@ -550,6 +552,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
             </label>
           </div>
         )}
+
         {uploadedStructures.length > 0 && (
           <div>
             <div className="flex justify-between mb-4">
@@ -618,7 +621,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
       >
         <p className="mr-3">{btnText || "New Inspection"}</p>
-        {showIcon && <GearIcon />}
+        {showIcon && <GoGear size={17} color="white" />}
       </Button>
 
       {isDrawerOpen && (

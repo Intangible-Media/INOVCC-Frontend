@@ -15,6 +15,7 @@ import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo } from "../../utils/strings";
 import ActivityLog from "../ActivityLog";
 import AvatarImage from "../AvatarImage";
+import { MdArrowBackIos } from "react-icons/md";
 import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
@@ -172,8 +173,18 @@ export default function MapPanel({
 
   return (
     <>
-      <div className="flex justify-between px-8 pt-5 pb-2 w-full">
+      <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 w-full">
         <div className="flex flex-col gap-2">
+          <h6
+            className=" text-dark-blue-700 text-xxs flex gap-0.5"
+            onClick={() => {
+              setActiveView("overview");
+              setStructureSearch("");
+            }}
+          >
+            <MdArrowBackIos size={8} />
+            Back
+          </h6>
           <h4 className="leading-none text-xs font-medium text-gray-500">
             {inspection?.name || ""}
           </h4>
@@ -209,7 +220,7 @@ export default function MapPanel({
         </span>
       </div>
 
-      <div className="im-tabs-header flex gap-3 border-b w-full px-8 justify-around">
+      <div className="im-tabs-header flex gap-3 border-b w-full px-6 md:px-8  justify-around">
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "overview"
@@ -241,7 +252,7 @@ export default function MapPanel({
         <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
             <div id="overview-content">
-              <div className="flex gap-4 border-b px-8 py-8">
+              <div className="flex gap-4 border-b px-6 md:px-8  py-8">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400 w-full">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg
@@ -329,22 +340,22 @@ export default function MapPanel({
                   </li>
                 </ul>
               </div>
-              <div className="flex flex-col border-b px-8 py-6">
+              <div className="flex flex-col border-b px-6 md:px-8  py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
-                  Assets
+                  Structure Documents
                 </h4>
                 <ImageCardSlider
                   images={updatedStructure.attributes.images}
                   editable={false}
                 />
               </div>
-              <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
+              <div className="flex flex-col blorder-b px-6 md:px-8  py-6 bg-gray-50">
                 <h4 className="leading-none font-medium text-sm mb-2">
                   Comments
                 </h4>
                 <StructureComments />
               </div>
-              <div className="flex flex-col border-b px-8 py-6">
+              <div className="flex flex-col border-b px-6 md:px-8  py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
                 </h4>
@@ -359,7 +370,7 @@ export default function MapPanel({
                 />
               </div>
 
-              <div className="flex flex-col blorder-b px-8 py-6 bg-gray-50">
+              <div className="flex flex-col blorder-b px-6 md:px-8  py-6 bg-gray-50">
                 <h4 className="leading-none font-medium text-sm mb-2">
                   Activity
                 </h4>
@@ -376,19 +387,19 @@ export default function MapPanel({
           {currentPanel === "field" && (
             <div id="assets-content" className="w-full">
               <div className="bg-gray-50">
-                <div className="flex flex-col px-8 pt-6 mb-2 w-full">
+                <div className="flex flex-col px-6 md:px-8  pt-6 mb-2 w-full">
                   <h4 className="leading-none font-medium text-sm mb-2">
                     Comments
                   </h4>
                 </div>
-                <div className="flex flex-col px-8 pb-6">
+                <div className="flex flex-col px-6 md:px-8  pb-6">
                   <StructureComments editable={true} />
                 </div>
               </div>
 
-              <div className="flex flex-col px-8 py-6 w-full">
+              <div className="flex flex-col px-6 md:px-8  py-6 w-full">
                 <h4 className="leading-none font-medium text-sm mb-4">
-                  Assets
+                  Structure Documents
                 </h4>
                 <ImageCardSlider
                   images={updatedStructure.attributes.images}
@@ -403,7 +414,7 @@ export default function MapPanel({
 
           {currentPanel === "admin" && (
             <div id="comments-content" className="w-full">
-              <div className="flex flex-col px-8 pt-6 pb-8">
+              <div className="flex flex-col px-6 md:px-8  pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
 
                 <div className="flex flex-col gap-4">
