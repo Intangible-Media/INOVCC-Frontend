@@ -1,6 +1,6 @@
 import { Label, FileInput, Dropdown } from "flowbite-react";
 import { GoPlus } from "react-icons/go";
-import { ensureDomain } from "../utils/strings";
+import { ensureDomain, getUrls } from "../utils/strings";
 
 export default function ImageCardGrid({
   files,
@@ -119,13 +119,18 @@ export default function ImageCardGrid({
       >
         {files?.map((file, index) => {
           // Create an object URL for the file
+
+          const smallestImageResolution =
+            getUrls(file, "smallest")[0] || URL.createObjectURL(file);
           const fileUrl = file.attributes?.url || URL.createObjectURL(file);
           const fileName = file.attributes?.name || file.name;
 
           // Determine the background style
           const backgroundStyle = isImage(fileName)
             ? {
-                backgroundImage: `url(${ensureDomain(fileUrl)})`,
+                backgroundImage: `url(${ensureDomain(
+                  smallestImageResolution
+                )})`,
                 backgroundSize: "cover",
               }
             : {};

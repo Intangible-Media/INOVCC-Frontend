@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
-import { ensureDomain } from "../utils/strings";
+import { ensureDomain, getUrls } from "../utils/strings";
 import { useInspection } from "../context/InspectionContext";
 import { uploadFiles } from "../utils/api/structures";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -441,6 +441,11 @@ const ImageSlider = ({
         <div className="grid grid-cols-3 gap-2">
           {images.data && images.data.length > 0 ? (
             images.data.map((image, index) => {
+              console.log(getUrls(image, "smallest"));
+
+              const smallestImageResolution = getUrls(image, "smallest")[0];
+              const rawImageResolution = getUrls(image, "raw")[0];
+
               if (limit && index >= 6) return null;
               if (limit && index === 5)
                 return (
@@ -461,7 +466,7 @@ const ImageSlider = ({
                     onClick={() => setActiveImage(image)}
                   >
                     <img
-                      src={ensureDomain(image.attributes.url)}
+                      src={ensureDomain(smallestImageResolution)}
                       alt="travel image"
                       className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
                     />

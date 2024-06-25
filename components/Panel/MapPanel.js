@@ -12,7 +12,7 @@ import { getAllTeams } from "../../utils/api/teams";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
 import { getLocationDetails } from "../../utils/api/mapbox";
-import { formatReadableDate, timeAgo } from "../../utils/strings";
+import { formatReadableDate, timeAgo, getUrls } from "../../utils/strings";
 import ActivityLog from "../ActivityLog";
 import AvatarImage from "../AvatarImage";
 import { MdArrowBackIos } from "react-icons/md";

@@ -470,3 +470,44 @@ export const titleCaseToKebabCase = (input) => {
     .map((word) => word.toLowerCase())
     .join("-");
 };
+
+/**
+ * Retrieves an array of URLs from the given object based on the specified size argument.
+ *
+ * @param {Object} obj - The object containing image data.
+ * @param {string} size - The size preference for the URLs ("smallest", "largest", "raw").
+ * @returns {string[]} An array of URLs based on the specified size preference.
+ * @throws {Error} Throws an error if the size argument is invalid.
+ */
+export const getUrls = (obj, size) => {
+  console.log("obj", obj);
+  const formats = obj.attributes.formats;
+
+  // If formats is null, return the raw URL in an array
+  if (formats === null) {
+    return [obj.attributes.url];
+  }
+
+  const urlOrder = ["thumbnail", "small", "medium", "large"];
+
+  /**
+   * Helper function to safely get the URL for a given format key.
+   *
+   * @param {string} key - The format key.
+   * @returns {string|undefined} The URL for the format, or undefined if not available.
+   */
+  const getUrl = (key) => formats[key]?.url;
+
+  if (size === "smallest") {
+    return urlOrder.map(getUrl).filter((url) => url);
+  } else if (size === "largest") {
+    return urlOrder
+      .reverse()
+      .map(getUrl)
+      .filter((url) => url);
+  } else if (size === "raw") {
+    return [obj.attributes.url];
+  } else {
+    throw new Error("Invalid size argument");
+  }
+};

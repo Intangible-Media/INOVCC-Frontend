@@ -179,7 +179,6 @@ export default function Page(props) {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     const filteredStructuresList =
       inspection?.structures.data.filter((structure) => {
-        console.log("structure search", structure);
         const attributes = structure.attributes;
         return ["status", "mapSection", "type"].some((field) =>
           attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
@@ -866,7 +865,7 @@ export default function Page(props) {
 
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <div className="flex flex-col gap-1">
-            <h6 className="text-lg font-semibold">Documents</h6>
+            <h6 className="text-lg font-semibold">Map Documents</h6>
             <p className="text-base text-gray-500">{inspection?.name || ""}</p>
           </div>
           <div className="overflow-auto">
@@ -901,35 +900,10 @@ export default function Page(props) {
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <div className="flex justify-between">
             <div>
-              <h6 className="text-lg font-semibold">Assets</h6>
-              <select
-                className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                value={structureAssetType}
-                onChange={(e) => {
-                  setStructureAssetType(e.target.value);
-                }}
-              >
-                <option value="All">All</option>
-                {getAllStructureTypes().map((structureType, index) => (
-                  <option key={index} value={structureType}>
-                    {structureType}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              {selectedStructure && (
-                <span
-                  className={`${getInspectionColor(
-                    selectedStructure.attributes.status
-                  )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full`}
-                >
-                  {selectedStructure.attributes.status}
-                  {selectedStructure.attributes.status === "Uploaded" && (
-                    <CheckMark />
-                  )}
-                </span>
-              )}
+              <h6 className="text-lg font-semibold">All Structure Documents</h6>
+              <p className="text-base text-gray-500">
+                {inspection?.name || ""}
+              </p>
             </div>
           </div>
           <div className="overflow-auto">
