@@ -98,44 +98,47 @@ export const deleteStructure = (data) => {
 };
 
 /**
- * Asynchronously uploads an array of files to a specified field within a structure entry.
- * The files are uploaded via a multipart/form-data POST request to a dedicated upload endpoint.
+ * Asynchronously uploads each file from an array of files to a specified field within a structure entry.
+ * Each file is uploaded via a separate multipart/form-data POST request to a dedicated upload endpoint.
  *
  * @async
  * @param {File[]} files - An array of File objects to be uploaded.
  * @param {string} structureId - The ID of the structure to which the files are to be associated.
  * @param {string} fieldName - The name of the field within the structure entry to associate the uploaded files with.
- * @returns {Promise<void>} A promise that resolves when the upload operation is complete. Logs the outcome of the operation.
+ * @returns {Promise<void>} A promise that resolves when all upload operations are complete. Logs the outcome of each operation.
  */
 
-// Helper function to upload files to a specific field
 export const uploadFiles = async (jwt, files, structureId, fieldName) => {
-  const formData = new FormData();
+  for (const file of files) {
+    const formData = new FormData();
 
-  files.forEach((file) => {
-    formData.append("files", file); // Add each file to the form data
-  });
+    // Add the current file to the form data
+    formData.append("files", file);
 
-  // Append reference data to link the uploaded files to the structure entry
-  formData.append("ref", "api::structure.structure"); // Adjust according to your API path
-  formData.append("refId", structureId);
-  formData.append("field", fieldName); // Use the field name passed as a parameter
+    // Append reference data to link the uploaded file to the structure entry
+    formData.append("ref", "api::structure.structure"); // Adjust according to your API path
+    formData.append("refId", structureId);
+    formData.append("field", fieldName); // Use the field name passed as a parameter
 
-  try {
-    // Make the POST request to upload and associate files with the structure entry
-    const uploadResponse = await axios.post(
-      `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/upload`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    try {
+      // Make the POST request to upload and associate the file with the structure entry
+      const uploadResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    //console.log(`${fieldName} uploaded successfully`, uploadResponse.data);
-  } catch (error) {
-    console.error(`Error uploading ${fieldName}:`, error);
+      console.log(
+        `${file.name} uploaded successfully to ${fieldName}`,
+        uploadResponse.data
+      );
+    } catch (error) {
+      console.error(`Error uploading ${file.name} to ${fieldName}:`, error);
+    }
   }
 };

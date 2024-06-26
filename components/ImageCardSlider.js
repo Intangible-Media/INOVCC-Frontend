@@ -28,6 +28,8 @@ export const useImageUpload = (
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
+    console.log(files);
+    alert(files);
     setUploadedImageObjs(files);
     if (files.length) {
       setUploadedImages(
