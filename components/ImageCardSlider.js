@@ -231,7 +231,7 @@ const ImageSlider = ({
       {activeImage && (
         <div
           id="active-image-modal"
-          className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-10"
+          className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10"
           onClick={exitModal}
         >
           <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
@@ -286,7 +286,7 @@ const ImageSlider = ({
       {uploadImage && (
         <div
           id="upload-image-modal"
-          className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-10"
+          className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10"
           onClick={exitModal}
         >
           <div className="aspect-square flex bg-red-500 rounded-lg overflow-hidden relative">

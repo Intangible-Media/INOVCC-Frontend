@@ -538,7 +538,8 @@ input[type="date"] {
 }
 
 .inspection-map-box {
-  max-height: 575px;
+  height: 550px;
+  max-height: 475px;
 }
 
 .inspection-map-box-sm {

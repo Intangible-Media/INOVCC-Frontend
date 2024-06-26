@@ -170,8 +170,8 @@ export default function MapPanel({
 
   return (
     <>
-      <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 w-full">
-        <div className="flex flex-col gap-2">
+      <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
+        <div className="flex flex-col gap-2 w-auto shrink">
           <h6
             className=" text-dark-blue-700 text-xxs flex gap-0.5 cursor-pointer"
             onClick={() => {
@@ -185,18 +185,20 @@ export default function MapPanel({
           <h4 className="leading-none text-xs font-medium text-gray-500">
             {inspection?.name || ""}
           </h4>
-          <h3 className="text-base leading-none font-medium">
-            {structure?.attributes.mapSection || ""}{" "}
-            <span className="text-gray-500">
+          <div className="flex shrink">
+            <h3 className="text-base leading-none font-medium shorten-text">
+              {structure?.attributes.mapSection || ""}{" "}
+            </h3>
+            <span className="text-base leading-none font-medium text-gray-500 shrink-0">
               {" "}
               / {structure?.attributes.type || ""}
             </span>
-          </h3>
+          </div>
         </div>
         <span
           className={`${getInspectionColor(
             updatedStructure.attributes.status
-          )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full`}
+          )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full `}
         >
           {updatedStructure.attributes.status}
           {updatedStructure.attributes.status === "Uploaded" && (

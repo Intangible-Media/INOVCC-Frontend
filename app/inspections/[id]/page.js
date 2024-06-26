@@ -65,7 +65,7 @@ export default function Page(props) {
     series: [70],
     chart: {
       type: "radialBar",
-      offsetY: -33,
+      offsetY: 0,
     },
     colors: ["#FDF6B2"],
     plotOptions: {
@@ -684,7 +684,7 @@ export default function Page(props) {
   return (
     <>
       <div className="flex flex-col md:flex-row justify-between pt-6 pb-5">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>
@@ -710,7 +710,7 @@ export default function Page(props) {
             <InspectionDrawer
               inspection={inspection}
               setInspection={setInspection}
-              btnText={"Edit Inspection"}
+              btnText={"Edit Map"}
               showIcon={true}
             />
           </ProtectedContent>
@@ -870,15 +870,17 @@ export default function Page(props) {
               )}
             </div>
           </div>
-          <div className="w-full mt-auto">
+          <div className="w-full mt-auto md:mt-0">
             <ProtectedContent requiredRoles={["Admin"]}>
-              <ApexChart
-                type="radialBar"
-                options={options}
-                series={[activeCompletion]}
-                height={450}
-                width={"100%"}
-              />
+              <div className=" h-[400px] md:h-[400px] -mb-12 -mt-8">
+                <ApexChart
+                  type="radialBar"
+                  options={options}
+                  series={[activeCompletion]}
+                  height={"100%"}
+                  width={"100%"}
+                />
+              </div>
             </ProtectedContent>
           </div>
         </div>

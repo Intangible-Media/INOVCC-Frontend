@@ -632,7 +632,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         onClick={toggleDrawer}
         className="bg-dark-blue-700 text-white w-full shrink-0 self-start"
       >
-        <p className="mr-3">{btnText || "New Inspection"}</p>
+        <p className="mr-3">{btnText || "New Map"}</p>
         {showIcon && <GoGear size={17} color="white" />}
       </Button>
 
