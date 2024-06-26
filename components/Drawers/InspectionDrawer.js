@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from "react";
 import DirectionsComponent from "../DirectionsComponent";
 import { getAllClients } from "../../utils/api/clients";
 import { useParams, useRouter } from "next/navigation";
-import { MdLocationPin } from "react-icons/md";
+import { MdLocationPin, MdArrowBackIos } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
 import { HiHome } from "react-icons/hi";
@@ -14,6 +14,7 @@ import { useAlert } from "../../context/AlertContext";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
 import { GoGear } from "react-icons/go";
+import { useLoading } from "../../context/LoadingContext";
 
 import axios from "axios";
 import {
@@ -32,12 +33,6 @@ import {
   Spinner,
 } from "flowbite-react";
 import {
-  PlusIcon,
-  GearIcon,
-  AddFavorite,
-  StarSm,
-} from "../../public/icons/intangible-icons";
-import {
   useInspection,
   fetchInspection,
 } from "../../context/InspectionContext";
@@ -48,6 +43,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
+  const { showLoading, hideLoading, showSuccess } = useLoading();
 
   const [loadingNewStructure, setLoadingNewStructure] = useState(false);
   const [isLoadingInspection, setIsLoadingInspection] = useState(false);
@@ -139,7 +135,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   };
 
   const submitInspection = async () => {
-    setIsLoadingInspection(true); // Assume you have a state to manage loading
+    showLoading("Updating Inspection Map..."); // Assume you have a state to manage loading
 
     const payload = {
       data: {
@@ -165,7 +161,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           client: newInspection.client,
         };
 
-        showAlert("API call successful!", "success", 5000);
         setInspection(updatedInspection);
       } else {
         // Creation logic here
@@ -173,13 +168,13 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         router.push(`/inspections/${response.data.data.id}`);
       }
 
-      setIsLoadingInspection(false);
+      showSuccess();
     } catch (error) {
       showAlert("Error submitting inspection:", "failed");
 
       console.error("Error submitting inspection:", error);
     } finally {
-      setIsLoadingInspection(false);
+      hideLoading(false);
     }
   };
 
@@ -207,7 +202,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       },
     };
 
-    setLoadingNewStructure(true);
+    showLoading("Creating New Structure...");
 
     try {
       // Assume createStructure is imported or defined similar to createInspection
@@ -242,7 +237,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         images: [],
       });
 
-      setLoadingNewStructure(false);
+      showSuccess();
 
       return response;
     } catch (error) {
@@ -251,7 +246,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       if (error.response) {
         console.error("Error details:", error.response.data); // log the server's response
       }
-      setLoadingNewStructure(false);
+      hideLoading();
       return error;
     }
   };
@@ -907,6 +902,15 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
+                  <h6
+                    className=" text-dark-blue-700 text-xs flex gap-0.5 cursor-pointer font-semibold"
+                    onClick={() => {
+                      setFormView("inspection");
+                    }}
+                  >
+                    <MdArrowBackIos size={10} />
+                    Back
+                  </h6>
                   <h3 className="leading-tight text-2xl font-medium">
                     Edit{" "}
                     {inspection?.name === "" ? (
@@ -1017,7 +1021,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                   </div>
                 </div>
 
-                <ImageCardGrid
+                {/* <ImageCardGrid
                   files={structure.documents}
                   updateFiles={updateStructureDocuments}
                   labelText={"Structure Documents"}
@@ -1031,15 +1035,15 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                   labelText={"Structure Assets"}
                   identifier={"structure-assets"}
                   editMode={true}
-                />
+                /> */}
 
                 <div className="flex bg-100 justify-end">
-                  <Button
+                  {/* <Button
                     className="bg-dark-blue-700"
                     onClick={() => setFormView("inspection")}
                   >
                     Back
-                  </Button>
+                  </Button> */}
                   <Button
                     className="bg-dark-blue-700"
                     onClick={() => createAndUploadStructure()}

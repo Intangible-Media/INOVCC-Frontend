@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Keyframe animations */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg) scale(.45);
+    
+  }
+  50% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+/* Applying animations */
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+.animate-spin {
+  animation: spin 2s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-in-out;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

@@ -35,6 +35,7 @@ import {
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
 import { AddFavorite } from "../../../public/icons/intangible-icons";
+import { useLoading } from "../../../context/LoadingContext";
 import { format } from "path";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -45,6 +46,7 @@ export default function Page(props) {
   const pathname = usePathname();
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
+  const { showLoading, hideLoading } = useLoading();
 
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -679,6 +681,9 @@ export default function Page(props) {
     <>
       <div className="flex flex-col md:flex-row justify-between py-6">
         <div className="flex flex-col gap-3 mb-4">
+          <button onClick={() => showLoading("Loading Images...")}>
+            Loading Me
+          </button>
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>

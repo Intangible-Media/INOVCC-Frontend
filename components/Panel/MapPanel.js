@@ -176,7 +176,7 @@ export default function MapPanel({
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 w-full">
         <div className="flex flex-col gap-2">
           <h6
-            className=" text-dark-blue-700 text-xxs flex gap-0.5"
+            className=" text-dark-blue-700 text-xxs flex gap-0.5 cursor-pointer"
             onClick={() => {
               setActiveView("overview");
               setStructureSearch("");
