@@ -212,7 +212,7 @@ export default function Page({ params }) {
         <div className="flex flex-col col-span-5 gap-3">
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
             <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {teams.map((team, index) => {
                 const teamScheduledStructures = structures.filter(
                   (structure) => {
@@ -231,7 +231,7 @@ export default function Page({ params }) {
             <h6 className=" text-xs text-gray-400 border-b border-gray-300 mt-6 mb-4 pb-2">
               Not Scheduled Teams
             </h6>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {teams.map((team, index) => {
                 const teamScheduledStructures = structures.filter(
                   (structure) => {

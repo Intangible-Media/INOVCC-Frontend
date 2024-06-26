@@ -344,7 +344,7 @@ export default function MapPanel({
                   Structure Documents
                 </h4>
                 <ImageCardSlider
-                  images={updatedStructure.attributes.images}
+                  images={structure.attributes.images}
                   editable={false}
                 />
               </div>

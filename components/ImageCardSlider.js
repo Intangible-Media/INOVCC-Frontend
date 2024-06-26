@@ -97,7 +97,7 @@ export const useImageUpload = (
     [addGeoTag, longitude, latitude]
   );
 
-  const handleImageSubmit = async (setImages, images) => {
+  const handleImageSubmit = async (images) => {
     if (!uploadedImages.length) return;
     try {
       showLoading("Uploading your images...");
@@ -131,7 +131,7 @@ export const useImageUpload = (
 
       setUploadedImages([]);
       setUploadedImageObjs([]);
-      refreshInspection();
+      await refreshInspection();
       showSuccess("Finished loading images!");
     } catch (error) {
       console.error(error);
@@ -148,12 +148,11 @@ export const useImageUpload = (
   };
 };
 
-export const useImageActions = (session, images, setImages, setActiveImage) => {
+export const useImageActions = (session, images, setActiveImage) => {
   const handleDelete = async (id) => {
     if (!session) return console.error("Not authenticated");
     try {
       await deleteFile({ id, jwt: session.accessToken });
-      setImages({ data: images.data.filter((image) => image.id !== id) });
       setActiveImage(null);
     } catch (error) {
       console.error(error);
@@ -182,18 +181,18 @@ export const useImageActions = (session, images, setImages, setActiveImage) => {
   return { handleDelete, downloadImage };
 };
 const ImageSlider = ({
-  images: propImages = [],
+  images,
   structureId = null,
   limit = true,
   longitude = 0,
   latitude = 0,
   editable = true,
 }) => {
+  console.log("images slider", images);
   const { data: session } = useSession();
   const [activeImage, setActiveImage] = useState(null);
   const [uploadImage, setUploadImage] = useState(false);
   const [addGeoTag, setAddGeoTag] = useState(false);
-  const [images, setImages] = useState({ data: propImages.data || [] });
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const {
@@ -207,7 +206,6 @@ const ImageSlider = ({
   const { handleDelete, downloadImage } = useImageActions(
     session,
     images,
-    setImages,
     setActiveImage
   );
 
@@ -421,7 +419,7 @@ const ImageSlider = ({
                 <div className="flex">
                   <button
                     className="flex gap-1 text-white"
-                    onClick={() => handleImageSubmit(setImages, images)}
+                    onClick={() => handleImageSubmit(images)}
                   >
                     <p className="m-auto">Save All</p>
                     <MdOutlineSaveAlt

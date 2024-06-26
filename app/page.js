@@ -4,8 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import InspectionTable from "../components/InspectionTable";
 import { getAllInspections } from "../utils/api/inspections";
+import { getAllTeams } from "../utils/api/teams";
 import { getAllInvoices } from "../utils/api/invoices";
 import { getAllStructure } from "../utils/api/structures";
+import { useRouter } from "next/navigation";
 import qs from "qs";
 import dynamic from "next/dynamic";
 import RevenueChart from "../components/Charts/RevenueChart";
@@ -94,6 +96,7 @@ const calculatePercentageChange = (totals) => {
 export default function Home() {
   const { data: session } = useSession();
   const [inspections, setInspections] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [structures, setStructures] = useState([]);
   const chartRef = useRef(null);
@@ -349,6 +352,23 @@ export default function Home() {
     },
   });
 
+  const teamsQuery = qs.stringify(
+    {
+      populate: {
+        structures: {
+          filters: {
+            scheduleForInspection: {
+              $eq: today,
+            },
+          },
+        },
+      },
+    },
+    {
+      encodeValuesOnly: true, // prettify URL
+    }
+  );
+
   const structuresQuery = qs.stringify({
     filters: {
       status: {
@@ -384,6 +404,15 @@ export default function Home() {
       setInspections(inspectionResponse.data.data);
     };
 
+    const fetchTeams = async () => {
+      const teams = await getAllTeams({
+        jwt: session.accessToken,
+        query: teamsQuery,
+      });
+      console.log(teams.data.data);
+      setTeams(teams.data.data);
+    };
+
     const fetchStructures = async () => {
       const apiParams = {
         jwt: session?.accessToken,
@@ -407,9 +436,48 @@ export default function Home() {
     };
 
     fetchProjects();
+    fetchTeams();
     fetchStructures();
     fetchInvoices();
   }, [session]);
+
+  const ProgressCard = ({ team }) => {
+    const router = useRouter();
+
+    return (
+      <div
+        className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
+        onClick={() => router.push(`/schedules/${team.id}`)}
+      >
+        <div className="flex flex-col gap-2">
+          <h4 className="leading-none font-medium text-md text-dark-blue-700">
+            {team.attributes.name}
+          </h4>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex w-7 h-7 bg-gray-200 rounded-full text-gray-700">
+            <p className="text-xs m-auto">{0}</p>
+          </div>
+
+          <div className="flex w-7 h-7 bg-yellow-100 rounded-full text-yellow-700">
+            <p className="text-xs m-auto">{0}</p>
+          </div>
+
+          <div className="flex w-7 h-7 bg-green-100 rounded-full text-green-700">
+            <p className="text-xs m-auto">{0}</p>
+          </div>
+
+          <div className="flex w-7 h-7 bg-red-200 rounded-full text-red-800">
+            <p className="text-xs m-auto">{0}</p>
+          </div>
+
+          <div className="flex w-7 h-7 bg-green-700 rounded-full text-white">
+            <p className="text-xs m-auto">{0}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -483,6 +551,21 @@ export default function Home() {
           <RevenueChart invoices={invoices} />
         </div>
       </div>
+
+      <section className="grid grid-col p-0 rounded-md gap-4 mb-4">
+        <div className="flex flex-col col-span-5 gap-3">
+          <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
+            <h5 className="text-xl font-bold dark:text-white mb-3">
+              Teams Scheduled
+            </h5>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {teams.map((team, index) => (
+                <ProgressCard key={index} team={team} showEmpty={false} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 mb-4 shadow-none">
         <div className="border-gray-300 rounded-lg dark:border-gray-600 bg-white p-0 shadow-none">

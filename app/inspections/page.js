@@ -271,7 +271,7 @@ export default function Dashboard() {
       </div> */}
 
       <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-200 rounded-md overflow-hidden bg-white p-4 md:p-6">
-        <div className="flex bg-white gap-6 justify-between">
+        <div className="flex flex-col md:flex-row bg-white gap-6 justify-between">
           <div>
             <h3 className="text-xl font-bold dark:text-white mb-1">
               Structure Reports
@@ -282,9 +282,9 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-between">
             {/* <h3 className="text-xl font-bold dark:text-white">Report</h3> */}
-            <div className="flex gap-3">
+            <div className="flex flex-col w-full md:flex-row gap-3">
               <Select
-                className="w-52"
+                className="w-full md:w-52"
                 onChange={(e) => setClientSelected(e.target.value)}
               >
                 <option value={null}>All Clients</option>
@@ -295,7 +295,7 @@ export default function Dashboard() {
                 ))}
               </Select>
               <Select
-                className="w-52"
+                className="w-full md:w-52"
                 onChange={(e) => setAggregation(e.target.value)}
               >
                 <option value={null}>Choose Aggregation</option>
@@ -303,12 +303,12 @@ export default function Dashboard() {
                 <option value={"month"}>Months</option>
               </Select>
               <Datepicker
-                className="w-52"
+                className="w-full md:w-52"
                 defaultDate={startDate}
                 onSelectedDateChanged={(date) => setStartDate(date)}
               />
               <Datepicker
-                className="w-52"
+                className="w-full md:w-52"
                 defaultDate={endDate}
                 onSelectedDateChanged={(date) => setEndDate(date)}
               />
@@ -317,7 +317,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-4 gap-3 pt-6">
-          <div className="col-span-3">
+          <div className="col-span-4 md:col-span-3">
             <div className="w-full mt-auto">
               <div style={{ height: "400px" }}>
                 <StructureGraph
@@ -330,11 +330,8 @@ export default function Dashboard() {
               {/* <StructureTypesNumbers structures={allStructures} /> */}
             </div>
           </div>
-          <div className="flex flex-col justify-between col-span-1">
-            <div
-              className=" grid grid-cols-2 gap-4 overflow-scroll"
-              style={{ maxHeight: "400px" }}
-            >
+          <div className="flex flex-col justify-between col-span-4 md:col-span-1">
+            <div className=" grid grid-cols-2 gap-4 overflow-scroll max-h-[250px] md:max-h-[400px]">
               <div
                 className={`flex col-span-2 rounded-lg px-7 gap-4 justify-center bg-white hover:bg-gray-50 border border-gray-300 h-32`}
               >
