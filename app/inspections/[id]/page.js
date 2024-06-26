@@ -788,14 +788,11 @@ export default function Page(props) {
                     "active-structure"
                   }`}
                   onClick={() => {
-                    const structureFromContext = inspection?.structures.find(
-                      (s) => s.id === structure.id
-                    ); // Corrected the method to find a structure
                     updateCenterOnClick(
                       structure.attributes.longitude,
                       structure.attributes.latitude
                     );
-                    setSelectedStructure(structureFromContext);
+                    setSelectedStructure(structure);
                     setActiveView("singleView");
                   }}
                 >
