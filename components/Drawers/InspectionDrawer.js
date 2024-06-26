@@ -15,7 +15,11 @@ import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import qs from "qs";
 import { GoGear } from "react-icons/go";
 import { useLoading } from "../../context/LoadingContext";
-
+import {
+  FaRegCalendarCheck,
+  FaRegBuilding,
+  FaListCheck,
+} from "react-icons/fa6";
 import axios from "axios";
 import {
   createInspection,
@@ -25,10 +29,12 @@ import {
 } from "../../utils/api/inspections";
 import {
   Button,
+  Badge,
   FileInput,
   Label,
   Breadcrumb,
   ToggleSwitch,
+  Checkbox,
   Select,
   Spinner,
 } from "flowbite-react";
@@ -49,6 +55,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const [isLoadingInspection, setIsLoadingInspection] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [formView, setFormView] = useState("inspection");
+  const [selectedStructures, setSelectedStructures] = useState([]);
   const [switch1, setSwitch1] = useState(false);
   const [clients, setClients] = useState([]);
   const [structure, setStructure] = useState({
@@ -421,6 +428,16 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     return result;
   };
 
+  const handleCheckboxChange = (event, structureId) => {
+    if (event.target.checked) {
+      setSelectedStructures([...selectedStructures, structureId]);
+    } else {
+      setSelectedStructures(
+        selectedStructures.filter((id) => id !== structureId)
+      );
+    }
+  };
+
   const bulkCreateStructures = async (data) => {
     if (!session) return;
     const { jwt, structures } = data;
@@ -764,6 +781,24 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                     </button>
                   </div>
 
+                  {selectedStructures.length > 0 && (
+                    <div className="p-4 border border-gray-200 bg-white rounded-md">
+                      <div className="flex justify-between">
+                        <div className="flex gap-2">
+                          <p className=" text-xs my-auto">Selected </p>
+                          <Badge color="gray" className="rounded-full">
+                            {selectedStructures.length}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-5">
+                          <FaListCheck className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
+                          <FaRegBuilding className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
+                          <FaRegCalendarCheck className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
                     <div className="rounded-md w-full  overflow-auto">
                       {inspection?.structures.data.map((structure, index) => (
@@ -772,14 +807,16 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                           className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
                         >
                           <div className="flex">
-                            <MdLocationPin
-                              className={`${getInspectionIconColor(
-                                structure.attributes.status
-                              )} text-xs font-medium me-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300`}
-                              style={{ width: 40, height: 40 }}
+                            <Checkbox
+                              className="my-auto"
+                              onChange={(e) =>
+                                handleCheckboxChange(e, structure.id)
+                              }
+                              checked={selectedStructures.includes(
+                                structure.id
+                              )}
                             />
-
-                            <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                            <div className="flex flex-col justify-between pt-0 pb-0 pl-5 pr-4 leading-normal">
                               <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
                                 {structure.attributes.mapSection}
                                 <span className="flex items-center font-light ml-1">

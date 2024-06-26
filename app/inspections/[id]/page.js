@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
-import { TextInput, Button, Dropdown, Checkbox, Label } from "flowbite-react";
+import { TextInput, Button, Dropdown, Checkbox, Badge } from "flowbite-react";
 import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -223,6 +223,8 @@ export default function Page(props) {
     const uniqueTypes = [...new Set(types)]; // Removes duplicates
     return uniqueTypes;
   };
+
+  console.log("types", getAllStructureTypes());
 
   const filteredStructures = filterStructures(structureSearch);
 
@@ -679,11 +681,25 @@ export default function Page(props) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between py-6">
-        <div className="flex flex-col gap-3 mb-4">
+      <div className="flex flex-col md:flex-row justify-between pt-6 pb-5">
+        <div className="flex flex-col gap-2">
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>
+          <div className="flex gap-3 text-base text-gray-500">
+            {getAllStructureTypes().map((type, index) => (
+              <div key={index} className="flex gap-2">
+                <p className=" my-auto text-sm">{type}</p>
+                <Badge className="rounded-full bg-gray-300 inline-block mt-1 text-xxs font-semibold">
+                  {
+                    structures.filter(
+                      (structure) => structure.attributes.type === type
+                    ).length
+                  }
+                </Badge>
+              </div>
+            ))}
+          </div>
           {/* <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3> */}
         </div>
 
@@ -866,8 +882,13 @@ export default function Page(props) {
         </div>
 
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
-          <div className="flex flex-col gap-1">
-            <h6 className="text-lg font-semibold">Map Documents</h6>
+          <div className="flex flex-col gap-0.5">
+            <h6 className="text-lg font-semibold">
+              Map Documents{" "}
+              <Badge color="gray" className="rounded-full inline-block">
+                {inspection?.documents.data?.length || 0}
+              </Badge>
+            </h6>
             <p className="text-base text-gray-500">{inspection?.name || ""}</p>
           </div>
           <div className="overflow-auto">
@@ -909,8 +930,14 @@ export default function Page(props) {
 
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <div className="flex justify-between">
-            <div>
-              <h6 className="text-lg font-semibold">All Structure Documents</h6>
+            <div className="flex flex-col gap-0.5">
+              <h6 className="text-lg font-semibold">
+                All Structure Documents{" "}
+                <Badge color="gray" className="rounded-full inline-block">
+                  {allStructuresImages.length}
+                </Badge>
+              </h6>
+
               <p className="text-base text-gray-500">
                 {inspection?.name || ""}
               </p>
