@@ -327,6 +327,8 @@ export default function Page(props) {
 
     const structureId = searchParams.get("structure");
 
+    const structuresArray = inspection?.structures.data || [];
+
     console.log("something");
     console.log(structureId);
 
@@ -346,7 +348,7 @@ export default function Page(props) {
 
     // Function to execute map operations
     const executeMapOperations = () => {
-      structures.forEach((structure) => {
+      structuresArray.forEach((structure) => {
         const color = getColorBasedOnStatus(structure.attributes.status);
         const iconName = `profile-icon-${color}`;
 
@@ -369,7 +371,7 @@ export default function Page(props) {
 
       const geojsonData = {
         type: "FeatureCollection",
-        features: structures.map((structure) => {
+        features: structuresArray.map((structure) => {
           const color = getColorBasedOnStatus(structure.attributes.status);
           const iconName = `profile-icon-${color}`;
 
@@ -427,7 +429,7 @@ export default function Page(props) {
         map.current.off("load", executeMapOperations);
       }
     };
-  }, [structures]);
+  }, [inspection?.structures.data]);
 
   useEffect(() => {
     if (map.current) return; // Initialize map only once
