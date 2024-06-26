@@ -11,6 +11,7 @@ import {
 import { getAllTeams } from "../../utils/api/teams";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
+import { useLoading } from "../../context/LoadingContext";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo, getUrls } from "../../utils/strings";
 import ActivityLog from "../ActivityLog";
@@ -34,6 +35,7 @@ export default function MapPanel({
   const [structureAddress, setStructureAddress] = useState("");
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const { showLoading, hideLoading, showSuccess } = useLoading();
 
   useEffect(() => {
     const getStructureAddress = async () => {
@@ -599,7 +601,6 @@ export default function MapPanel({
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  {isLoading && <h1>Loading</h1>}
                   <Button
                     className=" bg-red-800 text-white mt-5"
                     onClick={() => removeStructure(structure)}

@@ -480,7 +480,6 @@ export const titleCaseToKebabCase = (input) => {
  * @throws {Error} Throws an error if the size argument is invalid.
  */
 export const getUrls = (obj, size) => {
-  console.log("obj", obj);
   const formats = obj.attributes.formats;
 
   // If formats is null, return the raw URL in an array

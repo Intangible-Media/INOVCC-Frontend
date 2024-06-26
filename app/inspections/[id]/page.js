@@ -46,7 +46,7 @@ export default function Page(props) {
   const pathname = usePathname();
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
-  const { showLoading, hideLoading } = useLoading();
+  const { showLoading, hideLoading, showSuccess } = useLoading();
 
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -681,9 +681,6 @@ export default function Page(props) {
     <>
       <div className="flex flex-col md:flex-row justify-between py-6">
         <div className="flex flex-col gap-3 mb-4">
-          <button onClick={() => showLoading("Loading Images...")}>
-            Loading Me
-          </button>
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>
@@ -886,18 +883,26 @@ export default function Page(props) {
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button
-              className="text-sm text-gray-500 font-medium"
-              onClick={(e) => {
-                downloadFilesAsZipWithSubfolders(
-                  getArrayOfUrls(inspectionDocuments),
-                  `${inspection?.name} Documents`
-                );
+              className="text-sm text-dark-blue-700 font-medium"
+              onClick={async (e) => {
+                showLoading("Downloading all documents for this map");
+                try {
+                  const imagesWithAttributes = inspection?.documents.data.map(
+                    (image) => image.attributes
+                  );
+                  const response = await downloadFilesAsZip(
+                    imagesWithAttributes,
+                    `${inspection?.name} Documents.zip`
+                  );
+
+                  showSuccess("Successfully downloaded all map documents!");
+                } catch (error) {
+                  console.error(error);
+                  hideLoading();
+                }
               }}
             >
               Download All
-            </button>
-            <button className="flex align-middle text-sm font-semibold">
-              Add Documents <PlusIcon />
             </button>
           </div>
         </div>
@@ -922,27 +927,27 @@ export default function Page(props) {
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <button
-              className="text-sm text-gray-500 font-medium"
+              className="text-sm text-dark-blue-700 font-medium"
               onClick={async (e) => {
-                const assetsToDownload = [];
-                const zipFileName = `Steven's test ${new Date()}`;
-
+                showLoading(
+                  `Downloading all documents for ${structures.length} structures`
+                );
                 const formattedStructures =
                   convertInspectionsToZipArgs(structures);
 
-                console.log("formattedStructures", formattedStructures);
+                try {
+                  const response = await downloadFilesAsZipWithSubfolders(
+                    formattedStructures
+                  );
 
-                const response = await downloadFilesAsZipWithSubfolders(
-                  formattedStructures
-                );
-
-                console.log(response);
+                  showSuccess("Download finished successfully!");
+                } catch (error) {
+                  console.error(error);
+                  hideLoading();
+                }
               }}
             >
               Download All
-            </button>
-            <button className="flex align-middle text-sm font-semibold">
-              Add Image <PlusIcon />
             </button>
           </div>
         </div>

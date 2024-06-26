@@ -5,6 +5,7 @@ import { ensureDomain, getUrls } from "../utils/strings";
 import { useInspection } from "../context/InspectionContext";
 import { uploadFiles } from "../utils/api/structures";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { useLoading } from "../context/LoadingContext";
 import {
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
@@ -23,10 +24,7 @@ export const useImageUpload = (
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedImageObjs, setUploadedImageObjs] = useState([]);
   const [loadingImage, setLoadingImage] = useState(false);
-
-  useEffect(() => {
-    console.log(uploadedImages);
-  }, [uploadedImages]);
+  const { showSuccess, hideLoading, showLoading } = useLoading();
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -34,7 +32,6 @@ export const useImageUpload = (
     if (files.length) {
       setUploadedImages(
         files.map((file) => {
-          console.log(file);
           return {
             type: file.type,
             name: file.name,
@@ -100,7 +97,7 @@ export const useImageUpload = (
   const handleImageSubmit = async (setImages, images) => {
     if (!uploadedImages.length) return;
     try {
-      setLoadingImage(true);
+      showLoading("Uploading your images...");
       const processedFiles = await Promise.all(
         uploadedImageObjs.map((file) => {
           if (file.type.startsWith("image/")) {
@@ -128,10 +125,9 @@ export const useImageUpload = (
         },
       }));
 
-      setImages({ data: [...images.data, ...newImages] });
       setUploadedImages([]);
       setUploadedImageObjs([]);
-      setLoadingImage(false);
+      showSuccess("Finished loading images!");
       refreshInspection();
     } catch (error) {
       console.error(error);
@@ -441,8 +437,6 @@ const ImageSlider = ({
         <div className="grid grid-cols-3 gap-2">
           {images.data && images.data.length > 0 ? (
             images.data.map((image, index) => {
-              console.log(getUrls(image, "smallest"));
-
               const smallestImageResolution = getUrls(image, "smallest")[0];
               const rawImageResolution = getUrls(image, "raw")[0];
 

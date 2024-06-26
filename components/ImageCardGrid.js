@@ -145,27 +145,16 @@ export default function ImageCardGrid({
             >
               {!isImage(fileName) && (
                 // Show the SVG icon if the file is not an image
-                <svg
-                  className="m-auto"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="25"
-                  viewBox="0 0 24 25"
-                  fill="none"
-                >
-                  <path
-                    d="M20 3.75H4C3.46957 3.75 2.96086 3.96071 2.58579 4.33579C2.21071 4.71086 2 5.21957 2 5.75V19.75C2 20.2804 2.21071 20.7891 2.58579 21.1642C2.96086 21.5393 3.46957 21.75 4 21.75H20C20.5304 21.75 21.0391 21.5393 21.4142 21.1642C21.7893 20.7891 22 20.2804 22 19.75V5.75C22 5.21957 21.7893 4.71086 21.4142 4.33579C21.0391 3.96071 20.5304 3.75 20 3.75ZM4 19.75V5.75H20V19.75H4Z"
-                    fill="#1F2A37"
-                  />
-                  <path
-                    d="M16.3 13.214C16.2154 13.0803 16.1003 12.9685 15.9641 12.8879C15.8279 12.8073 15.6745 12.7602 15.5166 12.7505C15.3586 12.7407 15.2006 12.7686 15.0555 12.8318C14.9104 12.895 14.7824 12.9917 14.682 13.114L13.136 15.001L10.364 10.25C10.2765 10.0902 10.1455 9.95843 9.98625 9.86995C9.82698 9.78147 9.64592 9.73988 9.464 9.75C9.28374 9.75564 9.10837 9.80992 8.95645 9.9071C8.80452 10.0043 8.68171 10.1407 8.601 10.302L5.101 17.302C5.02441 17.4548 4.98828 17.6248 4.99606 17.7955C5.00385 17.9663 5.05528 18.1322 5.14545 18.2775C5.23562 18.4227 5.36152 18.5424 5.51113 18.6251C5.66073 18.7079 5.82905 18.7508 6 18.75H18C18.1791 18.75 18.3549 18.7018 18.509 18.6106C18.6631 18.5194 18.7899 18.3885 18.8762 18.2316C18.9624 18.0746 19.0049 17.8974 18.9993 17.7184C18.9936 17.5394 18.94 17.3652 18.844 17.214L16.3 13.214Z"
-                    fill="#1F2A37"
-                  />
-                  <path
-                    d="M14.5 10.75C15.3284 10.75 16 10.0784 16 9.25C16 8.42157 15.3284 7.75 14.5 7.75C13.6716 7.75 13 8.42157 13 9.25C13 10.0784 13.6716 10.75 14.5 10.75Z"
-                    fill="#1F2A37"
-                  />
-                </svg>
+                <div className="group flex flex-col gap-2 items-center justify-center w-full h-full  text-gray-800 rounded-md p-4 relative overflow-hidden cursor-pointer">
+                  <div className="flex flex-col justify-center ">
+                    <h6 className=" text-lg text-gray-400 font-medium">
+                      {file.attributes.ext}
+                    </h6>
+                  </div>
+                  <h6 className="text-xxs font-medium text-gray-500 shorten-text absolute -bottom-3 left-3 right-3 group-hover:bottom-3 transition-all duration-200">
+                    {file.attributes.name}
+                  </h6>
+                </div>
               )}
               <div className="file-name-footer bg-white p-4 flex justify-between align-middle absolute left-0 right-0 bottom-0 mt-auto">
                 <h6 className="leading-none text-xxs shorten-text">
@@ -175,9 +164,10 @@ export default function ImageCardGrid({
                   inline
                   label=""
                   placement="top"
+                  className="cursor-pointer"
                   dismissOnClick={false}
                   renderTrigger={() => (
-                    <span className="flex">
+                    <span className="flex cursor-pointer">
                       <svg
                         className="m-auto"
                         xmlns="http://www.w3.org/2000/svg"
