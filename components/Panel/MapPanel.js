@@ -93,7 +93,7 @@ export default function MapPanel({
   };
 
   const submitStructure = async () => {
-    setIsLoading(true);
+    showLoading("Updating Structure");
 
     try {
       const { images, inspectors, status, ...attributesWithoutImages } =
@@ -115,9 +115,6 @@ export default function MapPanel({
       }
 
       const payload = { data: newAttributes };
-
-      console.log(payload);
-
       const apiParams = {
         jwt: session.accessToken,
         payload,
@@ -127,9 +124,6 @@ export default function MapPanel({
 
       const response = await updateStructure(apiParams);
       const newlyUpdatedStructure = response.data.data;
-
-      console.log(newlyUpdatedStructure);
-
       const newlyUpdatedStructuresList = inspection.structures.data.map(
         (structure) =>
           structure.id === newlyUpdatedStructure.id
@@ -147,10 +141,11 @@ export default function MapPanel({
         ...inspection,
         structures: { data: newlyUpdatedStructuresList },
       });
+
+      showSuccess("Updated structure successfully!");
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
+      hideLoading();
     }
   };
 

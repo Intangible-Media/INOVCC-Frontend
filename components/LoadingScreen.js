@@ -3,7 +3,7 @@ import React from "react";
 import { useLoading } from "../context/LoadingContext";
 import { Spinner } from "flowbite-react";
 import { CiCircleCheck } from "react-icons/ci";
-import { ImSpinner8 } from "react-icons/im";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const LoadingScreen = () => {
   const { loading, message, success, successMessage } = useLoading();
@@ -15,7 +15,7 @@ const LoadingScreen = () => {
       <div className="flex flex-col gap-4 text-center">
         {loading && (
           <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
-            <ImSpinner8
+            <AiOutlineLoading3Quarters
               size={100}
               color="white"
               className="animate-spin-infinite mx-auto"
