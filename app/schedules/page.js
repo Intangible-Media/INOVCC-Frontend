@@ -212,7 +212,7 @@ export default function Page({ params }) {
         <div className="flex flex-col col-span-5 gap-3">
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
             <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {teams.map((team, index) => {
                 const teamScheduledStructures = structures.filter(
                   (structure) => {
