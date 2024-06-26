@@ -344,6 +344,7 @@ export default function Dashboard() {
                   Total Structures
                 </p>
               </div>
+
               {allStructureTypes.map((type, index) => {
                 const backgroundColor = colors[index];
                 const lighterColor = lightenColor(backgroundColor, 40); // Adjust the percentage as needed

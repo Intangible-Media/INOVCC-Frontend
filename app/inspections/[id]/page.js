@@ -326,7 +326,6 @@ export default function Page(props) {
     if (!map.current || structures.length === 0) return;
 
     const structureId = searchParams.get("structure");
-
     const structuresArray = inspection?.structures.data || [];
 
     console.log("something");

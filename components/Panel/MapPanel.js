@@ -78,6 +78,34 @@ export default function MapPanel({
     fetchTeams();
   }, [session]);
 
+  useEffect(() => {
+    // Log the data array for debugging purposes.
+    console.log(inspection?.structures?.data);
+
+    // Check if the data array is empty or undefined.
+    if (
+      !inspection?.structures?.data ||
+      inspection.structures.data.length === 0
+    ) {
+      console.log("No structures data available.");
+      return;
+    }
+
+    console.log(
+      "checking to see if I can find the reference rather than a passed down version"
+    );
+    console.log(`Structure ID: ${structure.id}`);
+
+    // Correctly use the `find` method to locate the specific structure.
+    const foundStructure = inspection.structures.data.find(
+      (s) => s.id === structure.id
+    );
+
+    setUpdatedStructure(foundStructure);
+
+    console.log(foundStructure);
+  }, [inspection?.structures?.data, structure.id]); // Include structure.id in dependencies if it can change.
+
   const activePanelClasses = (panelTab) => {
     if (panelTab === currentPanel)
       return "border-b-2 border-dark-blue-700 text-dark-blue-700";
