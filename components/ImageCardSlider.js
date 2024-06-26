@@ -46,6 +46,7 @@ export const useImageUpload = (
 
   const processImageForFinal = useCallback(
     (file, callback) => {
+      console.log("this image is be proccessed to add a geotag");
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -100,9 +101,10 @@ export const useImageUpload = (
     if (!uploadedImages.length) return;
     try {
       showLoading("Uploading your images...");
+
       const processedFiles = await Promise.all(
         uploadedImageObjs.map((file) => {
-          if (file.type.startsWith("image/")) {
+          if (file.type.startsWith("image/") && addGeoTag) {
             return new Promise((resolve) => {
               processImageForFinal(file, resolve);
             });
@@ -129,8 +131,8 @@ export const useImageUpload = (
 
       setUploadedImages([]);
       setUploadedImageObjs([]);
-      showSuccess("Finished loading images!");
       refreshInspection();
+      showSuccess("Finished loading images!");
     } catch (error) {
       console.error(error);
       setLoadingImage(false);
