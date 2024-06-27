@@ -417,14 +417,17 @@ export default function Page(props) {
 
     // Check if the map is already loaded, if not, listen for the load event
     if (map.current.isStyleLoaded()) {
+      addSatelliteLayer();
       executeMapOperations();
     } else {
+      map.current.on("load", addSatelliteLayer);
       map.current.on("load", executeMapOperations);
     }
 
     // Clean up the event listener
     return () => {
       if (map.current) {
+        map.current.off("load", addSatelliteLayer);
         map.current.off("load", executeMapOperations);
       }
     };
@@ -448,7 +451,7 @@ export default function Page(props) {
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
 
       // Set padding based on device type
-      const padding = isPhone ? { bottom: 400 } : { right: 400 };
+      const padding = isPhone ? { bottom: 475 } : { right: 400 };
 
       map.current.easeTo({ padding: padding });
 
@@ -520,7 +523,7 @@ export default function Page(props) {
       // Determine if the device is a phone or not
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
       // Set padding based on device type
-      const padding = isPhone ? { bottom: 400 } : { right: 450 };
+      const padding = isPhone ? { bottom: 475 } : { right: 450 };
 
       map.current.easeTo({
         zoom: 18,
@@ -682,7 +685,7 @@ export default function Page(props) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between pt-6 pb-5">
+      <div className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-5">
         <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
@@ -725,7 +728,7 @@ export default function Page(props) {
         className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-white border-2 dark:border-gray-600 bg-white rounded-lg"
       >
         <div
-          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-8 bottom-4 z-10"
+          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-8 bottom-[460px] md:bottom-4 z-10"
           role="group"
         >
           <button
@@ -984,7 +987,7 @@ export default function Page(props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-        <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg mb-4">
+        <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <h6 className="text-lg font-semibold">Inspectors</h6>
 
           <div className="flex flex-col overflow-auto">
@@ -1031,7 +1034,7 @@ export default function Page(props) {
           </div>
         </div>
 
-        <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg mb-4">
+        <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <h6 className="text-lg font-semibold">
             {inspection?.client.data.attributes.name}
           </h6>

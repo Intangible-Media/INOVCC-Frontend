@@ -308,7 +308,7 @@ export default function RootLayout({ children }) {
               </Navbar>
 
               <div
-                className={`main-navigation fixed top-0 left-0 z-30 h-screen pt-20 transition-all duration-300 px-3 py-4 transform" ${
+                className={`main-navigation fixed top-0 left-0 z-30 h-screen pt-20 transition-all duration-300 px-4 py-4 transform" ${
                   isCollapsed ? "w-auto" : "w-64"
                 } bg-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-all ${
                   openMobileMenu ? "open" : "fdfds"
@@ -527,7 +527,7 @@ export default function RootLayout({ children }) {
                 } mt-16 transition-all	`}
               >
                 <DynamicBreadcrumb />
-                <div className="px-3 md:px-6 pb-8">{children}</div>
+                <div className="px-4 md:px-6 pb-8">{children}</div>
               </div>
 
               <LoadingScreen />
