@@ -97,9 +97,18 @@ export default function Page({ params }) {
   const structureQuery = qs.stringify(
     {
       filters: {
-        scheduleForInspection: {
-          $eq: date,
-        },
+        $and: [
+          {
+            scheduleStart: {
+              $lte: today, // scheduleStart should be on or before today
+            },
+          },
+          {
+            scheduleEnd: {
+              $gte: today, // scheduleEnd should be on or after today
+            },
+          },
+        ],
       },
       populate: {
         team: {
@@ -109,12 +118,12 @@ export default function Page({ params }) {
           fields: ["name"],
         },
         images: {
-          populate: "*",
+          populate: "*", // Fully populate images
         },
       },
     },
     {
-      encodeValuesOnly: true,
+      encodeValuesOnly: true, // This prevents the keys from being URL-encoded
     }
   );
 

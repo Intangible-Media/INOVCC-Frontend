@@ -753,7 +753,7 @@ export default function Page(props) {
           </button>
         </div>
 
-        <div className="map-structure-panel shadow-sm flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-8 top-8 bottom-8 overflow-hidden">
+        <div className="map-structure-panel shadow-md flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-6 top-6 bottom-6 overflow-hidden">
           {activeView === "overview" && (
             <div className="p-4 w-full bg-gray-100">
               <div className="relative">

@@ -130,14 +130,25 @@ export default function Page({ params }) {
     const structureQuery = qs.stringify(
       {
         filters: {
-          team: {
-            id: {
-              $eq: params.id,
+          $and: [
+            {
+              team: {
+                id: {
+                  $eq: params.id,
+                },
+              },
             },
-          },
-          scheduleForInspection: {
-            $eq: date,
-          },
+            {
+              scheduleStart: {
+                $lte: date, // scheduleStart should be on or before today
+              },
+            },
+            {
+              scheduleEnd: {
+                $gte: date, // scheduleEnd should be on or after today
+              },
+            },
+          ],
         },
         populate: {
           team: {

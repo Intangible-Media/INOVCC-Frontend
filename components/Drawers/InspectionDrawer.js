@@ -1,9 +1,10 @@
 "use client";
 
-import { createStructure } from "../../utils/api/structures";
+import { createStructure, updateStructure } from "../../utils/api/structures";
 import React, { useState, useRef, useEffect } from "react";
 import DirectionsComponent from "../DirectionsComponent";
 import { getAllClients } from "../../utils/api/clients";
+import { getAllTeams } from "../../utils/api/teams";
 import { useParams, useRouter } from "next/navigation";
 import { MdLocationPin, MdArrowBackIos } from "react-icons/md";
 import { useSession } from "next-auth/react";
@@ -34,6 +35,7 @@ import {
   Label,
   Breadcrumb,
   ToggleSwitch,
+  Datepicker,
   Checkbox,
   Select,
   Spinner,
@@ -58,6 +60,16 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const [selectedStructures, setSelectedStructures] = useState([]);
   const [switch1, setSwitch1] = useState(false);
   const [clients, setClients] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [bulkUpdateView, setBulkUpdateView] = useState("");
+  const [bulkStructuresType, setBulkStructuresType] = useState("");
+  const [bulkStructuresStatus, setBulkStructuresStatus] = useState("");
+  const [bulkStructuresTeam, setBulkStructuresTeam] = useState("");
+  const [bulkStructuresStartSchedule, setBulkStructuresStartSchedule] =
+    useState(Date.now());
+  const [bulkStructuresEndSchedule, setBulkStructuresEndSchedule] = useState(
+    Date.now()
+  );
   const [structure, setStructure] = useState({
     inspection: null,
     mapSection: null,
@@ -90,6 +102,8 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   }, [inspection]);
 
   useEffect(() => {
+    if (!session) return;
+
     const fetchAllClients = async () => {
       const query = qs.stringify(
         {
@@ -130,7 +144,17 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       }
     };
 
+    const fetchTeams = async () => {
+      const teams = await getAllTeams({
+        jwt: session.accessToken,
+        query: "",
+      });
+      console.log(teams.data.data);
+      setTeams(teams.data.data);
+    };
+
     fetchAllClients();
+    fetchTeams();
   }, [session]); // This useEffect depends on session
 
   /**
@@ -428,17 +452,28 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     return result;
   };
 
-  const handleCheckboxChange = (event, structureId) => {
+  const handleCheckboxChange = (event, structure) => {
     if (event.target.checked) {
-      setSelectedStructures([...selectedStructures, structureId]);
+      setSelectedStructures([...selectedStructures, structure]);
     } else {
       setSelectedStructures(
-        selectedStructures.filter((id) => id !== structureId)
+        selectedStructures.filter((s) => s.id !== structure.id)
       );
     }
   };
 
+  const handleSelectAllCheckboxs = (event) => {
+    if (event.target.checked) {
+      setSelectedStructures(
+        inspection?.structures.data.map((structure) => structure)
+      );
+    } else {
+      setSelectedStructures([]);
+    }
+  };
+
   const bulkCreateStructures = async (data) => {
+    console.log("you have updated");
     if (!session) return;
     const { jwt, structures } = data;
     const requests = structures.map((structure) =>
@@ -457,6 +492,112 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       const allStructureRequest = await axios.all(requests);
       // runs and updates the page with all the structures
       refreshInspection();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const bulkUpdateStructuresStatus = async () => {
+    console.log("you have updated");
+    if (!session) return;
+
+    showLoading(`Updating ${selectedStructures.length} Structures`);
+
+    try {
+      const allResponses = await Promise.all(
+        selectedStructures.map(async (structure) => {
+          console.log("structure.id====================");
+          console.log(structure.id);
+          const apiParams = {
+            jwt: session.accessToken,
+            id: structure.id,
+            query: "",
+            payload: {
+              data: {
+                status: bulkStructuresStatus,
+              },
+            },
+          };
+
+          const response = await updateStructure(apiParams);
+          refreshInspection();
+          return response;
+        })
+      );
+
+      showSuccess("Finished All Structures");
+      return allResponses;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const bulkUpdateStructuresType = async () => {
+    console.log("you have updated");
+    if (!session) return;
+
+    showLoading(`Updating ${selectedStructures.length} Structures`);
+
+    try {
+      const allResponses = await Promise.all(
+        selectedStructures.map(async (structure) => {
+          console.log(structure.id);
+
+          const apiParams = {
+            jwt: session.accessToken,
+            id: structure.id,
+            query: "",
+            payload: {
+              data: {
+                type: bulkStructuresType,
+              },
+            },
+          };
+
+          const response = await updateStructure(apiParams);
+          refreshInspection();
+          return response;
+        })
+      );
+
+      showSuccess("Finished All Structures");
+      return allResponses;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const bulkUpdateStructuresSchedule = async (scheduleStart, scheduleEnd) => {
+    if (!session) return;
+
+    showLoading(`Updating ${selectedStructures.length} Structures`);
+
+    try {
+      const allResponses = await Promise.all(
+        selectedStructures.map(async (structure) => {
+          console.log(structure.id);
+
+          const apiParams = {
+            jwt: session.accessToken,
+            id: structure.id,
+            query: "",
+            payload: {
+              data: {
+                team: bulkStructuresTeam,
+                scheduleStart: bulkStructuresStartSchedule,
+                scheduleEnd: bulkStructuresEndSchedule,
+              },
+            },
+          };
+
+          const response = await updateStructure(apiParams);
+          refreshInspection();
+          return response;
+        })
+      );
+
+      showSuccess("Finished All Structures");
+      return allResponses;
     } catch (error) {
       console.error(error);
     }
@@ -782,25 +923,173 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                   </div>
 
                   {selectedStructures.length > 0 && (
-                    <div className="p-4 border border-gray-200 bg-white rounded-md">
+                    <div className="px-4 py-2 border border-gray-200 bg-white rounded-md">
                       <div className="flex justify-between">
                         <div className="flex gap-2">
                           <p className=" text-xs my-auto">Selected </p>
-                          <Badge color="gray" className="rounded-full">
+                          <Badge color="gray" className="rounded-full my-auto">
                             {selectedStructures.length}
                           </Badge>
                         </div>
-                        <div className="flex gap-5">
-                          <FaListCheck className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
-                          <FaRegBuilding className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
-                          <FaRegCalendarCheck className="text-gray-300 hover:text-gray-900 cursor-pointer my-auto h-5" />
+                        <div className="flex gap-3">
+                          <div
+                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                            onClick={() => setBulkUpdateView("status")}
+                          >
+                            <FaListCheck className="my-auto h-3" />
+                          </div>
+                          <div
+                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                            onClick={() => setBulkUpdateView("type")}
+                          >
+                            <FaRegBuilding className="my-auto h-3" />
+                          </div>
+                          <div
+                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                            onClick={() => setBulkUpdateView("schedule")}
+                          >
+                            <FaRegCalendarCheck className="my-auto h-3" />
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex bg-gray-100 p-4 h-60 mb-1 rounded-lg overflow-hidden">
-                    <div className="rounded-md w-full  overflow-auto">
+                  {bulkUpdateView === "type" &&
+                    selectedStructures.length > 0 && (
+                      <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs" htmlFor="structureType">
+                            Structure Type
+                          </Label>
+                          <select
+                            id="structureType"
+                            className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                            value={bulkStructuresType}
+                            onChange={(e) =>
+                              setBulkStructuresType(e.target.value)
+                            }
+                          >
+                            <option value="Standard Vault">
+                              Standard Vault
+                            </option>
+                            <option value="Pull Box">Pull Box</option>
+                            <option value="Wood Pole">Wood Pole</option>
+                            <option value="Man Hole">Man Hole</option>
+                            <option value="Street Light">Street Light</option>
+                            <option value="Pad Vault">Pad Vault</option>
+                            <option value="Beehive">Beehive</option>
+                          </select>
+                        </div>
+                        <Button
+                          className="bg-dark-blue-700"
+                          onClick={() => bulkUpdateStructuresType()}
+                        >
+                          Save Structures
+                        </Button>
+                      </div>
+                    )}
+
+                  {bulkUpdateView === "status" &&
+                    selectedStructures.length > 0 && (
+                      <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs" htmlFor="structureStatus">
+                            Structure Status
+                          </Label>
+                          <select
+                            id="structureStatus"
+                            className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                            defaultValue={bulkStructuresStatus}
+                            onChange={(e) => {
+                              setBulkStructuresStatus(e.target.value);
+                            }}
+                          >
+                            <option value="Not Inspected">Not Inspected</option>
+                            <option value="Cannot Locate">Cannot Locate</option>
+                            <option value="Inspected">Inspected</option>
+                            <option value="Uploaded">Uploaded</option>
+                            <option value="Urgent">Urgent</option>
+                          </select>
+                        </div>
+                        <Button
+                          className="bg-dark-blue-700"
+                          onClick={() => bulkUpdateStructuresStatus()}
+                        >
+                          Save Structures
+                        </Button>
+                      </div>
+                    )}
+
+                  {bulkUpdateView === "schedule" &&
+                    selectedStructures.length > 0 && (
+                      <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
+                        <div className="flex flex-col gap-2">
+                          <label
+                            className="text-xs mb-2"
+                            htmlFor="structureLatitude"
+                          >
+                            Schedule For Inspection
+                          </label>
+                          <select
+                            id="inspectionTeam"
+                            className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                            value={bulkStructuresTeam}
+                            onChange={(e) => {
+                              setBulkStructuresTeam(e.target.value);
+                            }}
+                          >
+                            {teams.map((team, index) => (
+                              <option key={index} value={team.id}>
+                                {team.attributes.name}
+                              </option>
+                            ))}
+                          </select>
+                          <Datepicker
+                            title="Flowbite Datepicker"
+                            className="w-full bg-white"
+                            onSelectedDateChanged={(date) =>
+                              setBulkStructuresStartSchedule(date)
+                            }
+                          />
+                          <Datepicker
+                            title="Flowbite Datepicker"
+                            className="w-full bg-white"
+                            onSelectedDateChanged={(date) =>
+                              setBulkStructuresEndSchedule(date)
+                            }
+                          />
+                        </div>
+                        <Button
+                          className="bg-dark-blue-700"
+                          onClick={() => bulkUpdateStructuresSchedule()}
+                        >
+                          Save Structures
+                        </Button>
+                      </div>
+                    )}
+
+                  <div className="flex flex-col bg-gray-100 p-4 h-72 mb-1 rounded-lg overflow-hidden">
+                    {selectedStructures.length > 0 && (
+                      <div
+                        className={`flex flex-row cursor-pointer justify-between items-center bg-white border border-gray-100 w-full dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 px-4 py-3 mb-2 rounded-md`}
+                      >
+                        <div className="flex">
+                          <Checkbox
+                            className="my-auto"
+                            onChange={(e) => handleSelectAllCheckboxs(e)}
+                          />
+
+                          <div className="flex flex-col justify-between pt-0 pb-0 pl-5 pr-4 leading-normal">
+                            <h5 className="flex flex-shrink-0 font-base text-xs tracking-tight text-gray-700 dark:text-white">
+                              Select All
+                            </h5>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="rounded-md w-full  overflow-auto px-0">
                       {inspection?.structures.data.map((structure, index) => (
                         <div
                           key={index}
@@ -810,10 +1099,10 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                             <Checkbox
                               className="my-auto"
                               onChange={(e) =>
-                                handleCheckboxChange(e, structure.id)
+                                handleCheckboxChange(e, structure)
                               }
-                              checked={selectedStructures.includes(
-                                structure.id
+                              checked={selectedStructures.some(
+                                (item) => item.id === structure.id
                               )}
                             />
                             <div className="flex flex-col justify-between pt-0 pb-0 pl-5 pr-4 leading-normal">
