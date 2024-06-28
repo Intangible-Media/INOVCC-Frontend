@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { LoadingProvider } from "../context/LoadingContext";
 import LoadingScreen from "../components/LoadingScreen";
 import SearchBar from "../components/SearchBar";
+import useWakeLock from "../hooks/useWakeLock";
 import "./globals.css";
 import path from "path";
 
@@ -52,6 +53,8 @@ export const useBackgroundClass = (searchString) => {
   return backgroundClass;
 };
 export default function RootLayout({ children }) {
+  useWakeLock();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
