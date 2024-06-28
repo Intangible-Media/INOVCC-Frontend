@@ -64,7 +64,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const [bulkUpdateView, setBulkUpdateView] = useState("");
   const [bulkStructuresType, setBulkStructuresType] = useState("");
   const [bulkStructuresStatus, setBulkStructuresStatus] = useState("");
-  const [bulkStructuresTeam, setBulkStructuresTeam] = useState("");
+  const [bulkStructuresTeam, setBulkStructuresTeam] = useState("Select a Team");
   const [bulkStructuresStartSchedule, setBulkStructuresStartSchedule] =
     useState(Date.now());
   const [bulkStructuresEndSchedule, setBulkStructuresEndSchedule] = useState(
@@ -494,7 +494,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     try {
       const allStructureRequest = await axios.all(requests);
       // runs and updates the page with all the structures
-      refreshInspection();
+      await refreshInspection();
     } catch (error) {
       console.error(error);
     }
@@ -520,11 +520,11 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           };
 
           const response = await updateStructure(apiParams);
-          refreshInspection();
           return response;
         })
       );
 
+      await refreshInspection();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -552,11 +552,11 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           };
 
           const response = await updateStructure(apiParams);
-          refreshInspection();
           return response;
         })
       );
 
+      await refreshInspection();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -575,12 +575,12 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           const apiParams = {
             jwt: session.accessToken,
             id: structure.id,
-            query: "",
+            query: "", // Make sure this is correctly formatted
             payload: {
               data: {
                 team: bulkStructuresTeam,
-                scheduleStart: new Date(bulkStructuresStartSchedule),
-                scheduleEnd: new Date(bulkStructuresEndSchedule),
+                scheduleStart: bulkStructuresStartSchedule,
+                scheduleEnd: bulkStructuresEndSchedule,
               },
             },
           };
@@ -590,11 +590,13 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         })
       );
 
-      refreshInspection();
+      await refreshInspection();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
       console.error(error);
+      showError("Failed to update structures");
+      return []; // Return an empty array or handle the error appropriately
     }
   };
 
@@ -1033,6 +1035,9 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                               setBulkStructuresTeam(e.target.value);
                             }}
                           >
+                            <option value={"Select a Team"}>
+                              Select a Team
+                            </option>
                             {teams.map((team, index) => (
                               <option key={index} value={team.id}>
                                 {team.attributes.name}

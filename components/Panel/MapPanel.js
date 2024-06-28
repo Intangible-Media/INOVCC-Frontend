@@ -35,7 +35,7 @@ export default function MapPanel({
   const [structureAddress, setStructureAddress] = useState("");
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const { showLoading, hideLoading, showSuccess } = useLoading();
+  const { showLoading, showError, showSuccess } = useLoading();
 
   useEffect(() => {
     const getStructureAddress = async () => {
@@ -156,7 +156,7 @@ export default function MapPanel({
       showSuccess("Updated structure successfully!");
     } catch (error) {
       console.error(error);
-      hideLoading();
+      showError("There was an error");
     }
   };
 

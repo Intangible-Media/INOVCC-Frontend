@@ -1,5 +1,6 @@
 // contexts/LoadingContext.js
 import React, { createContext, useState, useContext } from "react";
+import useBodyClass from "../hooks/useBodyClass";
 
 const LoadingContext = createContext();
 
@@ -11,6 +12,8 @@ export const LoadingProvider = ({ children }) => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  useBodyClass("overflow-hidden", loading || success || error);
+
   const showLoading = (msg) => {
     setLoading(true);
     setMessage(msg);
@@ -21,7 +24,7 @@ export const LoadingProvider = ({ children }) => {
     setSuccessMessage(msg);
     setLoading(false);
     setTimeout(() => {
-      resetLoading(false);
+      resetLoading();
     }, 3000); // Duration for showing the success message
   };
 
@@ -30,8 +33,8 @@ export const LoadingProvider = ({ children }) => {
     setErrorMessage(msg);
     setLoading(false);
     setTimeout(() => {
-      resetLoading(false);
-    }, 3000); // Duration for showing the success message
+      resetLoading();
+    }, 3000); // Duration for showing the error message
   };
 
   const resetLoading = () => {

@@ -35,11 +35,11 @@ const UrgencyBadge = ({ urgency }) => {
     urgencyMap[urgency.toLowerCase()] || urgencyMap.default;
 
   return (
-    <div className="flex justify-center">
+    <span className="flex justify-center">
       <Badge color={color} className="text-center" size="sm">
         {text}
       </Badge>
-    </div>
+    </span>
   );
 };
 
@@ -451,9 +451,7 @@ const Page = ({ params }) => {
             </section>
           </Modal.Body>
           <Modal.Footer>
-            <Button onClick={() => requestNotificationPermission()}>
-              Mark Complete
-            </Button>
+            <Button>Mark Complete</Button>
           </Modal.Footer>
         </Modal>
       )}

@@ -2,6 +2,38 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 /**
+ * Sorts an array of structures based on their status.
+ * The order is: "Not Inspected" first, others in the middle, "Inspected" second to last, "Uploaded" last.
+ * @param {Array} structures - Array of structures to be sorted.
+ * @returns {Array} - Sorted array of structures.
+ */
+export const sortStructuresByStatus = (structures) => {
+  const order = ["Not Inspected", "Inspected", "Uploaded"];
+
+  return structures.sort((a, b) => {
+    const statusA = a.attributes.status;
+    const statusB = b.attributes.status;
+
+    const indexA = order.indexOf(statusA);
+    const indexB = order.indexOf(statusB);
+
+    if (indexA === -1 && indexB === -1) {
+      // If both statuses are not in the order array, sort them normally
+      return statusA.localeCompare(statusB);
+    } else if (indexA === -1) {
+      // If statusA is not in the order array, it should come after statusB
+      return 1;
+    } else if (indexB === -1) {
+      // If statusB is not in the order array, it should come after statusA
+      return -1;
+    } else {
+      // Both statuses are in the order array, sort them based on their index in the order array
+      return indexA - indexB;
+    }
+  });
+};
+
+/**
  * Initiates a download of an image file from a Blob or File object.
  *
  * @param {Blob|File} file - The Blob or File object to download.

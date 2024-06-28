@@ -53,7 +53,7 @@ export const useBackgroundClass = (searchString) => {
   return backgroundClass;
 };
 export default function RootLayout({ children }) {
-  useWakeLock();
+  //useWakeLock();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);

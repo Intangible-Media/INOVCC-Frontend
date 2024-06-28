@@ -58,7 +58,12 @@ export default function FavoriteInspectionCard({ inspection }) {
       <div className="w-80 max-w-xs  bg-white p-6">
         <div className="flex justify-between gap-2">
           <h6 className="font-bold text-base text-dark-blue-700 hover:underline shorten-text capitalize">
-            {inspection.attributes.name}
+            <Link
+              href={`/inspections/${inspection.id}`}
+              className="flex gap-2 items-center"
+            >
+              {inspection.attributes.name}
+            </Link>
           </h6>
 
           <svg

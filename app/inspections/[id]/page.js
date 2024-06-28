@@ -30,6 +30,7 @@ import {
   downloadFilesAsZip,
   downloadFilesAsZipWithSubfolders,
   convertInspectionsToZipArgs,
+  sortStructuresByStatus,
   isImage,
   ensureDomain,
 } from "../../../utils/strings";
@@ -224,7 +225,9 @@ export default function Page(props) {
     return uniqueTypes;
   };
 
-  const filteredStructures = filterStructures(structureSearch);
+  const filteredStructures = sortStructuresByStatus(
+    filterStructures(structureSearch)
+  );
 
   /**
    * This function returns a color based on the status.
