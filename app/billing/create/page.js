@@ -225,17 +225,6 @@ export default function Page({ params }) {
             $eq: "Uploaded", // Filter structures by "inspected" status
           },
         },
-        {
-          uploadDate: {
-            $gte: startDate, // Start of the date range
-            $lte: endDate, // End of the date range
-          },
-        },
-        {
-          billed: {
-            $eq: false,
-          },
-        },
       ],
     },
     populate: {

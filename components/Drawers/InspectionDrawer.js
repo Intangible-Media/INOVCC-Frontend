@@ -102,6 +102,11 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   }, [inspection]);
 
   useEffect(() => {
+    console.log("bulkStructuresStartSchedule", bulkStructuresStartSchedule);
+    console.log("bulkStructuresEndSchedule", bulkStructuresEndSchedule);
+  }, [bulkStructuresStartSchedule, bulkStructuresEndSchedule]);
+
+  useEffect(() => {
     if (!session) return;
 
     const fetchAllClients = async () => {
@@ -574,18 +579,18 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
             payload: {
               data: {
                 team: bulkStructuresTeam,
-                scheduleStart: bulkStructuresStartSchedule,
-                scheduleEnd: bulkStructuresEndSchedule,
+                scheduleStart: new Date(bulkStructuresStartSchedule),
+                scheduleEnd: new Date(bulkStructuresEndSchedule),
               },
             },
           };
 
           const response = await updateStructure(apiParams);
-          refreshInspection();
           return response;
         })
       );
 
+      refreshInspection();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {

@@ -99,6 +99,9 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
+      <head>
+        <title>INOVCC</title>
+      </head>
       <body className={`${inter.className} bg-gray-100`}>
         <AuthProvider>
           <AlertProvider>
