@@ -4,14 +4,20 @@ import { useLoading } from "../context/LoadingContext";
 import { Spinner } from "flowbite-react";
 import { CiCircleCheck } from "react-icons/ci";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { MdErrorOutline } from "react-icons/md"; // Import an error icon
 
 const LoadingScreen = () => {
-  const { loading, message, success, successMessage } = useLoading();
+  const { loading, message, success, successMessage, error, errorMessage } =
+    useLoading();
 
-  if (!loading && !success) return null;
+  if (!loading && !success && !error) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-80">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-gray-900 ${
+        error && "bg-red-50"
+      } bg-opacity-80`}
+    >
       <div className="flex flex-col gap-4 text-center">
         {loading && (
           <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
@@ -27,13 +33,17 @@ const LoadingScreen = () => {
         )}
         {success && (
           <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
-            <CiCircleCheck
-              size={100}
-              color="white"
-              className="animate-spin mx-auto"
-            />
+            <CiCircleCheck size={100} color="white" className="mx-auto" />
             <p className="text-white text-2xl leading-none font-light animate-fade-in">
               {successMessage}
+            </p>
+          </div>
+        )}
+        {error && (
+          <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
+            <MdErrorOutline size={100} color="red" className="mx-auto" />
+            <p className="text-red-500 text-2xl leading-none font-light animate-fade-in">
+              {errorMessage}
             </p>
           </div>
         )}

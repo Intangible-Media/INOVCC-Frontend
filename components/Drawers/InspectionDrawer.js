@@ -149,7 +149,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         jwt: session.accessToken,
         query: "",
       });
-      console.log(teams.data.data);
       setTeams(teams.data.data);
     };
 
@@ -473,7 +472,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   };
 
   const bulkCreateStructures = async (data) => {
-    console.log("you have updated");
     if (!session) return;
     const { jwt, structures } = data;
     const requests = structures.map((structure) =>
@@ -498,7 +496,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   };
 
   const bulkUpdateStructuresStatus = async () => {
-    console.log("you have updated");
     if (!session) return;
 
     showLoading(`Updating ${selectedStructures.length} Structures`);
@@ -506,8 +503,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     try {
       const allResponses = await Promise.all(
         selectedStructures.map(async (structure) => {
-          console.log("structure.id====================");
-          console.log(structure.id);
           const apiParams = {
             jwt: session.accessToken,
             id: structure.id,
@@ -533,7 +528,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   };
 
   const bulkUpdateStructuresType = async () => {
-    console.log("you have updated");
     if (!session) return;
 
     showLoading(`Updating ${selectedStructures.length} Structures`);
@@ -541,8 +535,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     try {
       const allResponses = await Promise.all(
         selectedStructures.map(async (structure) => {
-          console.log(structure.id);
-
           const apiParams = {
             jwt: session.accessToken,
             id: structure.id,
@@ -575,8 +567,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     try {
       const allResponses = await Promise.all(
         selectedStructures.map(async (structure) => {
-          console.log(structure.id);
-
           const apiParams = {
             jwt: session.accessToken,
             id: structure.id,
@@ -647,7 +637,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
           (structure) => !structure.isDuplicate
         );
         await bulkCreateStructures({ jwt, structures: validStructures });
-        console.log("Structures created successfully");
       } catch (error) {
         console.error("Error creating structures:", error);
       }

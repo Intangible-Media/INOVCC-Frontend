@@ -56,10 +56,6 @@ export default function MapPanel({
   }, [structure.attributes.longitude, structure.attributes.latitude]); // dependencies
 
   useEffect(() => {
-    console.log(updatedStructure);
-  }, [updatedStructure]);
-
-  useEffect(() => {
     const fetchTeams = async () => {
       const apiParams = {
         jwt: session.accessToken,
@@ -68,7 +64,6 @@ export default function MapPanel({
 
       try {
         const response = await getAllTeams(apiParams);
-        console.log(response.data.data);
         setTeams(response.data.data);
       } catch (error) {
         console.error(error);
@@ -79,31 +74,19 @@ export default function MapPanel({
   }, [session]);
 
   useEffect(() => {
-    // Log the data array for debugging purposes.
-    console.log(inspection?.structures?.data);
-
     // Check if the data array is empty or undefined.
     if (
       !inspection?.structures?.data ||
-      inspection.structures.data.length === 0
+      inspection?.structures?.data.length === 0
     ) {
-      console.log("No structures data available.");
       return;
     }
-
-    console.log(
-      "checking to see if I can find the reference rather than a passed down version"
-    );
-    console.log(`Structure ID: ${structure.id}`);
-
     // Correctly use the `find` method to locate the specific structure.
     const foundStructure = inspection.structures.data.find(
       (s) => s.id === structure.id
     );
 
     setUpdatedStructure(foundStructure);
-
-    console.log(foundStructure);
   }, [inspection?.structures?.data, structure.id]); // Include structure.id in dependencies if it can change.
 
   const activePanelClasses = (panelTab) => {
@@ -190,7 +173,6 @@ export default function MapPanel({
 
     try {
       const response = await deleteStructure(apiParams);
-      console.log(response.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -693,7 +675,6 @@ const StructureComments = ({ comments = [], editable = false }) => {
           }
         );
 
-        // console.log(response.data.data);
         setAllStructureComments(response.data.data);
       } catch (error) {
         console.error("Error fetching comments", error);

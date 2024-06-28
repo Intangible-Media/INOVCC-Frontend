@@ -224,8 +224,6 @@ export default function Page(props) {
     return uniqueTypes;
   };
 
-  console.log("types", getAllStructureTypes());
-
   const filteredStructures = filterStructures(structureSearch);
 
   /**
@@ -328,13 +326,7 @@ export default function Page(props) {
     const structureId = searchParams.get("structure");
     const structuresArray = inspection?.structures.data || [];
 
-    console.log("something");
-    console.log(structureId);
-
     if (structureId) {
-      console.log("searchParams.structure");
-      console.log(structureId);
-
       const structure = structures.find((s) => s.id === Number(structureId));
 
       updateCenterOnClick(
@@ -578,14 +570,10 @@ export default function Page(props) {
 
   useEffect(() => {
     if (!map.current || !selectedStructure) return;
-    console.log(selectedStructure);
     router.push(
       pathname + "?" + createQueryString("structure", selectedStructure.id)
     );
-    console.log(
-      "Selected structure:",
-      pathname + "?" + createQueryString("structure", selectedStructure.id)
-    );
+
     if (
       map.current.getLayer("marker-layer") &&
       map.current.getSource("markers")

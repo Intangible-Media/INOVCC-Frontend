@@ -62,11 +62,7 @@ export default function ActivityLog({
         );
 
         const newData = response.data.data;
-        console.log("activityGroups", activityGroups);
-        console.log("new activity group", [
-          ...activityGroups,
-          ...groupByCreationDate(newData),
-        ]);
+
         setActivityGroups(
           flattenActivityGroups(activityGroups, groupByCreationDate(newData))
         );

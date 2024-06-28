@@ -115,7 +115,7 @@ export default function ImageCardGrid({
       )}
 
       <div
-        className={`grid ${columnsNumber} ${paddedStyle} ${background} gap-2`}
+        className={`grid ${columnsNumber} 3xl:grid-cols-3 ${paddedStyle} ${background} gap-2`}
       >
         {files?.map((file, index) => {
           // Create an object URL for the file

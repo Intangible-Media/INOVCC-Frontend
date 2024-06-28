@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        "3xl": "1700px",
+        // => @media (min-width: 992px) { ... }
+      },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },

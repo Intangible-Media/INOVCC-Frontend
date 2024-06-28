@@ -24,29 +24,25 @@ export const useImageUpload = (
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedImageObjs, setUploadedImageObjs] = useState([]);
   const [loadingImage, setLoadingImage] = useState(false);
-  const { showSuccess, hideLoading, showLoading } = useLoading();
+  const { showSuccess, hideLoading, showLoading, showError, resetLoading } =
+    useLoading();
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
-    console.log(files);
-    alert(files);
-    setUploadedImageObjs(files);
     if (files.length) {
+      setUploadedImageObjs(files);
       setUploadedImages(
-        files.map((file) => {
-          return {
-            type: file.type,
-            name: file.name,
-            url: URL.createObjectURL(file),
-          };
-        })
+        files.map((file) => ({
+          type: file.type,
+          name: file.name,
+          url: URL.createObjectURL(file),
+        }))
       );
     }
   };
 
   const processImageForFinal = useCallback(
     (file, callback) => {
-      console.log("this image is be proccessed to add a geotag");
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -61,16 +57,14 @@ export const useImageUpload = (
             const fontSize = 100;
             ctx.font = `${fontSize}px Arial`;
             ctx.fillStyle = "white";
-            ctx.textAlign = "right"; // Align text to the right
-            ctx.textBaseline = "top"; // Align text to the top
-            ctx.shadowColor = "black"; // Color of the shadow
-            ctx.shadowOffsetX = 2; // Horizontal distance of the shadow
-            ctx.shadowOffsetY = 2; // Vertical distance of the shadow
-            ctx.shadowBlur = 4; // Blurriness of the shadow
+            ctx.textAlign = "right";
+            ctx.textBaseline = "top";
+            ctx.shadowColor = "black";
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 4;
 
-            const padding = 10; // Padding from the edge
-
-            // Draw text at the top right corner
+            const padding = 10;
             ctx.fillText(
               `Longitude: ${longitude}`,
               canvas.width - padding,
@@ -80,7 +74,7 @@ export const useImageUpload = (
               `Latitude: ${latitude}`,
               canvas.width - padding,
               padding + fontSize + 5
-            ); // Additional spacing between lines
+            );
           }
 
           canvas.toBlob((blob) => {
@@ -97,20 +91,26 @@ export const useImageUpload = (
     [addGeoTag, longitude, latitude]
   );
 
-  const handleImageSubmit = async (images) => {
-    if (!uploadedImages.length) return;
-    try {
-      showLoading("Uploading your images...");
+  const handleImageSubmit = async () => {
+    if (!uploadedImageObjs.length) {
+      showError("No images selected for upload.");
+      return;
+    }
 
+    showLoading("Uploading your images...");
+
+    try {
       const processedFiles = await Promise.all(
-        uploadedImageObjs.map((file) => {
-          if (file.type.startsWith("image/") && addGeoTag) {
-            return new Promise((resolve) => {
-              processImageForFinal(file, resolve);
-            });
-          }
-          return Promise.resolve(file); // Return non-image files as they are
-        })
+        uploadedImageObjs.map(
+          (file) =>
+            new Promise((resolve, reject) => {
+              if (file.type.startsWith("image/") && addGeoTag) {
+                processImageForFinal(file, resolve);
+              } else {
+                resolve(file); // Return non-image files as they are
+              }
+            })
+        )
       );
 
       const response = await uploadFiles(
@@ -120,22 +120,26 @@ export const useImageUpload = (
         "images"
       );
 
-      const newImages = processedFiles.map((file) => ({
-        id: Date.now(),
-        attributes: {
-          url: URL.createObjectURL(file),
-          type: file.type,
-          mime: file.type,
-        },
-      }));
+      console.log(response.type);
+      console.log(response.message);
+
+      if (response.type === "Success") {
+        showSuccess(response.message);
+      }
+      if (response.type === "Mixed") {
+        showSuccess(response.message);
+      }
+      if (response.type === "Error") {
+        showError(response.message);
+      }
 
       setUploadedImages([]);
       setUploadedImageObjs([]);
+
       await refreshInspection();
-      showSuccess("Finished loading images!");
     } catch (error) {
       console.error(error);
-      setLoadingImage(false);
+      showError(`Failed to upload images: ${error || "Unknown error"}`);
     }
   };
 
@@ -188,7 +192,6 @@ const ImageSlider = ({
   latitude = 0,
   editable = true,
 }) => {
-  console.log("images slider", images);
   const { data: session } = useSession();
   const [activeImage, setActiveImage] = useState(null);
   const [uploadImage, setUploadImage] = useState(false);
@@ -471,7 +474,7 @@ const ImageSlider = ({
               }
               return (
                 <div
-                  className="group flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800 border border-gray-300 rounded-md p-4 relative overflow-hidden cursor-pointer"
+                  className="group flex flex-col aspect-square gap-2 items-center justify-center w-full h-full bg-white text-gray-800 border border-gray-300 rounded-md p-4 relative overflow-hidden cursor-pointer"
                   onClick={() => setActiveImage(image)}
                   key={index}
                 >

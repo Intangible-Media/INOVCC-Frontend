@@ -8,24 +8,39 @@ export const LoadingProvider = ({ children }) => {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const showLoading = (msg = "Loading...") => {
-    setMessage(msg);
+  const showLoading = (msg) => {
     setLoading(true);
-    setSuccess(false);
+    setMessage(msg);
   };
 
-  const hideLoading = () => {
-    setLoading(false);
-  };
-
-  const showSuccess = (msg = "Operation Successful!") => {
-    setSuccessMessage(msg);
+  const showSuccess = (msg) => {
     setSuccess(true);
+    setSuccessMessage(msg);
     setLoading(false);
     setTimeout(() => {
-      setSuccess(false);
+      resetLoading(false);
     }, 3000); // Duration for showing the success message
+  };
+
+  const showError = (msg) => {
+    setError(true);
+    setErrorMessage(msg);
+    setLoading(false);
+    setTimeout(() => {
+      resetLoading(false);
+    }, 3000); // Duration for showing the success message
+  };
+
+  const resetLoading = () => {
+    setLoading(false);
+    setSuccess(false);
+    setError(false);
+    setMessage("");
+    setSuccessMessage("");
+    setErrorMessage("");
   };
 
   return (
@@ -35,9 +50,12 @@ export const LoadingProvider = ({ children }) => {
         message,
         success,
         successMessage,
+        error,
+        errorMessage,
         showLoading,
-        hideLoading,
         showSuccess,
+        showError,
+        resetLoading,
       }}
     >
       {children}
