@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls } from "../utils/strings";
 import { useInspection } from "../context/InspectionContext";
+import { useLoading } from "../context/LoadingContext";
 import { uploadFiles } from "../utils/api/structures";
 import { FaRegTrashCan } from "react-icons/fa6";
-import { useLoading } from "../context/LoadingContext";
 import {
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
@@ -23,6 +23,7 @@ export const useImageUpload = (
   const { refreshInspection } = useInspection();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedImageObjs, setUploadedImageObjs] = useState([]);
+  const [capturedImages, setCapturedImages] = useState([]);
   const [loadingImage, setLoadingImage] = useState(false);
   const { showSuccess, hideLoading, showLoading, showError, resetLoading } =
     useLoading();
@@ -92,7 +93,7 @@ export const useImageUpload = (
   );
 
   const handleImageSubmit = async () => {
-    if (!uploadedImageObjs.length) {
+    if (!uploadedImageObjs.length && !capturedImages.length) {
       showError("No images selected for upload.");
       return;
     }
@@ -100,8 +101,10 @@ export const useImageUpload = (
     showLoading("Uploading your images...");
 
     try {
+      const allImages = [...uploadedImageObjs, ...capturedImages];
+
       const processedFiles = await Promise.all(
-        uploadedImageObjs.map(
+        allImages.map(
           (file) =>
             new Promise((resolve, reject) => {
               if (file.type.startsWith("image/") && addGeoTag) {
@@ -135,6 +138,7 @@ export const useImageUpload = (
 
       setUploadedImages([]);
       setUploadedImageObjs([]);
+      setCapturedImages([]);
 
       await refreshInspection();
     } catch (error) {
@@ -146,6 +150,8 @@ export const useImageUpload = (
   return {
     uploadedImages,
     setUploadedImages,
+    capturedImages,
+    setCapturedImages,
     loadingImage,
     handleImageUpload,
     handleImageSubmit,
@@ -184,6 +190,93 @@ export const useImageActions = (session, images, setActiveImage) => {
 
   return { handleDelete, downloadImage };
 };
+
+const CameraComponent = ({ onCapture, onCaptureDone }) => {
+  const videoRef = useRef(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(true);
+  const [capturedImages, setCapturedImages] = useState([]);
+
+  useEffect(() => {
+    if (isCameraOpen) {
+      const getCameraStream = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error("Error accessing camera:", error);
+        }
+      };
+
+      getCameraStream();
+    }
+  }, [isCameraOpen]);
+
+  const captureImage = () => {
+    if (capturedImages.length >= 5) return; // Max 5 images
+    const canvas = document.createElement("canvas");
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      const file = new File(
+        [blob],
+        `captured_image_${capturedImages.length + 1}.png`,
+        {
+          type: "image/png",
+        }
+      );
+      setCapturedImages((prev) => [...prev, file]);
+      onCapture(file);
+    }, "image/png");
+  };
+
+  const closeCamera = () => {
+    setIsCameraOpen(false);
+    onCaptureDone(capturedImages);
+    setCapturedImages([]);
+  };
+
+  return (
+    <div>
+      {/* <button onClick={() => setIsCameraOpen(!isCameraOpen)}>
+        {isCameraOpen ? "Close Camera" : "Open Camera"}
+      </button> */}
+      {isCameraOpen && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black flex flex-col items-center justify-center z-50">
+          <video
+            ref={videoRef}
+            autoPlay
+            className="w-full h-auto relative"
+          ></video>
+          <div className=" absolute flex gap-4 left-1/2 transform -translate-x-1/2 bottom-10">
+            <Button
+              onClick={captureImage}
+              className="mt-4 p-2 bg-dark-blue-700 text-white w-40"
+            >
+              Capture Image
+            </Button>
+            <Button
+              onClick={closeCamera}
+              className="mt-4 p-2 bg-dark-blue-700 text-white w-40"
+            >
+              Done
+            </Button>
+          </div>
+          <div className="absolute top-4 right-4 text-white">
+            {capturedImages.length}/5 images captured
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ImageSlider = ({
   images,
   structureId = null,
@@ -197,10 +290,13 @@ const ImageSlider = ({
   const [uploadImage, setUploadImage] = useState(false);
   const [addGeoTag, setAddGeoTag] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [useCamera, setUseCamera] = useState(null);
 
   const {
     uploadedImages,
     setUploadedImages,
+    capturedImages,
+    setCapturedImages,
     loadingImage,
     handleImageUpload,
     handleImageSubmit,
@@ -225,6 +321,21 @@ const ImageSlider = ({
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? uploadedImages.length - 1 : prevIndex - 1
     );
+  };
+
+  const handleCapture = (file) => {
+    setCapturedImages([...capturedImages, file]);
+  };
+
+  const handleCaptureDone = (capturedImages) => {
+    setUploadedImages((prevImages) => [
+      ...prevImages,
+      ...capturedImages.map((file) => ({
+        type: file.type,
+        name: file.name,
+        url: URL.createObjectURL(file),
+      })),
+    ]);
   };
 
   return (
@@ -350,44 +461,68 @@ const ImageSlider = ({
                 )}
               </div>
             ) : (
-              <Label
-                htmlFor="dropzone-file-34343"
-                className="flex justify-center bg-gray-100 w-full h-full items-center overflow-hidden cursor-pointer flex-col"
-              >
-                <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                  <svg
-                    className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 16"
+              <div className="flex flex-col items-center w-full h-full bg-gray-100 justify-center overflow-hidden cursor-pointer">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setUseCamera("upload")}
+                    className="mb-4 p-2 bg-dark-blue-700 text-white w-32 aspect-square"
                   >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                    />
-                  </svg>
-                  <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">
-                      Drag and drop or upload here
-                    </span>
-                  </p>
-                  <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span className="">
-                      Recomend images larger than 800 x 800
-                    </span>
-                  </p>
+                    Use Upload
+                  </Button>
+                  <Button
+                    onClick={() => setUseCamera("camera")}
+                    className="mb-4 p-2 bg-dark-blue-700 text-white w-32 aspect-square"
+                  >
+                    Use Camera
+                  </Button>
                 </div>
-                <FileInput
-                  id="dropzone-file-34343"
-                  className="hidden"
-                  type="file"
-                  multiple
-                  onChange={handleImageUpload}
-                />
-              </Label>
+
+                {useCamera === "camera" && (
+                  <CameraComponent
+                    onCapture={handleCapture}
+                    onCaptureDone={handleCaptureDone}
+                  />
+                )}
+
+                {useCamera === "upload" && (
+                  <Label
+                    htmlFor="dropzone-file-34343"
+                    className="flex justify-center items-center flex-col"
+                  >
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                      <svg
+                        className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 20 16"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                        />
+                      </svg>
+                      <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">
+                          Drag and drop or upload here
+                        </span>
+                      </p>
+                      <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span>Recommend images larger than 800 x 800</span>
+                      </p>
+                    </div>
+                    <FileInput
+                      id="dropzone-file-34343"
+                      className="hidden"
+                      type="file"
+                      multiple
+                      onChange={handleImageUpload}
+                    />
+                  </Label>
+                )}
+              </div>
             )}
 
             {uploadedImages.length > 0 && (
@@ -422,7 +557,7 @@ const ImageSlider = ({
                 <div className="flex">
                   <button
                     className="flex gap-1 text-white"
-                    onClick={() => handleImageSubmit(images)}
+                    onClick={handleImageSubmit}
                   >
                     <p className="m-auto">Save All</p>
                     <MdOutlineSaveAlt

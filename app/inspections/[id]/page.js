@@ -19,6 +19,7 @@ import { getLocationDetails } from "../../../utils/api/mapbox";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa";
+import Camera from "../../../components/Camera";
 import AvatarImage from "../../../components/AvatarImage";
 import {
   CheckMark,
@@ -678,6 +679,7 @@ export default function Page(props) {
     <>
       <div className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-5">
         <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
+          {/* <Camera /> */}
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>
