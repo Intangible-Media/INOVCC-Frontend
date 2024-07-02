@@ -242,8 +242,8 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
 
   const captureImage = () => {
     if (capturedImages.length >= 5) return; // Max 5 images
-    const canvas = document.createElement("canvas");
     const video = videoRef.current;
+    const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
@@ -284,7 +284,7 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
             autoPlay
             className="w-full h-auto relative"
           ></video>
-          <div className="flex gap-3 absolute bottom-32 left-1/2 transform -translate-x-1/2">
+          <div className="grid grid-cols-5 gap-3 absolute bottom-32 left-1/2 transform -translate-x-1/2 w-full mx-6">
             {capturedImages.map((image) => (
               <div
                 key={image.name}
