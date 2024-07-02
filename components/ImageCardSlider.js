@@ -226,7 +226,11 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
       const getCameraStream = async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: { deviceId: currentDeviceId },
+            video: {
+              deviceId: currentDeviceId,
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
           });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -262,12 +266,20 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
           type: "image/png",
         }
       );
+      // Log captured image resolution
+      console.log(
+        `Captured image resolution: ${canvas.width}x${canvas.height}`
+      );
       setCapturedImages((prev) => [...prev, file]);
       onCapture(file);
     }, "image/png");
   };
 
   const closeCamera = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(200); // Vibrate for 200 milliseconds
+    }
+
     setIsCameraOpen(false);
     onCaptureDone(capturedImages);
     setCapturedImages([]);
@@ -290,11 +302,11 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
             autoPlay
             className="w-full h-auto relative"
           ></video>
-          <div className="grid grid-cols-5 gap-3 absolute bottom-32 left-1/2 transform -translate-x-1/2 w-full mx-6">
+          <div className="grid grid-cols-5 gap-3 absolute bottom-32 left-6 right-6">
             {capturedImages.map((image) => (
               <div
                 key={image.name}
-                className="aspect-square rounded-lg border border-gray-300 bg-white w-32"
+                className="aspect-square rounded-lg border border-gray-300 bg-white"
               >
                 <img
                   src={URL.createObjectURL(image)}
