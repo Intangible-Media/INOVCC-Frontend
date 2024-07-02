@@ -242,6 +242,12 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
 
   const captureImage = () => {
     if (capturedImages.length >= 5) return; // Max 5 images
+
+    // Trigger device vibration
+    if (navigator.vibrate) {
+      navigator.vibrate(200); // Vibrate for 200 milliseconds
+    }
+
     const video = videoRef.current;
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
