@@ -5,6 +5,10 @@ import { ensureDomain, getUrls } from "../utils/strings";
 import { useInspection } from "../context/InspectionContext";
 import { useLoading } from "../context/LoadingContext";
 import { uploadFiles } from "../utils/api/structures";
+import { FaRegCircle } from "react-icons/fa";
+import { MdFlipCameraAndroid } from "react-icons/md";
+import { IoCloseCircleOutline } from "react-icons/io5";
+
 import { FaRegTrashCan } from "react-icons/fa6";
 import {
   MdOutlineKeyboardArrowLeft,
@@ -195,13 +199,34 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
   const videoRef = useRef(null);
   const [isCameraOpen, setIsCameraOpen] = useState(true);
   const [capturedImages, setCapturedImages] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState(null);
 
   useEffect(() => {
-    if (isCameraOpen) {
+    const getDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(
+          (device) => device.kind === "videoinput"
+        );
+        setDevices(videoDevices);
+        if (videoDevices.length > 0) {
+          setCurrentDeviceId(videoDevices[0].deviceId);
+        }
+      } catch (error) {
+        console.error("Error accessing devices:", error);
+      }
+    };
+
+    getDevices();
+  }, []);
+
+  useEffect(() => {
+    if (isCameraOpen && currentDeviceId) {
       const getCameraStream = async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: { deviceId: currentDeviceId },
           });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -213,7 +238,7 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
 
       getCameraStream();
     }
-  }, [isCameraOpen]);
+  }, [isCameraOpen, currentDeviceId]);
 
   const captureImage = () => {
     if (capturedImages.length >= 5) return; // Max 5 images
@@ -242,31 +267,49 @@ const CameraComponent = ({ onCapture, onCaptureDone }) => {
     setCapturedImages([]);
   };
 
+  const switchCamera = () => {
+    const currentIndex = devices.findIndex(
+      (device) => device.deviceId === currentDeviceId
+    );
+    const nextIndex = (currentIndex + 1) % devices.length;
+    setCurrentDeviceId(devices[nextIndex].deviceId);
+  };
+
   return (
     <div>
-      {/* <button onClick={() => setIsCameraOpen(!isCameraOpen)}>
-        {isCameraOpen ? "Close Camera" : "Open Camera"}
-      </button> */}
       {isCameraOpen && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed top-0 left-0 w-full h-full bg-black flex flex-col items-center justify-center z-[999999999999999999999]">
           <video
             ref={videoRef}
             autoPlay
             className="w-full h-auto relative"
           ></video>
-          <div className=" absolute flex gap-4 left-1/2 transform -translate-x-1/2 bottom-10">
-            <Button
-              onClick={captureImage}
-              className="mt-4 p-2 bg-dark-blue-700 text-white w-40"
-            >
-              Capture Image
-            </Button>
-            <Button
-              onClick={closeCamera}
-              className="mt-4 p-2 bg-dark-blue-700 text-white w-40"
-            >
-              Done
-            </Button>
+          <div className="flex gap-3 absolute bottom-32 left-1/2 transform -translate-x-1/2">
+            {capturedImages.map((image) => (
+              <div
+                key={image.name}
+                className="aspect-square rounded-lg border border-gray-300 bg-white w-32"
+              >
+                <img
+                  src={URL.createObjectURL(image)}
+                  alt="Captured"
+                  className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="absolute flex gap-4 left-1/2 transform -translate-x-1/2 bottom-10">
+            {devices.length > 1 && (
+              <button onClick={switchCamera} className="">
+                <MdFlipCameraAndroid className="text-white w-10 h-10" />
+              </button>
+            )}
+            <button onClick={captureImage} className="">
+              <FaRegCircle className="text-white w-12 h-12" />
+            </button>
+            <button onClick={closeCamera} className="">
+              <IoCloseCircleOutline className="text-white w-10 h-10" />
+            </button>
           </div>
           <div className="absolute top-4 right-4 text-white">
             {capturedImages.length}/5 images captured
@@ -462,16 +505,19 @@ const ImageSlider = ({
               </div>
             ) : (
               <div className="flex flex-col items-center w-full h-full bg-gray-100 justify-center overflow-hidden cursor-pointer">
-                <div className="flex gap-2">
+                <div className="flex flex-col w-full px-6 gap-2">
+                  <h3 className="font-medium text-lg text-gray-700 text-center mb-4">
+                    Please Select How You Will Upload
+                  </h3>
                   <Button
                     onClick={() => setUseCamera("upload")}
-                    className="mb-4 p-2 bg-dark-blue-700 text-white w-32 aspect-square"
+                    className="p-2 bg-dark-blue-700 text-white w-full h-24"
                   >
                     Use Upload
                   </Button>
                   <Button
                     onClick={() => setUseCamera("camera")}
-                    className="mb-4 p-2 bg-dark-blue-700 text-white w-32 aspect-square"
+                    className="p-2 bg-dark-blue-700 text-white w-full h-24"
                   >
                     Use Camera
                   </Button>

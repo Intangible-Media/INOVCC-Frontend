@@ -111,7 +111,7 @@ export default function RootLayout({ children }) {
             <LoadingProvider>
               <Navbar
                 fluid
-                className="fixed top-0 z-10 w-full bg-gray-800	 border-b border-blue-950 text-white dark:bg-gray-800 dark:border-gray-700"
+                className="fixed top-0 z-[11] w-full bg-gray-800	 border-b border-blue-950 text-white dark:bg-gray-800 dark:border-gray-700"
               >
                 <Navbar.Brand href="https://flowbite-react.com">
                   <img

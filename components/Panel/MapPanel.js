@@ -902,7 +902,7 @@ const AddInspectorForm = ({
             {assignedInspectors.map((inspector) => (
               <div key={inspector.id} className="relative group">
                 <button
-                  className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100"
+                  className="bg-red-600 hover:bg-red-800 text-white p-1 text-xxs rounded-full absolute top-0 right-0 z-10 opacity-0 group-hover:opacity-100"
                   onClick={() => handleRemoveInspector(inspector)}
                 >
                   <img src="/icons/x-icon.png" alt="" className="w-1.5 h-1.5" />
