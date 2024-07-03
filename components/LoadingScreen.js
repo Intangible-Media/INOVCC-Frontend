@@ -20,29 +20,34 @@ const LoadingScreen = () => {
     >
       <div className="flex flex-col gap-4 text-center">
         {loading && (
-          <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
+          <div className="flex flex-col gap-3 lg:gap-6 animate-bounce-in justify-center text-center">
             <AiOutlineLoading3Quarters
-              size={100}
               color="white"
-              className="animate-spin-infinite mx-auto"
+              className="animate-spin-infinite mx-auto w-10 h-10 lg:w-20 lg:h-20"
             />
-            <p className="text-white text-2xl leading-none font-light">
+            <p className="text-white text-lg lg:text-2xl leading-none font-light">
               {message}
             </p>
           </div>
         )}
         {success && (
-          <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
-            <CiCircleCheck size={100} color="white" className="mx-auto" />
-            <p className="text-white text-2xl leading-none font-light animate-fade-in">
+          <div className="flex flex-col gap-3 lg:gap-6 animate-bounce-in justify-center text-center">
+            <CiCircleCheck
+              color="white"
+              className="mx-auto w-10 h-10 lg:w-20 lg:h-20"
+            />
+            <p className="text-white text-lg lg:text-2xl leading-none font-light animate-fade-in">
               {successMessage}
             </p>
           </div>
         )}
         {error && (
-          <div className="flex flex-col gap-6 animate-bounce-in justify-center text-center">
-            <MdErrorOutline size={100} color="red" className="mx-auto" />
-            <p className="text-red-500 text-2xl leading-none font-light animate-fade-in">
+          <div className="flex flex-col gap-3 lg:gap-6 animate-bounce-in justify-center text-center">
+            <MdErrorOutline
+              color="red"
+              className="mx-auto w-10 h-10 lg:w-20 lg:h-20"
+            />
+            <p className="text-red-500 text-lg lg:text-2xl leading-none font-light animate-fade-in">
               {errorMessage}
             </p>
           </div>
