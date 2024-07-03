@@ -115,6 +115,13 @@
 
 }
 
+.minor-shadow {
+  -webkit-box-shadow: 0px 4px 5px 0px rgba(230,230,230,0.21);
+-moz-box-shadow: 0px 4px 5px 0px rgba(230,230,230,0.21);
+box-shadow: 0px 4px 5px 0px rgba(230,230,230,0.21);
+
+}
+
 .status-bar {
   background-color: #4CAF50;
   color: #ffffff;
@@ -157,7 +164,7 @@
 @media (max-width: 550px) {
 
   .map-structure-panel {
-    height: 450px;
+    height: 550px;
     width: 100%;
     left: 0;
     position: absolute;

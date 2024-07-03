@@ -436,7 +436,7 @@ export default function Page(props) {
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/standard-beta",
       center: [lng, lat],
-      zoom: 16,
+      zoom: 18,
       pitch: 50,
     });
 
@@ -447,7 +447,7 @@ export default function Page(props) {
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
 
       // Set padding based on device type
-      const padding = isPhone ? { bottom: 475 } : { right: 400 };
+      const padding = isPhone ? { bottom: 525 } : { right: 400 };
 
       map.current.easeTo({ padding: padding });
 
@@ -519,7 +519,7 @@ export default function Page(props) {
       // Determine if the device is a phone or not
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
       // Set padding based on device type
-      const padding = isPhone ? { bottom: 475 } : { right: 450 };
+      const padding = isPhone ? { bottom: 525 } : { right: 450 };
 
       map.current.easeTo({
         zoom: 18,
@@ -574,9 +574,9 @@ export default function Page(props) {
 
   useEffect(() => {
     if (!map.current || !selectedStructure) return;
-    router.push(
-      pathname + "?" + createQueryString("structure", selectedStructure.id)
-    );
+    const newUrl =
+      pathname + "?" + createQueryString("structure", selectedStructure.id);
+    window.history.pushState({ path: newUrl }, "", newUrl);
 
     if (
       map.current.getLayer("marker-layer") &&
@@ -782,7 +782,9 @@ export default function Page(props) {
                     selectedStructure.id === structure.id &&
                     "active-structure"
                   }`}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent default click behavior
+                    e.stopPropagation(); // Stop propagation if necessary
                     updateCenterOnClick(
                       structure.attributes.longitude,
                       structure.attributes.latitude

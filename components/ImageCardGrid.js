@@ -156,9 +156,9 @@ export default function ImageCardGrid({
                   </h6>
                 </div>
               )}
-              <div className="file-name-footer bg-white p-4 3xl:p-3 flex justify-between gap-2 align-middle absolute left-0 right-0 bottom-0 mt-auto">
+              <div className="file-name-footer bg-white p-3 3xl:p-3 flex justify-between gap-2 align-middle absolute left-0 right-0 bottom-0 mt-auto">
                 <h6 className="leading-none text-xxs shorten-text">
-                  {formatFileName(file.attributes?.name || file.name)}
+                  {file.attributes?.name || file.name}
                 </h6>
                 <Dropdown
                   inline

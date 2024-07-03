@@ -18,7 +18,7 @@ function DynamicBreadcrumb() {
 
   const breadcrumbItems = breadcrumbPath.map((segment, index) => {
     return (
-      <Breadcrumb.Item key={index} href="/">
+      <Breadcrumb.Item key={index} href="/" className=" text-xs md:text-sm">
         {camelCaseToTitleCase(segment)}
       </Breadcrumb.Item>
     );
@@ -26,10 +26,10 @@ function DynamicBreadcrumb() {
 
   return (
     <Breadcrumb
-      className="dark-text p-3 md:p-5 border-b border-gray-300"
+      className="dark-text p-2.5 md:p-5 border-b border-gray-300"
       aria-label="Breadcrumb"
     >
-      <Breadcrumb.Item href="/" icon={HiHome}>
+      <Breadcrumb.Item href="/" icon={HiHome} className=" text-xs md:text-sm">
         Home
       </Breadcrumb.Item>
       {breadcrumbItems}

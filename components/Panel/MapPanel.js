@@ -229,7 +229,7 @@ export default function MapPanel({
         </span>
       </div>
 
-      <div className="im-tabs-header flex gap-3 border-b w-full px-6 md:px-8  justify-around">
+      <div className="im-tabs-header flex gap-3 border-b w-full px-6 md:px-8  justify-around minor-shadow">
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
             "overview"
