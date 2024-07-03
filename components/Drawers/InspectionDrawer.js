@@ -273,6 +273,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       });
 
       showSuccess();
+      await refreshInspection();
 
       return response;
     } catch (error) {

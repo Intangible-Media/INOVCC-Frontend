@@ -178,6 +178,35 @@ export default function MapPanel({
     }
   };
 
+  const getGeoLocationForStructure = async () => {
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUpdatedStructure((prevStructure) => ({
+          ...prevStructure,
+          attributes: {
+            ...prevStructure.attributes,
+            longitude: longitude,
+            latitude: latitude,
+          },
+        }));
+      },
+      (error) => {
+        console.error("Error getting geolocation:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   return (
     <>
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
@@ -501,48 +530,57 @@ export default function MapPanel({
                       <option value="Nonbillable">Do Not Bill</option>
                     </select>
                   </div>
-                  <div className="flex flex-col w-full">
-                    <label className="text-xs" htmlFor="structureLongitude">
-                      Longitude
-                    </label>
-                    <input
-                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                      type="text"
-                      id="structureLongitude"
-                      placeholder="Enter Longitude"
-                      value={updatedStructure.attributes?.longitude}
-                      onChange={(e) => {
-                        setUpdatedStructure({
-                          ...updatedStructure,
-                          attributes: {
-                            ...updatedStructure.attributes,
-                            longitude: e.target.value,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col w-full">
-                    <label className="text-xs" htmlFor="structureLatitude">
-                      Latitude
-                    </label>
-                    <input
-                      className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                      type="text"
-                      id="structureLatitude"
-                      placeholder="Enter Latitude"
-                      value={updatedStructure.attributes?.latitude}
-                      onChange={(e) => {
-                        setUpdatedStructure({
-                          ...updatedStructure,
-                          attributes: {
-                            ...updatedStructure.attributes,
-                            latitude: e.target.value,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
+                  {updatedStructure.attributes?.longitude &&
+                  updatedStructure.attributes?.latitude ? (
+                    <>
+                      <div className="flex flex-col w-full">
+                        <label className="text-xs" htmlFor="structureLongitude">
+                          Longitude
+                        </label>
+                        <input
+                          className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                          type="text"
+                          id="structureLongitude"
+                          placeholder="Enter Longitude"
+                          value={updatedStructure.attributes?.longitude}
+                          onChange={(e) => {
+                            setUpdatedStructure({
+                              ...updatedStructure,
+                              attributes: {
+                                ...updatedStructure.attributes,
+                                longitude: e.target.value,
+                              },
+                            });
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col w-full">
+                        <label className="text-xs" htmlFor="structureLatitude">
+                          Latitude
+                        </label>
+                        <input
+                          className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                          type="text"
+                          id="structureLatitude"
+                          placeholder="Enter Latitude"
+                          value={updatedStructure.attributes?.latitude}
+                          onChange={(e) => {
+                            setUpdatedStructure({
+                              ...updatedStructure,
+                              attributes: {
+                                ...updatedStructure.attributes,
+                                latitude: e.target.value,
+                              },
+                            });
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <Button onClick={() => getGeoLocationForStructure()}>
+                      Set Longitude / Latitude
+                    </Button>
+                  )}
                   <>
                     <div className="flex flex-col gap-1">
                       <Label className="text-xs" htmlFor="structureStatus">

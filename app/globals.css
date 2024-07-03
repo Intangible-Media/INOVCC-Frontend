@@ -152,7 +152,7 @@ box-shadow: 0px 4px 5px 0px rgba(230,230,230,0.21);
 
   .map-container,
   .map-stuctures-container {
-    height: 50rem;
+    height: 55rem;
   }
 }
 
@@ -164,7 +164,7 @@ box-shadow: 0px 4px 5px 0px rgba(230,230,230,0.21);
 @media (max-width: 550px) {
 
   .map-structure-panel {
-    height: 550px;
+    height: 575px;
     width: 100%;
     left: 0;
     position: absolute;

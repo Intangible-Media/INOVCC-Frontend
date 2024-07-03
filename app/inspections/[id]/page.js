@@ -572,24 +572,24 @@ export default function Page(props) {
     fetchData();
   }, [session, params.id, query]); // Assuming `query` here is a dependency that might change and is suitable for useEffect's dependency array
 
-  useEffect(() => {
-    if (!map.current || !selectedStructure) return;
-    const newUrl =
-      pathname + "?" + createQueryString("structure", selectedStructure.id);
-    window.history.pushState({ path: newUrl }, "", newUrl);
+  // useEffect(() => {
+  //   if (!map.current || !selectedStructure) return;
+  //   const newUrl =
+  //     pathname + "?" + createQueryString("structure", selectedStructure.id);
+  //   window.history.pushState({ path: newUrl }, "", newUrl);
 
-    if (
-      map.current.getLayer("marker-layer") &&
-      map.current.getSource("markers")
-    ) {
-      map.current.setLayoutProperty("marker-layer", "icon-size", [
-        "case",
-        ["==", ["get", "id"], selectedStructure.id],
-        1, // Larger size for selected structure
-        0.6, // Normal size
-      ]);
-    }
-  }, [selectedStructure]);
+  //   if (
+  //     map.current.getLayer("marker-layer") &&
+  //     map.current.getSource("markers")
+  //   ) {
+  //     map.current.setLayoutProperty("marker-layer", "icon-size", [
+  //       "case",
+  //       ["==", ["get", "id"], selectedStructure.id],
+  //       1, // Larger size for selected structure
+  //       0.6, // Normal size
+  //     ]);
+  //   }
+  // }, [selectedStructure]);
 
   useEffect(() => {
     updateProgressBar(structureProgressType);
@@ -721,7 +721,7 @@ export default function Page(props) {
         className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-white border-2 dark:border-gray-600 bg-white rounded-lg"
       >
         <div
-          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-8 bottom-[460px] md:bottom-4 z-10"
+          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-8 bottom-[585px] md:bottom-4 z-10"
           role="group"
         >
           <button
