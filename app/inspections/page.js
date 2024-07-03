@@ -319,7 +319,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-3 pt-6">
           <div className="col-span-4 md:col-span-3">
             <div className="w-full mt-auto">
-              <div style={{ height: "400px" }}>
+              <div className="overflow-x-auto overflow-y-hidden">
                 <StructureGraph
                   structures={dateRanggStructures}
                   aggregation={aggregation}

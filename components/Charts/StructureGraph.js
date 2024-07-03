@@ -251,6 +251,7 @@ export default function RevenueChart({
 
   return (
     <ApexChart
+      className="w-[700px] h-[400px] md:w-full"
       type="bar"
       options={options}
       series={seriesData}

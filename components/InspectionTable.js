@@ -165,7 +165,7 @@ export default function InspectionTable({ inspectionData }) {
             </div>
           </div>
           <div className="flex flex-col-reverse md:flex-row justify-between md:space-x-4 pb-4">
-            <form className=" w-80 md:max-w-sm flex-1 md:mr-4">
+            <form className="w-full md:w-80 md:max-w-sm flex-1 md:mr-4">
               <label
                 htmlFor="default-search"
                 className="text-sm font-medium text-gray-900 sr-only dark:text-white"
@@ -201,179 +201,6 @@ export default function InspectionTable({ inspectionData }) {
                 />
               </div>
             </form>
-            {/* <div className="flex items-center space-x-4 hidden">
-                <div>
-                  <Button
-                    id="filterDropdownButton"
-                    data-dropdown-toggle="filterDropdown"
-                    type="Button"
-                    className="w-full md:w-auto flex items-center justify-center px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      className="h-4 w-4 mr-2 text-gray-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
-                      />
-                    </svg>
-                    Filter
-                    <svg
-                      className="-mr-1 ml-1.5 w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                    >
-                      <path
-                        clipRule="evenodd"
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      />
-                    </svg>
-                  </Button>
-                  <div
-                    id="filterDropdown"
-                    className="z-10 hidden p-3 bg-white rounded-lg shadow w-56 dark:bg-gray-700"
-                  >
-                    <h6 className="mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      By status
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="filterDropdownButton"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          In progress
-                        </label>
-                      </li>
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            defaultChecked=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          In review
-                        </label>
-                      </li>
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Completed
-                        </label>
-                      </li>
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          Canceled
-                        </label>
-                      </li>
-                    </ul>
-                    <h6 className="mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      By number of users
-                    </h6>
-                    <ul
-                      className="space-y-2 text-sm"
-                      aria-labelledby="dropdownDefault"
-                    >
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            defaultChecked=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          5-10 peoples
-                        </label>
-                      </li>
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          10+ peoples
-                        </label>
-                      </li>
-                      <li>
-                        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md px-1.5 py-1 w-full">
-                          <input
-                            type="checkbox"
-                            defaultValue=""
-                            className="w-4 h-4 mr-2 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                          />
-                          More than 10 peoples
-                        </label>
-                      </li>
-                    </ul>
-                    <a
-                      href="#"
-                      className="flex items-center text-sm font-medium text-primary-600 dark:text-primary-500 hover:underline mt-4 ml-1.5"
-                    >
-                      Apply to all projects
-                    </a>
-                  </div>
-                </div>
-                <div>
-                  <div
-                    id="configurationDropdown"
-                    className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-                  >
-                    <ul
-                      className="py-1 text-sm text-gray-700 dark:text-gray-200"
-                      aria-labelledby="configurationDropdownButton"
-                    >
-                      <li>
-                        <a
-                          href="#"
-                          className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                        >
-                          By Category
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href="#"
-                          className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                        >
-                          By Brand
-                        </a>
-                      </li>
-                    </ul>
-                    <div className="py-1">
-                      <a
-                        href="#"
-                        className="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                      >
-                        Reset
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
           </div>
         </div>
         <div className="pb-3 flex flex-wrap hidden">
@@ -460,12 +287,12 @@ export default function InspectionTable({ inspectionData }) {
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                   key={`${inspection.id}-${index}`}
                 >
-                  <Table.Cell className="font-medium text-dark-blue-700 hover:underline dark:text-white">
+                  <Table.Cell className="font-medium text-dark-blue-700 hover:underline dark:text-white whitespace-nowrap">
                     <Link href={`/inspections/${inspection.id}`}>
                       {highlightMatch(inspection.attributes.name, searchQuery)}
                     </Link>
                   </Table.Cell>
-                  <Table.Cell className="text-dark-blue-700 hover:underline">
+                  <Table.Cell className="text-dark-blue-700 hover:underline whitespace-nowrap">
                     <Link
                       href={`/clients/${inspection.attributes.client.data.id}`}
                     >
@@ -516,12 +343,13 @@ export default function InspectionTable({ inspectionData }) {
                     </div>
                   </Table.Cell>
 
-                  <Table.Cell>
+                  <Table.Cell className="whitespace-nowrap shrink-0">
                     <Progress
                       progress={getInspectionProgress(inspection)}
                       textLabel=""
                       size="lg"
                       color="green"
+                      style={{ width: "150px" }}
                       labelProgress
                       labelText
                     />

@@ -63,8 +63,8 @@ const handler = NextAuth({
             );
 
             // Extract picture URL if it exists
-            const pictureUrl = userDetailsResponse.data.picture.url;
-            console.log("USER INFORMATION", userDetailsResponse.data.picture.url)
+            const pictureUrl = userDetailsResponse.data.picture?.url || null;
+            console.log("USER INFORMATION", userDetailsResponse.data.picture?.url);
 
             // Combine login response and detailed user information as needed
             const userWithRoleAndPicture = {
@@ -85,6 +85,7 @@ const handler = NextAuth({
           const errorMessage =
             e.response?.data?.message[0]?.messages[0]?.message ||
             "An error occurred during login.";
+          console.error("Login error:", e);
           throw new Error(errorMessage);
         }
       },
