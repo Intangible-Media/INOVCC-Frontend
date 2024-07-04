@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { HiHome } from "react-icons/hi";
 import { Breadcrumb } from "flowbite-react";
 import { camelCaseToTitleCase } from "../utils/strings";
+import Link from "next/link";
 
 function DynamicBreadcrumb() {
   const pathname = usePathname();
@@ -18,8 +19,8 @@ function DynamicBreadcrumb() {
 
   const breadcrumbItems = breadcrumbPath.map((segment, index) => {
     return (
-      <Breadcrumb.Item key={index} href="/" className=" text-xs md:text-sm">
-        {camelCaseToTitleCase(segment)}
+      <Breadcrumb.Item key={index} className=" text-xs md:text-sm">
+        <Link href={`/${segment}`}>{camelCaseToTitleCase(segment)}</Link>
       </Breadcrumb.Item>
     );
   });
@@ -29,8 +30,8 @@ function DynamicBreadcrumb() {
       className="dark-text p-2.5 md:p-5 border-b border-gray-300"
       aria-label="Breadcrumb"
     >
-      <Breadcrumb.Item href="/" icon={HiHome} className=" text-xs md:text-sm">
-        Home
+      <Breadcrumb.Item icon={HiHome} className=" text-xs md:text-sm">
+        <Link href="/">Home</Link>
       </Breadcrumb.Item>
       {breadcrumbItems}
     </Breadcrumb>

@@ -113,13 +113,14 @@ export default function RootLayout({ children }) {
                 fluid
                 className="fixed top-0 z-[11] w-full bg-gray-800	 border-b border-blue-950 text-white dark:bg-gray-800 dark:border-gray-700"
               >
-                <Navbar.Brand href="https://flowbite-react.com">
+                <Link href={"/"}>
                   <img
                     src="../../../logo-white.png"
                     className="mr-3 h-6 sm:h-9"
                     alt="Flowbite React Logo"
                   />
-                </Navbar.Brand>
+                </Link>
+
                 <div className="flex md:order-2 gap-3">
                   <NavbarDropdown />
                   <Navbar.Toggle />

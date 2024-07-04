@@ -491,7 +491,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-3 w-full">
             <div className="flex flex-col bg-gray-50 rounded-lg p-7">
-              <div className="bg-gray-200 p-5 rounded-full m-auto">
+              <div className="bg-gray-200 p-3.5 md:p-5 rounded-full m-auto">
                 <p className="text-2xl md:text-3xl text-gray-800">
                   {projectsNotStarted}
                 </p>
@@ -502,7 +502,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col bg-yellow-50 rounded-lg p-7">
-              <div className="bg-yellow-100 p-5 rounded-full m-auto">
+              <div className="bg-yellow-100 p-3.5 md:p-5 rounded-full m-auto">
                 <p className="text-2xl md:text-3xl text-yellow-800">
                   {projectsInProgress}
                 </p>
@@ -513,7 +513,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col bg-red-50 rounded-lg p-7">
-              <div className="bg-red-100 p-5 rounded-full m-auto">
+              <div className="bg-red-100 p-3.5 md:p-5 rounded-full m-auto">
                 <p className="text-2xl md:text-3xl text-red-800">0</p>
               </div>
               <p className=" text-sm text-center text-red-800 font-semibold mt-2">
@@ -522,7 +522,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col bg-green-50 rounded-lg p-7">
-              <div className="bg-green-100 p-5 rounded-full m-auto">
+              <div className="bg-green-100 p-3.5 md:p-5 rounded-full m-auto">
                 <p className="text-2xl md:text-3xl text-green-600">
                   {projectsCompleted}
                 </p>
