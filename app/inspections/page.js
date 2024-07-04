@@ -282,7 +282,7 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-between">
             {/* <h3 className="text-xl font-bold dark:text-white">Report</h3> */}
-            <div className="flex flex-col w-full md:flex-row gap-3">
+            <div className="hidden md:flex flex-col w-full md:flex-row gap-3">
               <Select
                 className="w-full md:w-52"
                 onChange={(e) => setClientSelected(e.target.value)}
@@ -316,7 +316,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 pt-6">
+        <div className="grid grid-cols-4 gap-3 md:pt-6">
           <div className="col-span-4 md:col-span-3">
             <div className="w-full mt-auto">
               <div className="overflow-x-auto overflow-y-hidden">
