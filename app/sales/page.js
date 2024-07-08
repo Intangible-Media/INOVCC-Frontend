@@ -78,12 +78,10 @@ const SalesDashboard = () => {
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Recent Activities</h2>
         <ul className="bg-white p-6 rounded shadow-lg">
+          <li className="mb-2">John Doe moved Client A to Proposal Accepted</li>
+          <li className="mb-2">Jane Smith added a new card to RFP Sent</li>
           <li className="mb-2">
-            John Doe moved "Client A" to "Proposal Accepted"
-          </li>
-          <li className="mb-2">Jane Smith added a new card to "RFP Sent"</li>
-          <li className="mb-2">
-            Michael Brown marked "Client B" as "Project Started"
+            Michael Brown marked Client B as Project Started
           </li>
         </ul>
       </div>
