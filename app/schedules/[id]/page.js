@@ -31,6 +31,7 @@ export default function Page({ params }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [structures, setStructures] = useState([]);
+  const [groupedStructures, setGroupedStructures] = useState([]);
   const [zoom, setZoom] = useState(20);
   const [myTasks, setMyTasks] = useState([]);
   const [activeCoordinate, setActiveCoordinate] = useState([78.0421, 27.1751]);
@@ -39,8 +40,6 @@ export default function Page({ params }) {
   const [date, setDate] = useState(
     new Date(convertToLongDateFormat(new Date()))
   );
-
-  console.log(structures);
 
   const coordinates = structures.map((structure) => [
     structure.attributes.longitude,
@@ -173,7 +172,26 @@ export default function Page({ params }) {
         query: structureQuery,
       });
 
-      setStructures(response.data.data);
+      const groupedByInspectionId = response.data.data.reduce(
+        (acc, structure) => {
+          const inspectionId = structure.attributes.inspection.data.id;
+          const mapName = structure.attributes.inspection.data.attributes.name;
+          if (!acc[inspectionId]) {
+            acc[inspectionId] = { mapName, structures: [] };
+          }
+          acc[inspectionId].structures.push(structure);
+          return acc;
+        },
+        {}
+      );
+
+      const groupedArray = Object.keys(groupedByInspectionId).map((key) => ({
+        inspectionId: key,
+        mapName: groupedByInspectionId[key].mapName,
+        structures: groupedByInspectionId[key].structures,
+      }));
+
+      setGroupedStructures(groupedArray);
 
       if (response.data.data.length > 0) {
         setActiveCoordinate([
@@ -210,14 +228,90 @@ export default function Page({ params }) {
     </div>
   );
 
+  const MapStructuresTabs = ({ groupedStructures }) => {
+    const [expandedGroup, setExpandedGroup] = useState(null);
+    const router = useRouter();
+
+    const toggleGroup = (index) => {
+      setExpandedGroup(expandedGroup === index ? null : index);
+    };
+
+    return (
+      <div className="flex flex-col gap-2 h-[430px] overflow-scroll">
+        {groupedStructures.map((structureGroup, index) => (
+          <div className="flex flex-col gap-2" key={`structure-group-${index}`}>
+            <div
+              className="border border-gray-300 p-4 rounded-md"
+              onClick={() => toggleGroup(index)}
+            >
+              <h3 className="text-base text-gray-700 font-medium cursor-pointer">
+                {structureGroup.mapName}
+              </h3>
+            </div>
+            {expandedGroup === index && (
+              <div className="im-snapping overflow-scroll w-full h-full mb-4">
+                {structureGroup.structures.map((structure) => (
+                  <div
+                    key={`${structure.id}-${index}`}
+                    className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
+                    onClick={() => {
+                      setSelectedStructure(structure);
+                      router.push(
+                        `/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`
+                      );
+                    }}
+                  >
+                    <div className="flex">
+                      <img
+                        src={loadIcon(
+                          getColorBasedOnStatus(structure.attributes.status)
+                        )}
+                        style={{ height: 27 }}
+                      />
+                      <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                        <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                          {structure.attributes.mapSection}
+                          <span className="flex items-center font-light ml-1">
+                            {` / ${structure.attributes.type}`}
+                          </span>
+                        </h5>
+                        <DirectionsComponent />
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                        <span
+                          className={`${getInspectionColor(
+                            structure.attributes.status
+                          )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+                        >
+                          {structure.attributes.status}
+                          {structure.attributes.status === "Uploaded" && (
+                            <CheckMark />
+                          )}
+                        </span>
+                      </p>
+
+                      {/* <EditIcon /> */}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
       <h1 className="leading-tight text-2xl font-medium">
         {team?.attributes.name || "Team Name"}
       </h1>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-sm ">
-        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 max-h-[550px] md:h-[550px] order-2 md:order-1">
+      <section className="grid grid-cols-1 md:grid-cols-2 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm ">
+        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 order-2 md:order-1">
           <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden md:flex">
             <div className="grid grid-cols-3 gap-3 w-full">
               <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
@@ -253,54 +347,8 @@ export default function Page({ params }) {
             </div>
           </div>
 
-          <div className="im-snapping overflow-scroll w-full h-full">
-            {structures.map((structure, index) => (
-              <div
-                key={`${structure.id}-${index}`}
-                className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
-                onClick={() => {
-                  setSelectedStructure(structure);
-                  router.push(
-                    `/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`
-                  );
-                }}
-              >
-                <div className="flex">
-                  <img
-                    src={loadIcon(
-                      getColorBasedOnStatus(structure.attributes.status)
-                    )}
-                    style={{ height: 27 }}
-                  />
-                  <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                    <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                      {structure.attributes.mapSection}
-                      <span className="flex items-center font-light ml-1">
-                        {` / ${structure.attributes.type}`}
-                      </span>
-                    </h5>
-                    <DirectionsComponent />
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                    <span
-                      className={`${getInspectionColor(
-                        structure.attributes.status
-                      )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                    >
-                      {structure.attributes.status}
-                      {structure.attributes.status === "Uploaded" && (
-                        <CheckMark />
-                      )}
-                    </span>
-                  </p>
+          <MapStructuresTabs groupedStructures={groupedStructures} />
 
-                  {/* <EditIcon /> */}
-                </div>
-              </div>
-            ))}
-          </div>
           <div className="relative flex gap-4">
             <Datepicker
               title="Flowbite Datepicker"

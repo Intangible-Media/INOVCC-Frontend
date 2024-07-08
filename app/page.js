@@ -564,7 +564,7 @@ export default function Home() {
             <h5 className="text-xl font-bold dark:text-white mb-3">
               Teams Scheduled
             </h5>
-            <div className=" inline-grid md:grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {teams.map((team, index) => (
                 <ProgressCard key={index} team={team} showEmpty={false} />
               ))}
