@@ -1,4 +1,5 @@
 import axios from "axios";
+import Pica from "pica";
 
 /**
  * Retrieves a specific structure based on provided criteria.
