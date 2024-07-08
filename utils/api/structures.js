@@ -119,9 +119,40 @@ export const uploadFiles = async (
   let successCount = 0;
   let errorMessages = [];
 
+  // Function to compress image
+  const compressImage = async (file) => {
+    const pica = new Pica();
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    await img.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    const compressedCanvas = await pica.resize(canvas, canvas, {
+      quality: 3,
+      alpha: true,
+    });
+
+    const blob = await pica.toBlob(compressedCanvas, "image/jpeg", 0.5);
+    return new File([blob], file.name, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  };
+
   for (const file of files) {
+    let compressedFile = file;
+    if (file.type.startsWith("image/")) {
+      compressedFile = await compressImage(file);
+    }
+
     const formData = new FormData();
-    formData.append("files", file);
+    formData.append("files", compressedFile);
     formData.append("ref", "api::structure.structure");
     formData.append("refId", structureId);
     formData.append("field", fieldName);
