@@ -1,10 +1,17 @@
 "use client";
 
 import React from "react";
-import { Table, Button, TextInput, Select, Alert } from "flowbite-react";
+import {
+  Table,
+  Button,
+  TextInput,
+  Select,
+  Alert,
+  Datepicker,
+} from "flowbite-react";
 import { useRouter } from "next/navigation";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
@@ -133,8 +140,8 @@ export default function Page({ params }) {
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
   const [selectedClientId, setSelectedClientId] = useState(); // State to store the selected client ID
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [clients, setClients] = useState([]);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showPublishButton, setShowPublishButton] = useState(false);
@@ -224,6 +231,26 @@ export default function Page({ params }) {
           status: {
             $eq: "Uploaded", // Filter structures by "inspected" status
           },
+        },
+        {
+          uploadDate: {
+            $gte: startDate.toISOString(), // Filter structures with uploadDate greater than or equal to startDate
+            $lte: endDate.toISOString(), // Filter structures with uploadDate less than or equal to endDate
+          },
+        },
+        {
+          $or: [
+            {
+              billed: {
+                $eq: false, // Ensure billed is false
+              },
+            },
+            {
+              billed: {
+                $null: true, // Ensure billed is null (not true)
+              },
+            },
+          ],
         },
       ],
     },
@@ -766,15 +793,10 @@ export default function Page({ params }) {
                 <p className="pl-0 border-x-0 border-t-0 text-xs text-gray-800 font-regular">
                   Start Date
                 </p>
-                {/* <TextInput icon={CiCalendarDate} type="date" /> */}
                 <div className="relative">
-                  <span className="absolute z-30 top-3 left-4">
-                    <FaCalendarDays className=" text-gray-500" />
-                  </span>
-                  <DatePicker
-                    className="w-full rounded-lg border border-1 border-gray-200 leading-tight text-sm text-gray-500 p-3 bg-gray-50 pl-10"
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
+                  <Datepicker
+                    defaultDate={startDate}
+                    onSelectedDateChanged={(date) => setStartDate(date)}
                   />
                 </div>
               </div>
@@ -782,15 +804,10 @@ export default function Page({ params }) {
                 <p className="pl-0 border-x-0 border-t-0 text-xs text-gray-800 font-regular">
                   End Date
                 </p>
-                {/* <TextInput icon={CiCalendarDate} type="date" /> */}
                 <div className="relative">
-                  <span className="absolute z-30 top-3 left-3">
-                    <FaCalendarDays className=" text-gray-500" />
-                  </span>
-                  <DatePicker
-                    className="w-full rounded-lg border border-1 border-gray-200 leading-tight text-sm text-gray-500 p-3 bg-gray-50 pl-10"
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
+                  <Datepicker
+                    defaultDate={endDate}
+                    onSelectedDateChanged={(date) => setEndDate(date)}
                   />
                 </div>
               </div>

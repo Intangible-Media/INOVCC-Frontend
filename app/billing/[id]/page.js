@@ -683,6 +683,38 @@ export default function Page({ params }) {
                     },
                   ];
                 }),
+                [
+                  {
+                    text: "",
+                    style: "tableBody",
+                    fillColor: "#ffffff",
+                    border: [false, false, false, false],
+                  },
+                  {
+                    text: "",
+                    style: "tableBody",
+                    fillColor: "#ffffff",
+                    border: [false, false, false, false],
+                  },
+                  {
+                    text: "",
+                    style: "tableBody",
+                    fillColor: "#ffffff",
+                    border: [false, false, false, false],
+                  },
+                  {
+                    text: "tesing",
+                    style: "tableHeader",
+                    fillColor: "#f9fafb",
+                    border: [false, false, false, false],
+                  },
+                  {
+                    text: "tesing",
+                    style: "tableHeader",
+                    fillColor: "#f9fafb",
+                    border: [false, false, false, false],
+                  },
+                ],
               ],
             },
             layout: {
@@ -711,17 +743,6 @@ export default function Page({ params }) {
           },
         ];
       };
-
-      // Example usage with dummy data for the invoice items
-      const invoiceItemsalt = [
-        {
-          description: "Web Development Services",
-          quantity: 120,
-          unitPrice: 150.0,
-        },
-        { description: "Web Hosting (Annual)", quantity: 1, unitPrice: 300.0 },
-        // You can add more items as needed
-      ];
 
       const invoiceItems = Object.keys(newGroupedStructures).map((type) => {
         console.log(newGroupedStructures[type].length);
@@ -765,7 +786,7 @@ export default function Page({ params }) {
     0
   );
 
-  const discount = 100;
+  const discount = 0;
 
   const totalAmount = subTotalAmount - Number(discount);
 
