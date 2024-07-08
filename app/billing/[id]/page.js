@@ -12,8 +12,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import qs from "qs";
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
 import { HiHome } from "react-icons/hi";
 import dynamic from "next/dynamic";
 import ActivityLog from "../../../components/ActivityLog";
@@ -26,9 +24,9 @@ import Link from "next/link";
 import InvoiceDrawer from "../../../components/Drawers/InvoiceDrawer";
 import InvoiceHeading from "../../../components/Invoice/Heading";
 import ProtectedContent from "../../../components/ProtectedContent";
+import usePdfMake from "../../../hooks/usePdfMake";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const docDefinition = {
   content: [
@@ -179,6 +177,7 @@ const docDefinition = {
 };
 
 export default function Page({ params }) {
+  const pdfMake = usePdfMake();
   const { data: session, loading } = useSession();
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
@@ -767,7 +766,7 @@ export default function Page({ params }) {
   }, [structures]);
 
   const generatePdf = () => {
-    pdfMake.createPdf(docDefinition).open();
+    pdfMake.createPdf(docDefinition).download();
   };
 
   const sortedStructures = [...structures].sort((a, b) =>
