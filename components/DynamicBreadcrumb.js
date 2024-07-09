@@ -20,7 +20,7 @@ function DynamicBreadcrumb() {
   const breadcrumbItems = breadcrumbPath.map((segment, index) => {
     return (
       <Breadcrumb.Item key={index} className=" text-xs md:text-sm">
-        <Link href={`/${segment}`}>{camelCaseToTitleCase(segment)}</Link>
+        {camelCaseToTitleCase(segment)}
       </Breadcrumb.Item>
     );
   });
