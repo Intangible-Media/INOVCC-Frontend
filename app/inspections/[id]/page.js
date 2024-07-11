@@ -560,8 +560,12 @@ export default function Page(props) {
           setStructures(structuresData);
 
           if (structuresData.length > 0) {
-            setLng(structuresData[0].attributes.longitude);
-            setLat(structuresData[0].attributes.latitude);
+            setLng(
+              sortStructuresByStatus(structuresData)[0].attributes.longitude
+            );
+            setLat(
+              sortStructuresByStatus(structuresData)[0].attributes.latitude
+            );
           }
         } catch (error) {
           console.error("Error fetching data", error.response || error);
@@ -571,25 +575,6 @@ export default function Page(props) {
 
     fetchData();
   }, [session, params.id, query]); // Assuming `query` here is a dependency that might change and is suitable for useEffect's dependency array
-
-  // useEffect(() => {
-  //   if (!map.current || !selectedStructure) return;
-  //   const newUrl =
-  //     pathname + "?" + createQueryString("structure", selectedStructure.id);
-  //   window.history.pushState({ path: newUrl }, "", newUrl);
-
-  //   if (
-  //     map.current.getLayer("marker-layer") &&
-  //     map.current.getSource("markers")
-  //   ) {
-  //     map.current.setLayoutProperty("marker-layer", "icon-size", [
-  //       "case",
-  //       ["==", ["get", "id"], selectedStructure.id],
-  //       1, // Larger size for selected structure
-  //       0.6, // Normal size
-  //     ]);
-  //   }
-  // }, [selectedStructure]);
 
   useEffect(() => {
     updateProgressBar(structureProgressType);

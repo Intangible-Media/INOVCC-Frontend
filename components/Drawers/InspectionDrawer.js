@@ -51,7 +51,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
-  const { showLoading, hideLoading, showSuccess } = useLoading();
+  const { showLoading, showSuccess, showError, resetLoading } = useLoading();
 
   const [loadingNewStructure, setLoadingNewStructure] = useState(false);
   const [isLoadingInspection, setIsLoadingInspection] = useState(false);
@@ -208,8 +208,6 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       showAlert("Error submitting inspection:", "failed");
 
       console.error("Error submitting inspection:", error);
-    } finally {
-      hideLoading(false);
     }
   };
 
@@ -272,8 +270,8 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
         images: [],
       });
 
-      showSuccess();
       await refreshInspection();
+      showSuccess("Successfully updated!");
 
       return response;
     } catch (error) {
@@ -282,7 +280,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       if (error.response) {
         console.error("Error details:", error.response.data); // log the server's response
       }
-      hideLoading();
+      showError("There was an issue updating the inspection");
       return error;
     }
   };

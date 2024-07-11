@@ -20,6 +20,13 @@ import { MdArrowBackIos } from "react-icons/md";
 import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
+import {
+  IoShareSocialOutline,
+  IoArrowRedoSharp,
+  IoAddOutline,
+  IoArrowRedoOutline,
+} from "react-icons/io5";
+
 //  fdsfds
 export default function MapPanel({
   structure,
@@ -207,6 +214,60 @@ export default function MapPanel({
     );
   };
 
+  const ShareButton = ({ structureId }) => {
+    const currentUrl = window.location.href;
+
+    const handleShare = async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Check this out!",
+            text: "Check out this amazing app!",
+            url: `${currentUrl}?structure=${structureId}`,
+          });
+          console.log("Shared successfully");
+        } catch (error) {
+          console.error("Error sharing:", error);
+        }
+      } else {
+        console.error("Web Share API not supported in this browser");
+      }
+    };
+
+    return (
+      <div className="cursor-pointer" onClick={handleShare}>
+        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+          <IoShareSocialOutline className="m-auto w-5 h-5" />
+        </div>
+        <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
+          Share
+        </h5>
+      </div>
+    );
+  };
+
+  const DirectionsButton = ({ latitude, longitude }) => {
+    if (latitude === null || longitude === null) return;
+
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+
+    return (
+      <a
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="cursor-pointer"
+      >
+        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+          <IoArrowRedoOutline className="m-auto w-5 h-5" />
+        </div>
+        <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
+          Directions
+        </h5>
+      </a>
+    );
+  };
+
   return (
     <>
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
@@ -290,7 +351,22 @@ export default function MapPanel({
         <div className="overflow-auto w-full">
           {currentPanel === "overview" && (
             <div id="overview-content">
-              <div className="flex gap-4 border-b px-6 md:px-8  py-8">
+              <div className="flex justify-center gap-6 lg:gap-10 px-6 md:px-8 py-6">
+                <DirectionsButton
+                  longitude={structure.attributes?.longitude || null}
+                  latitude={structure.attributes?.latitude || null}
+                />
+                <div className="cursor-pointer">
+                  <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+                    <IoAddOutline className=" m-auto w-5 h-5" />
+                  </div>
+                  <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
+                    Add Document
+                  </h5>
+                </div>
+                <ShareButton structureId={structure.id} />
+              </div>
+              <div className="flex gap-4 border-b px-6 md:px-8  pb-8">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400 w-full">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg
