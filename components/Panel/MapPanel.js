@@ -27,7 +27,6 @@ import {
   IoArrowRedoOutline,
 } from "react-icons/io5";
 
-//  fdsfds
 export default function MapPanel({
   structure,
   setActiveView,
@@ -356,7 +355,10 @@ export default function MapPanel({
                   longitude={structure.attributes?.longitude || null}
                   latitude={structure.attributes?.latitude || null}
                 />
-                <div className="cursor-pointer">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => setCurrentPanel("field")}
+                >
                   <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
                     <IoAddOutline className=" m-auto w-5 h-5" />
                   </div>
