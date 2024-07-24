@@ -63,8 +63,9 @@ export default function MapPanel({
 
   useEffect(() => {
     const fetchTeams = async () => {
+      if (!session) return;
       const apiParams = {
-        jwt: session.accessToken,
+        jwt: session?.accessToken,
         query: "",
       };
 
@@ -110,6 +111,8 @@ export default function MapPanel({
   };
 
   const submitStructure = async () => {
+    if (!session) return;
+
     showLoading("Updating Structure");
 
     try {
@@ -133,7 +136,7 @@ export default function MapPanel({
 
       const payload = { data: newAttributes };
       const apiParams = {
-        jwt: session.accessToken,
+        jwt: session?.accessToken,
         payload,
         id: updatedStructure.id,
         query: "",
@@ -167,8 +170,10 @@ export default function MapPanel({
   };
 
   const removeStructure = async (structure) => {
+    if (!session) return;
+
     const apiParams = {
-      jwt: session.accessToken,
+      jwt: session?.accessToken,
       id: structure.id,
       query: "",
     };
@@ -235,7 +240,7 @@ export default function MapPanel({
 
     return (
       <div className="cursor-pointer" onClick={handleShare}>
-        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-10 md:w-12 h-10 md:h-12 rounded-full mx-auto">
           <IoShareSocialOutline className="m-auto w-5 h-5" />
         </div>
         <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
@@ -257,7 +262,7 @@ export default function MapPanel({
         rel="noopener noreferrer"
         className="cursor-pointer"
       >
-        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+        <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-10 md:w-12 h-10 md:h-12 rounded-full mx-auto">
           <IoArrowRedoOutline className="m-auto w-5 h-5" />
         </div>
         <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
@@ -359,7 +364,7 @@ export default function MapPanel({
                   className="cursor-pointer"
                   onClick={() => setCurrentPanel("field")}
                 >
-                  <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-12 h-12 rounded-full mx-auto">
+                  <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-10 md:w-12 h-10 md:h-12 rounded-full mx-auto">
                     <IoAddOutline className=" m-auto w-5 h-5" />
                   </div>
                   <h5 className="leading-none font-medium text-xxs text-dark-blue-700 text-center mt-1.5 w-20">
@@ -766,6 +771,7 @@ const StructureComments = ({ comments = [], editable = false }) => {
 
   useEffect(() => {
     const fetchComments = async () => {
+      if (!session) return;
       const query = qs.stringify(
         {
           sort: ["createdAt:desc"],
@@ -905,6 +911,8 @@ const AddInspectorForm = ({
 
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!session) return;
+
       const query = qs.stringify({ populate: "*" }, { encodeValuesOnly: true });
       const apiParams = { jwt: session?.accessToken, query };
 
@@ -936,7 +944,7 @@ const AddInspectorForm = ({
         },
         { encodeValuesOnly: true }
       );
-      const apiParams = { jwt: session.accessToken, id: structure.id, query };
+      const apiParams = { jwt: session?.accessToken, id: structure.id, query };
 
       try {
         const response = await getStructure(apiParams);
@@ -961,11 +969,12 @@ const AddInspectorForm = ({
   }, [assignedInspectors, setUpdatedStructure]);
 
   const updateStructureInspectors = async () => {
+    if (!session) return;
     const payload = {
       data: { inspectors: assignedInspectors.map((inspector) => inspector.id) },
     };
     const apiParams = {
-      jwt: session.accessToken,
+      jwt: session?.accessToken,
       payload,
       id: updatedStructure.id,
     };
