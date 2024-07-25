@@ -26,6 +26,10 @@ import {
   IoAddOutline,
   IoArrowRedoOutline,
 } from "react-icons/io5";
+import {
+  structureStatuses,
+  structureTypes,
+} from "../../utils/collectionListAttributes";
 
 export default function MapPanel({
   structure,
@@ -578,13 +582,11 @@ export default function MapPanel({
                         });
                       }}
                     >
-                      <option value="Standard Vault">Standard Vault</option>
-                      <option value="Pull Box">Pull Box</option>
-                      <option value="Wood Pole">Wood Pole</option>
-                      <option value="Man Hole">Man Hole</option>
-                      <option value="Street Light">Street Light</option>
-                      <option value="Pad Vault">Pad Vault</option>
-                      <option value="Beehive">Beehive</option>
+                      {structureTypes.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -605,12 +607,11 @@ export default function MapPanel({
                         });
                       }}
                     >
-                      <option value="Cannot Locate">Cannot Locate</option>
-                      <option value="Not Inspected">Not Inspected</option>
-                      <option value="Inspected">Inspected</option>
-                      <option value="Uploaded">Uploaded</option>
-                      <option value="Urgent">Urgent</option>
-                      <option value="Nonbillable">Do Not Bill</option>
+                      {structureStatuses.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   {updatedStructure.attributes?.longitude &&

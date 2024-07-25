@@ -44,6 +44,10 @@ import {
   useInspection,
   fetchInspection,
 } from "../../context/InspectionContext";
+import {
+  structureStatuses,
+  structureTypes,
+} from "../../utils/collectionListAttributes";
 
 const InspectionDrawer = ({ btnText, showIcon = false }) => {
   const { showAlert } = useAlert();
@@ -965,15 +969,11 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                               setBulkStructuresType(e.target.value)
                             }
                           >
-                            <option value="Standard Vault">
-                              Standard Vault
-                            </option>
-                            <option value="Pull Box">Pull Box</option>
-                            <option value="Wood Pole">Wood Pole</option>
-                            <option value="Man Hole">Man Hole</option>
-                            <option value="Street Light">Street Light</option>
-                            <option value="Pad Vault">Pad Vault</option>
-                            <option value="Beehive">Beehive</option>
+                            {structureTypes.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <Button
@@ -996,15 +996,15 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                             id="structureStatus"
                             className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
                             defaultValue={bulkStructuresStatus}
-                            onChange={(e) => {
-                              setBulkStructuresStatus(e.target.value);
-                            }}
+                            onChange={(e) =>
+                              setBulkStructuresStatus(e.target.value)
+                            }
                           >
-                            <option value="Not Inspected">Not Inspected</option>
-                            <option value="Cannot Locate">Cannot Locate</option>
-                            <option value="Inspected">Inspected</option>
-                            <option value="Uploaded">Uploaded</option>
-                            <option value="Urgent">Urgent</option>
+                            {structureStatuses.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <Button
