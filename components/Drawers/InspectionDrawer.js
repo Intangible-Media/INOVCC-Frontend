@@ -522,6 +522,16 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
             },
           };
 
+          const currentDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+
+          if (bulkStructuresStatus === "Inspected") {
+            apiParams.payload.data.inspectionDate = currentDate;
+          }
+
+          if (bulkStructuresStatus === "Uploaded") {
+            apiParams.payload.data.uploadDate = currentDate;
+          }
+
           const response = await updateStructure(apiParams);
           return response;
         })

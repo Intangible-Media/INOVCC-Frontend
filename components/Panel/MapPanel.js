@@ -130,12 +130,24 @@ export default function MapPanel({
         inspectors: inspectors.data?.map((inspector) => inspector.id),
       };
 
-      if (status === "Inspected") {
-        newAttributes.inspectionDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      // Prioritize user-updated dates if they exist and are different
+      if (
+        structure.attributes.uploadDate !==
+        updatedStructure.attributes.uploadDate
+      ) {
+        newAttributes.uploadDate = updatedStructure.attributes.uploadDate;
+      } else if (status === "Uploaded") {
+        newAttributes.uploadDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }
 
-      if (status === "Uploaded") {
-        newAttributes.uploadDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      if (
+        structure.attributes.inspectionDate !==
+        updatedStructure.attributes.inspectionDate
+      ) {
+        newAttributes.inspectionDate =
+          updatedStructure.attributes.inspectionDate;
+      } else if (status === "Inspected") {
+        newAttributes.inspectionDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }
 
       const payload = { data: newAttributes };
@@ -614,6 +626,99 @@ export default function MapPanel({
                       ))}
                     </select>
                   </div>
+
+                  {updatedStructure.attributes.uploadDate && (
+                    <div className="flex flex-col">
+                      <label
+                        className="text-xs mb-2.5"
+                        htmlFor="structureUploadDate"
+                      >
+                        Upload Date
+                      </label>
+
+                      <Datepicker
+                        defaultDate={
+                          new Date(updatedStructure.attributes.uploadDate)
+                        }
+                        title="Flowbite Datepicker"
+                        className="w-full bg-white"
+                        onSelectedDateChanged={(date) =>
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              uploadDate: date,
+                            },
+                          })
+                        }
+                      />
+
+                      {/* <input
+                        className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                        type="text"
+                        id="structureUploadDate"
+                        placeholder="Enter Structure Name"
+                        value={updatedStructure.attributes?.uploadDate || ""} // Providing a fallback empty string for controlled input
+                        onChange={(e) =>
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              uploadDate: e.target.value,
+                            },
+                          })
+                        }
+                      /> */}
+                    </div>
+                  )}
+
+                  {updatedStructure.attributes.inspectionDate && (
+                    <div className="flex flex-col">
+                      <label
+                        className="text-xs mb-2.5"
+                        htmlFor="structureInspectionDate"
+                      >
+                        Inspection Date
+                      </label>
+
+                      <Datepicker
+                        defaultDate={
+                          new Date(updatedStructure.attributes.inspectionDate)
+                        }
+                        title="Flowbite Datepicker"
+                        className="w-full bg-white"
+                        onSelectedDateChanged={(date) =>
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              inspectionDate: date,
+                            },
+                          })
+                        }
+                      />
+
+                      {/* <input
+                        className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                        type="text"
+                        id="structureInspectionDate"
+                        placeholder="Enter Structure Name"
+                        value={
+                          updatedStructure.attributes?.inspectionDate || ""
+                        } // Providing a fallback empty string for controlled input
+                        onChange={(e) =>
+                          setUpdatedStructure({
+                            ...updatedStructure,
+                            attributes: {
+                              ...updatedStructure.attributes,
+                              inspectionDate: e.target.value,
+                            },
+                          })
+                        }
+                      /> */}
+                    </div>
+                  )}
+
                   {updatedStructure.attributes?.longitude &&
                   updatedStructure.attributes?.latitude ? (
                     <>
@@ -694,6 +799,17 @@ export default function MapPanel({
                         ))}
                       </select>
                     </div>
+                  </>
+
+                  <div className="flex flex-col w-full">
+                    <AddInspectorForm
+                      currentInspectors={
+                        updatedStructure.attributes.inspectors?.data || []
+                      }
+                      structure={structure}
+                      setUpdatedStructure={setUpdatedStructure}
+                      updatedStructure={updatedStructure}
+                    />
                     <div className="flex flex-col w-full">
                       <label
                         className="text-xs mb-2"
@@ -715,17 +831,6 @@ export default function MapPanel({
                         }
                       />
                     </div>
-                  </>
-
-                  <div className="flex flex-col w-full">
-                    <AddInspectorForm
-                      currentInspectors={
-                        updatedStructure.attributes.inspectors?.data || []
-                      }
-                      structure={structure}
-                      setUpdatedStructure={setUpdatedStructure}
-                      updatedStructure={updatedStructure}
-                    />
                   </div>
                 </div>
 
