@@ -21,7 +21,11 @@ const SearchBar = () => {
       id="search-bar"
       className="bg-gray-700 rounded-md text-center md:w-[500px]"
       onKeyDown={handleKeyDown}
-      onChange={(e) => setSearchText(e.target.value)}
+      onChange={(e) => {
+        console.log(e.target.value);
+        setSearchText(e.target.value);
+      }}
+      value={searchText}
     />
   );
 };
