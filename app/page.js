@@ -338,11 +338,7 @@ export default function Home() {
   const projectsQuery = qs.stringify({
     populate: {
       structures: {
-        populate: {
-          inspectors: {
-            fields: ["username"],
-          },
-        },
+        fields: ["status", "inspectionDate", "type"],
       },
       client: {
         populate: {

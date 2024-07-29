@@ -6,7 +6,7 @@ import { Dropdown } from "flowbite-react";
 import Link from "next/link";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const ITEMS_PER_PAGE = 10; // Define how many items you want per page
+const ITEMS_PER_PAGE = 15; // Define how many items you want per page
 
 const ElipseIcon = () => (
   <svg
