@@ -122,6 +122,10 @@ export default function RootLayout({ children }) {
             </Link>
           </div>
 
+          <div className=" hidden lg:block">
+            <SearchBar />
+          </div>
+
           <div className="flex items-center md:order-2 gap-3">
             <div className="relative inline-block text-left">
               <NavbarDropdown />
