@@ -862,9 +862,10 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
   const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
   const [addComment, setAddComment] = useState(false);
-  const [allStructureComments, setAllStructureComments] = useState(comments);
+  const [allStructureComments, setAllStructureComments] = useState([]);
 
   const fetchComments = async () => {
+    console.log("running function comments");
     if (!session) return;
     const query = qs.stringify(
       {
@@ -905,7 +906,7 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
   };
 
   const handleSubmit = async (event) => {
-    console.log(session);
+    //console.log(session);
     event.preventDefault();
     if (!newComment.trim()) return; // Prevent submitting empty comments
 
@@ -923,7 +924,9 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
 
     const response = await createComment(apiParams);
 
-    const refreshComments = await fetchComments();
+    console.log("response", response);
+
+    await fetchComments();
 
     setNewComment(""); // Clear the input after submission
   };
