@@ -20,6 +20,7 @@ import { MdArrowBackIos } from "react-icons/md";
 import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
+import { createComment } from "../../utils/api/comment";
 import {
   IoShareSocialOutline,
   IoArrowRedoSharp,
@@ -490,7 +491,7 @@ export default function MapPanel({
                 <h4 className="leading-none font-medium text-sm mb-2">
                   Comments
                 </h4>
-                <StructureComments />
+                <StructureComments structure={structure} />
               </div>
               <div className="flex flex-col border-b px-6 md:px-8  py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
@@ -530,7 +531,7 @@ export default function MapPanel({
                   </h4>
                 </div>
                 <div className="flex flex-col px-6 md:px-8  pb-6">
-                  <StructureComments editable={true} />
+                  <StructureComments structure={structure} editable={true} />
                 </div>
               </div>
 
@@ -857,58 +858,77 @@ export default function MapPanel({
   );
 }
 
-const StructureComments = ({ comments = [], editable = false }) => {
+const StructureComments = ({ structure, comments = [], editable = false }) => {
   const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
   const [addComment, setAddComment] = useState(false);
   const [allStructureComments, setAllStructureComments] = useState(comments);
 
+  const fetchComments = async () => {
+    if (!session) return;
+    const query = qs.stringify(
+      {
+        sort: ["createdAt:desc"],
+        filters: {
+          structure: structure.id, // Filter by the correct structure ID
+        },
+        populate: {
+          author: {
+            populate: {
+              picture: "*", // Populate the 'picture' relation
+            },
+            fields: ["firstName", "lastName"],
+          },
+        },
+      },
+      {
+        encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+      }
+    );
+
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/comments?${query}`,
+        {
+          headers: { Authorization: `Bearer ${session?.accessToken}` },
+        }
+      );
+
+      setAllStructureComments(response.data.data);
+    } catch (error) {
+      console.error("Error fetching comments", error);
+    }
+  };
+
   const handleCommentChange = (event) => {
     setNewComment(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
+    console.log(session);
     event.preventDefault();
     if (!newComment.trim()) return; // Prevent submitting empty comments
 
-    onCommentSubmit(newComment); // Assume this function sends the comments to the server or updates state
+    const apiParams = {
+      jwt: session?.accessToken,
+      payload: {
+        data: {
+          structure: structure.id,
+          author: session?.user.id,
+          message: newComment,
+        },
+      },
+      query: "",
+    };
+
+    const response = await createComment(apiParams);
+
+    const refreshComments = await fetchComments();
+
     setNewComment(""); // Clear the input after submission
   };
 
   useEffect(() => {
-    const fetchComments = async () => {
-      if (!session) return;
-      const query = qs.stringify(
-        {
-          sort: ["createdAt:desc"],
-          populate: {
-            author: {
-              populate: {
-                picture: "*", // Populate the 'picture' relation
-              },
-              fields: ["firstName", "lastName"],
-            },
-          },
-        },
-        {
-          encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
-        }
-      );
-
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/comments?${query}`,
-          {
-            headers: { Authorization: `Bearer ${session?.accessToken}` },
-          }
-        );
-
-        setAllStructureComments(response.data.data);
-      } catch (error) {
-        console.error("Error fetching comments", error);
-      }
-    };
-
     fetchComments();
   }, []);
 
@@ -928,7 +948,7 @@ const StructureComments = ({ comments = [], editable = false }) => {
                   <div className="flex-shrink-0">
                     <AvatarImage
                       customImage={
-                        comment.attributes.author.data.attributes.picture.data
+                        comment.attributes.author.data?.attributes.picture.data
                           ?.attributes.formats.thumbnail.url
                       }
                       customName={
@@ -982,7 +1002,7 @@ const StructureComments = ({ comments = [], editable = false }) => {
             </p>
           )}
           {addComment && (
-            <form onSubmit={handleSubmit} className="mt-4">
+            <form className="mt-4">
               <textarea
                 value={newComment}
                 onChange={handleCommentChange}
@@ -990,7 +1010,10 @@ const StructureComments = ({ comments = [], editable = false }) => {
                 placeholder="Write a comment..."
                 rows="3"
               ></textarea>
-              <Button className="w-full bg-dark-blue-700 hover:bg-dark-blue-800">
+              <Button
+                className="w-full bg-dark-blue-700 hover:bg-dark-blue-800"
+                onClick={handleSubmit}
+              >
                 Submit Comment
               </Button>
             </form>
