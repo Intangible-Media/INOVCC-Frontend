@@ -13,15 +13,19 @@ import Link from "next/link";
 import { ensureDomain, downloadFileFromUrl } from "../../utils/strings";
 import { DownloadOutlineIcon } from "../../public/icons/intangible-icons";
 import DirectionsComponent from "../../components/DirectionsComponent";
+import { useSearchParams } from "next/navigation";
 
-export default function Page({ searchParams }) {
+export default function Page() {
+  const searchParams = useSearchParams();
+
+  const search = searchParams.get("search");
   console.log("====================================================");
   console.log("====================================================");
   console.log("====================================================");
   console.log("====================================================");
   console.log("====================================================");
   console.log("====================================================");
-  console.log("Search Params", searchParams);
+  console.log("Search Params", search);
   const { data: session } = useSession();
   const [structures, setStructures] = useState([]);
   const [inspections, setInspections] = useState([]);
@@ -68,7 +72,7 @@ export default function Page({ searchParams }) {
       const inspectionQuery = qs.stringify({
         filters: {
           name: {
-            $contains: searchParams.search,
+            $contains: search,
           },
         },
         populate: {
@@ -97,7 +101,7 @@ export default function Page({ searchParams }) {
       const structuresQuery = qs.stringify({
         filters: {
           mapSection: {
-            $contains: searchParams.search,
+            $contains: search,
           },
         },
         populate: {
@@ -125,7 +129,7 @@ export default function Page({ searchParams }) {
       const clientsQuery = qs.stringify({
         filters: {
           name: {
-            $contains: searchParams.search,
+            $contains: search,
           },
         },
         populate: "logo",
@@ -149,7 +153,7 @@ export default function Page({ searchParams }) {
       const invoiceQuery = qs.stringify({
         filters: {
           name: {
-            $contains: searchParams.search,
+            $contains: search,
           },
         },
       });
@@ -172,7 +176,7 @@ export default function Page({ searchParams }) {
       const imagesQuery = qs.stringify({
         filters: {
           name: {
-            $contains: searchParams.search,
+            $contains: search,
           },
           $or: [
             {
@@ -211,7 +215,7 @@ export default function Page({ searchParams }) {
     fetchClients();
     fetchInvoices();
     fetchImages();
-  }, [session, searchParams]);
+  }, [session, search]);
 
   const ClientLogo = ({ client }) => {
     const abbreviatedName = client.attributes.name
@@ -243,7 +247,7 @@ export default function Page({ searchParams }) {
   return (
     <div className="my-6">
       <h1 className="leading-tight text-2xl font-medium">
-        {resultsNumber} Results for &ldquo;{searchParams.search}&ldquo;
+        {resultsNumber} Results for &ldquo;{search}&ldquo;
       </h1>
 
       <div className="flex flex-col gap-6 my-4">
