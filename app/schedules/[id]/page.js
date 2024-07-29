@@ -13,11 +13,17 @@ import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import Timeline from "../../../components/Timeline";
-import { DownloadOutlineIcon } from "../../../public/icons/intangible-icons";
+import { useLoading } from "../../../context/LoadingContext";
+
 import {
-  convertInspectionsToZipArgs,
+  downloadFilesAsZip,
   downloadFilesAsZipWithSubfolders,
+  convertInspectionsToZipArgs,
+  sortStructuresByStatus,
+  isImage,
+  ensureDomain,
 } from "../../../utils/strings";
+import { DownloadOutlineIcon } from "../../../public/icons/intangible-icons";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
@@ -25,6 +31,7 @@ const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
 });
 
 export default function Page({ params }) {
+  const { showLoading, hideLoading, showSuccess } = useLoading();
   const { data: session } = useSession();
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
@@ -115,6 +122,23 @@ export default function Page({ params }) {
     return formattedDate;
   }
 
+  const downloadStructureFromSchedule = async () => {
+    // showLoading(
+    //   `Downloading all documents for ${structures.length} structures`
+    // );
+    console.log("structures");
+    console.log(structures);
+    const formattedStructures = convertInspectionsToZipArgs(structures);
+
+    try {
+      const response = await downloadFilesAsZipWithSubfolders(
+        formattedStructures
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const formattedDate = convertToLongDateFormat(date);
 
   const downloadForUpload = () => {
@@ -171,6 +195,8 @@ export default function Page({ params }) {
         jwt: session?.accessToken,
         query: structureQuery,
       });
+
+      setStructures(response.data.data);
 
       const groupedByInspectionId = response.data.data.reduce(
         (acc, structure) => {
@@ -357,7 +383,24 @@ export default function Page({ params }) {
             />
             <Button
               className="bg-dark-blue-700 text-white"
-              onClick={downloadForUpload}
+              onClick={async (e) => {
+                showLoading(
+                  `Downloading all documents for ${structures.length} structures`
+                );
+                const formattedStructures =
+                  convertInspectionsToZipArgs(structures);
+
+                try {
+                  const response = await downloadFilesAsZipWithSubfolders(
+                    formattedStructures
+                  );
+
+                  showSuccess("Download finished successfully!");
+                } catch (error) {
+                  console.error(error);
+                  hideLoading();
+                }
+              }}
             >
               <DownloadOutlineIcon />
             </Button>
