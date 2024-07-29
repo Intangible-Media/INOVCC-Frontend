@@ -15,6 +15,13 @@ import { DownloadOutlineIcon } from "../../public/icons/intangible-icons";
 import DirectionsComponent from "../../components/DirectionsComponent";
 
 export default function Page({ searchParams }) {
+  console.log("====================================================");
+  console.log("====================================================");
+  console.log("====================================================");
+  console.log("====================================================");
+  console.log("====================================================");
+  console.log("====================================================");
+  console.log("Search Params", searchParams);
   const { data: session } = useSession();
   const [structures, setStructures] = useState([]);
   const [inspections, setInspections] = useState([]);
