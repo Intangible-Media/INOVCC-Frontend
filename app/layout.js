@@ -571,7 +571,7 @@ export default function RootLayout({ children }) {
                 }`}
               >
                 <button
-                  className={`hidden lg:block ease-in-out transition-all  ${
+                  className={`hidden mt-[7px] mb-[16px] lg:block ease-in-out transition-all  ${
                     isCollapsed && " rotate-180 mx-auto"
                   }`}
                   onClick={toggleSidebar}
@@ -593,7 +593,7 @@ export default function RootLayout({ children }) {
                     />
                   </svg>
                 </button>
-                <ul className="pt-4 mt-4 space-y-2 font-medium border-t border-gray-300 dark:border-gray-700">
+                <ul className="pt-4 space-y-2 font-medium border-t border-gray-300 dark:border-gray-700">
                   <li>
                     <Link
                       href="/"
