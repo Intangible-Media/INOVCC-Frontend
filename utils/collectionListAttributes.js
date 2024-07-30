@@ -2,14 +2,19 @@ export const structureStatuses = [
   "Cannot Locate",
   "Not Inspected",
   "Inspected",
-  "Uploaded",
   "Urgent",
-  "Nonbillable",
   "New Pole",
   "Metal Pole",
   "Not at Home",
   "Reschedule",
   "Access Issue",
+];
+
+export const adminStatuses = [
+  "Uploaded",
+  "Nonbillable",
+  "Field Hold",
+  "Waiting on Client ",
 ];
 
 export const structureTypes = [

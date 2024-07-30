@@ -28,6 +28,7 @@ import {
   IoArrowRedoOutline,
 } from "react-icons/io5";
 import {
+  adminStatuses,
   structureStatuses,
   structureTypes,
 } from "../../utils/collectionListAttributes";
@@ -351,20 +352,20 @@ export default function MapPanel({
         </div>
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "field"
+            "assets"
           )}`}
-          onClick={(e) => setCurrentPanel("field")}
+          onClick={(e) => setCurrentPanel("assets")}
         >
-          <h3 className="text-xs font-medium">Field</h3>
+          <h3 className="text-xs font-medium">Assets</h3>
         </div>
 
         <div
           className={`im-tab px-4 py-3 cursor-pointer text-gray-500 ${activePanelClasses(
-            "admin"
+            "details"
           )}`}
-          onClick={(e) => setCurrentPanel("admin")}
+          onClick={(e) => setCurrentPanel("details")}
         >
-          <h3 className="text-xs font-medium">Admin</h3>
+          <h3 className="text-xs font-medium">Details</h3>
         </div>
       </div>
 
@@ -379,7 +380,7 @@ export default function MapPanel({
                 />
                 <div
                   className="cursor-pointer"
-                  onClick={() => setCurrentPanel("field")}
+                  onClick={() => setCurrentPanel("assets")}
                 >
                   <div className="flex border border-dark-blue-700 text-dark-blue-700 hover:text-white hover:bg-dark-blue-700 w-10 md:w-12 h-10 md:h-12 rounded-full mx-auto">
                     <IoAddOutline className=" m-auto w-5 h-5" />
@@ -522,7 +523,7 @@ export default function MapPanel({
             </div>
           )}
 
-          {currentPanel === "field" && (
+          {currentPanel === "assets" && (
             <div id="assets-content" className="w-full">
               <div className="bg-gray-50">
                 <div className="flex flex-col px-6 md:px-8  pt-6 mb-2 w-full">
@@ -550,7 +551,7 @@ export default function MapPanel({
             </div>
           )}
 
-          {currentPanel === "admin" && (
+          {currentPanel === "details" && (
             <div id="comments-content" className="w-full">
               <div className="flex flex-col px-6 md:px-8  pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
@@ -602,6 +603,7 @@ export default function MapPanel({
                       ))}
                     </select>
                   </div>
+
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs" htmlFor="structureStatus">
                       Structure Status
@@ -621,6 +623,35 @@ export default function MapPanel({
                       }}
                     >
                       {structureStatuses.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs" htmlFor="adminStatus">
+                      Admin Status
+                    </Label>
+                    <select
+                      id="adminStatus"
+                      className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                      defaultValue={
+                        updatedStructure.attributes?.adminStatus || "Empty"
+                      }
+                      onChange={(e) => {
+                        setUpdatedStructure({
+                          ...updatedStructure,
+                          attributes: {
+                            ...updatedStructure.attributes,
+                            adminStatus: e.target.value,
+                          },
+                        });
+                      }}
+                    >
+                      <option value={"Empty"}>Select an Option</option>
+                      {adminStatuses.map((item) => (
                         <option key={item} value={item}>
                           {item}
                         </option>
