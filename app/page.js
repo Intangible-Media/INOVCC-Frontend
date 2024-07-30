@@ -442,34 +442,13 @@ export default function Home() {
 
     return (
       <div
-        className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
+        className="bg-white hover:bg-gray-50 rounded-lg p-7 overflow-hidden border cursor-pointer flex flex-col justify-between"
         onClick={() => router.push(`/schedules/${team.id}`)}
       >
-        <div className="flex flex-col gap-2">
-          <h4 className="leading-none font-medium text-md text-dark-blue-700">
+        <div className="flex flex-col gap-2 ">
+          <h4 className="leading-none text-center m-auto font-medium text-md text-dark-blue-700">
             {team.attributes.name}
           </h4>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex w-7 h-7 bg-gray-200 rounded-full text-gray-700">
-            <p className="text-xs m-auto">{0}</p>
-          </div>
-
-          <div className="flex w-7 h-7 bg-yellow-100 rounded-full text-yellow-700">
-            <p className="text-xs m-auto">{0}</p>
-          </div>
-
-          <div className="flex w-7 h-7 bg-green-100 rounded-full text-green-700">
-            <p className="text-xs m-auto">{0}</p>
-          </div>
-
-          <div className="flex w-7 h-7 bg-red-200 rounded-full text-red-800">
-            <p className="text-xs m-auto">{0}</p>
-          </div>
-
-          <div className="flex w-7 h-7 bg-green-700 rounded-full text-white">
-            <p className="text-xs m-auto">{0}</p>
-          </div>
         </div>
       </div>
     );
@@ -557,10 +536,7 @@ export default function Home() {
       <section className="grid grid-col p-0 rounded-md gap-4 mb-4">
         <div className="flex flex-col col-span-5 gap-3">
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
-            <h5 className="text-xl font-bold dark:text-white mb-3">
-              Teams Scheduled
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
               {teams.map((team, index) => (
                 <ProgressCard key={index} team={team} showEmpty={false} />
               ))}
