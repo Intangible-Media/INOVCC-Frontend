@@ -162,7 +162,7 @@ export const downloadFilesAsZip = async (files, zipFilename) => {
 export const convertInspectionsToZipArgs = (structures) => {
   console.log("this isthe structures", structures);
   return structures.map((structure) => {
-    const { mapSection, images } = structure.attributes;
+    const { mapSection, images, wpPassFail } = structure.attributes;
     const files =
       images?.data?.map((image) => ({
         url: ensureDomain(image.attributes.url),
@@ -171,6 +171,7 @@ export const convertInspectionsToZipArgs = (structures) => {
 
     return {
       name: mapSection,
+      wpPassFail: wpPassFail,
       files,
     };
   });
@@ -188,8 +189,11 @@ export const downloadFilesAsZipWithSubfolders = async (
 ) => {
   const zip = new JSZip();
 
-  for (let { name, files } of items) {
-    let folder = zip.folder(name.replace(/[\\/:*?"<>|]/g, ""));
+  for (let { name, wpPassFail, files } of items) {
+    const folderName = `${name.replace(/[\\/:*?"<>|]/g, "")}${
+      wpPassFail === "failed" ? " - Failed" : ""
+    }`;
+    let folder = zip.folder(folderName);
     const santitizedName = name.replace(/[\\/:*?"<>|]/g, "");
     console.log("Created folder:", santitizedName);
 
