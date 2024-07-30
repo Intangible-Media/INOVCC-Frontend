@@ -653,23 +653,6 @@ export default function MapPanel({
                           })
                         }
                       />
-
-                      {/* <input
-                        className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                        type="text"
-                        id="structureUploadDate"
-                        placeholder="Enter Structure Name"
-                        value={updatedStructure.attributes?.uploadDate || ""} // Providing a fallback empty string for controlled input
-                        onChange={(e) =>
-                          setUpdatedStructure({
-                            ...updatedStructure,
-                            attributes: {
-                              ...updatedStructure.attributes,
-                              uploadDate: e.target.value,
-                            },
-                          })
-                        }
-                      /> */}
                     </div>
                   )}
 
@@ -698,25 +681,6 @@ export default function MapPanel({
                           })
                         }
                       />
-
-                      {/* <input
-                        className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
-                        type="text"
-                        id="structureInspectionDate"
-                        placeholder="Enter Structure Name"
-                        value={
-                          updatedStructure.attributes?.inspectionDate || ""
-                        } // Providing a fallback empty string for controlled input
-                        onChange={(e) =>
-                          setUpdatedStructure({
-                            ...updatedStructure,
-                            attributes: {
-                              ...updatedStructure.attributes,
-                              inspectionDate: e.target.value,
-                            },
-                          })
-                        }
-                      /> */}
                     </div>
                   )}
 
@@ -771,36 +735,63 @@ export default function MapPanel({
                       Set Longitude / Latitude
                     </Button>
                   )}
-                  <>
+
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs" htmlFor="structureStatus">
+                      Inspection Team
+                    </Label>
+                    <select
+                      id="structureInspectionTeam"
+                      className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                      defaultValue={
+                        updatedStructure.attributes?.team?.data?.id || "none"
+                      }
+                      onChange={(e) => {
+                        setUpdatedStructure({
+                          ...updatedStructure,
+                          attributes: {
+                            ...updatedStructure.attributes,
+                            team: e.target.value,
+                          },
+                        });
+                      }}
+                    >
+                      <option value={"none"}>Choose a Team</option>
+                      {teams.map((team, index) => (
+                        <option key={index} value={team.id}>
+                          {team.attributes.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {updatedStructure.attributes.type === "Wood Pole" && (
                     <div className="flex flex-col gap-1">
-                      <Label className="text-xs" htmlFor="structureStatus">
-                        Inspection Team
+                      <Label className="text-xs" htmlFor="structureWpPassFail">
+                        Wood Pole Pass / Fail
                       </Label>
                       <select
-                        id="structureInspectionTeam"
+                        id="structureWpPassFail"
                         className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
                         defaultValue={
-                          updatedStructure.attributes?.team?.data?.id || "none"
+                          updatedStructure.attributes.wpPassFail || "na"
                         }
                         onChange={(e) => {
                           setUpdatedStructure({
                             ...updatedStructure,
                             attributes: {
                               ...updatedStructure.attributes,
-                              team: e.target.value,
+                              wpPassFail: e.target.value,
                             },
                           });
                         }}
                       >
-                        <option value={"none"}>Choose a Team</option>
-                        {teams.map((team, index) => (
-                          <option key={index} value={team.id}>
-                            {team.attributes.name}
-                          </option>
-                        ))}
+                        <option value={"na"}>Empty</option>
+                        <option value={"passed"}>Passed</option>
+                        <option value={"failed"}>Failed</option>
                       </select>
                     </div>
-                  </>
+                  )}
 
                   <div className="flex flex-col w-full">
                     <AddInspectorForm
@@ -811,7 +802,7 @@ export default function MapPanel({
                       setUpdatedStructure={setUpdatedStructure}
                       updatedStructure={updatedStructure}
                     />
-                    <div className="flex flex-col w-full">
+                    <div className="flex flex-col w-full mt-3">
                       <label
                         className="text-xs mb-2"
                         htmlFor="structureLatitude"
