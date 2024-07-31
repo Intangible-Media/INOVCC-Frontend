@@ -39,19 +39,12 @@ export default function Dashboard() {
   const inspectionQuery = qs.stringify({
     populate: {
       structures: {
-        populate: {
-          inspectors: {
-            fields: ["username"],
-          },
-        },
+        fields: ["status", "inspectionDate", "type"],
       },
       client: {
         populate: {
           fields: ["name"],
         },
-      },
-      favorited_by: {
-        fields: ["username"],
       },
     },
   });
