@@ -1,7 +1,6 @@
 import ImageCardSlider from "../ImageCardSlider";
 import { useEffect, useState, useMemo } from "react";
 import { Label, Dropdown, Button, FileInput, Datepicker } from "flowbite-react";
-import { ensureDomain } from "../../utils/strings";
 import { getAllUsers } from "../../utils/api/users";
 import {
   updateStructure,
@@ -13,7 +12,12 @@ import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
 import { useLoading } from "../../context/LoadingContext";
 import { getLocationDetails } from "../../utils/api/mapbox";
-import { formatReadableDate, timeAgo, getUrls } from "../../utils/strings";
+import {
+  formatReadableDate,
+  timeAgo,
+  getUrls,
+  sortStructuresByStatus,
+} from "../../utils/strings";
 import ActivityLog from "../ActivityLog";
 import AvatarImage from "../AvatarImage";
 import { MdArrowBackIos } from "react-icons/md";

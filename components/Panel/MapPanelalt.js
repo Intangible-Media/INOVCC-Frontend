@@ -995,9 +995,6 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
                   </p>
                 </div>
               </div>
-              <div className="py-2 px-3 text-right border-t">
-                <a href="#">Reply</a>
-              </div>
             </li>
           );
         })}

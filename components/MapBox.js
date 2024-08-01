@@ -7,6 +7,33 @@ import { getLocationDetails } from "../utils/api/mapbox";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+const iconMap = {
+  red: "/location-red.png",
+  yellow: "/location-yellow.png",
+  drkgreen: "/location-dark.png",
+  green: "/location-green.png",
+};
+
+const loadIcon = (color) => iconMap[color] || "/location-red.png";
+
+/**
+ * This function returns a color based on the status.
+ * @param {string} status - The status to get the color for.
+ * @returns {string} The color for the status.
+ */
+function getColorBasedOnStatus(status) {
+  switch (status.toLowerCase()) {
+    case "uploaded":
+      return "drkgreen";
+    case "inspected":
+      return "green";
+    case "not inspected":
+      return "yellow";
+    default:
+      return "red";
+  }
+}
+
 const MapboxMap = ({
   lng,
   lat,
@@ -54,7 +81,77 @@ const MapboxMap = ({
     if (!map.current) return;
     if (coordinates.length === 0) return;
 
+    // Function to execute map operations
     const executeMapOperations = () => {
+      coordinates.forEach((structure) => {
+        const color = getColorBasedOnStatus(structure.attributes.status);
+        const iconName = `profile-icon-${color}`;
+
+        // Only load the image if it's not already on the map
+        if (!map.current.hasImage(iconName)) {
+          const url = loadIcon(color);
+          map.current.loadImage(url, (error, image) => {
+            if (error) {
+              console.error(`Error loading ${color} icon:`, error);
+              return;
+            }
+
+            // Check if the image already exists before adding it
+            if (!map.current.hasImage(iconName)) {
+              map.current.addImage(iconName, image);
+            }
+          });
+        }
+      });
+
+      const geojsonData = {
+        type: "FeatureCollection",
+        features: coordinates.map((structure) => {
+          const color = getColorBasedOnStatus(structure.attributes.status);
+          const iconName = `profile-icon-${color}`;
+
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [
+                structure.attributes.longitude,
+                structure.attributes.latitude,
+              ],
+            },
+            properties: {
+              id: structure.id,
+              icon: iconName,
+            },
+          };
+        }),
+      };
+
+      // Ensure the "markers" source is added or updated
+      if (!map.current.getSource("markers")) {
+        map.current.addSource("markers", {
+          type: "geojson",
+          data: geojsonData,
+        });
+      } else {
+        map.current.getSource("markers").setData(geojsonData);
+      }
+
+      // Ensure the "marker-layer" is added
+      if (!map.current.getLayer("marker-layer")) {
+        map.current.addLayer({
+          id: "marker-layer",
+          type: "symbol",
+          source: "markers",
+          layout: {
+            "icon-image": ["get", "icon"],
+            "icon-size": 0.6, // Adjust icon size as needed
+          },
+        });
+      }
+    };
+
+    const executeMapOperationsold = () => {
       coordinates.forEach(([lng, lat]) => {
         new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map.current);
       });

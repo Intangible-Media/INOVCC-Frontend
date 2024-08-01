@@ -11,6 +11,17 @@ export const sortStructuresByStatus = (structures) => {
   const order = ["Not Inspected", "Inspected", "Uploaded"];
 
   return structures.sort((a, b) => {
+    // Check for favorited attribute first
+    const favoritedA = a.attributes.favorited;
+    const favoritedB = b.attributes.favorited;
+
+    if (favoritedA && !favoritedB) {
+      return -1; // a comes before b
+    } else if (!favoritedA && favoritedB) {
+      return 1; // b comes before a
+    }
+
+    // If both are favorited or neither is favorited, sort by status
     const statusA = a.attributes.status;
     const statusB = b.attributes.status;
 

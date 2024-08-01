@@ -216,7 +216,9 @@ export default function Page({ params }) {
       const groupedArray = Object.keys(groupedByInspectionId).map((key) => ({
         inspectionId: key,
         mapName: groupedByInspectionId[key].mapName,
-        structures: groupedByInspectionId[key].structures,
+        structures: sortStructuresByStatus(
+          groupedByInspectionId[key].structures
+        ),
       }));
 
       setGroupedStructures(groupedArray);
@@ -335,10 +337,10 @@ export default function Page({ params }) {
         <h1 className="leading-tight text-2xl font-medium">
           {team?.attributes.name || "Team Name"}
         </h1>
-        <div className="relative flex gap-4 w-[300px]">
+        <div className="relative flex gap-4 w-[400px]">
           <Datepicker
             title="Flowbite Datepicker"
-            className="w-full"
+            className="w-full bg-white"
             onSelectedDateChanged={(date) => setDate(date)}
           />
           <Button
@@ -430,7 +432,7 @@ export default function Page({ params }) {
             }
             zoom={16}
             style="mapbox://styles/mapbox/standard-beta"
-            coordinates={coordinates}
+            coordinates={structures}
           />
         </div>
       </section>
