@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import qs from "qs";
 import dynamic from "next/dynamic";
 import RevenueChart from "../components/Charts/RevenueChart";
+import AuthorizedWrapper from "../components/Auth/AuthorizationWrapper";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -456,82 +457,85 @@ export default function Home() {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
-        <div className="flex flex-col justify-between bg-white gap-0 p-4 md:p-6 rounded-lg">
-          <div className="h-11">
-            <h5 className="text-xl font-bold dark:text-white">
-              Current Projects
-            </h5>
-          </div>
+      <AuthorizedWrapper authorization={4} userRole={session?.user.role.name}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
+          <div className="flex flex-col justify-between bg-white gap-0 p-4 md:p-6 rounded-lg">
+            <div className="h-11">
+              <h5 className="text-xl font-bold dark:text-white">
+                Current Projects
+              </h5>
+            </div>
 
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <div className="flex flex-col bg-gray-50 rounded-lg p-7">
-              <div className="bg-gray-200 p-3.5 md:p-5 rounded-full m-auto">
-                <p className="text-2xl md:text-3xl text-gray-800">
-                  {projectsNotStarted}
+            <div className="grid grid-cols-2 gap-3 w-full">
+              <div className="flex flex-col bg-gray-50 rounded-lg p-7">
+                <div className="bg-gray-200 p-3.5 md:p-5 rounded-full m-auto">
+                  <p className="text-2xl md:text-3xl text-gray-800">
+                    {projectsNotStarted}
+                  </p>
+                </div>
+                <p className=" text-sm text-center text-gray-800 font-semibold mt-2">
+                  Not Started
                 </p>
               </div>
-              <p className=" text-sm text-center text-gray-800 font-semibold mt-2">
-                Not Started
-              </p>
-            </div>
 
-            <div className="flex flex-col bg-yellow-50 rounded-lg p-7">
-              <div className="bg-yellow-100 p-3.5 md:p-5 rounded-full m-auto">
-                <p className="text-2xl md:text-3xl text-yellow-800">
-                  {projectsInProgress}
+              <div className="flex flex-col bg-yellow-50 rounded-lg p-7">
+                <div className="bg-yellow-100 p-3.5 md:p-5 rounded-full m-auto">
+                  <p className="text-2xl md:text-3xl text-yellow-800">
+                    {projectsInProgress}
+                  </p>
+                </div>
+                <p className=" text-sm text-center text-yellow-800 font-semibold mt-2">
+                  In Progress
                 </p>
               </div>
-              <p className=" text-sm text-center text-yellow-800 font-semibold mt-2">
-                In Progress
-              </p>
-            </div>
 
-            <div className="flex flex-col bg-red-50 rounded-lg p-7">
-              <div className="bg-red-100 p-3.5 md:p-5 rounded-full m-auto">
-                <p className="text-2xl md:text-3xl text-red-800">0</p>
-              </div>
-              <p className=" text-sm text-center text-red-800 font-semibold mt-2">
-                Late
-              </p>
-            </div>
-
-            <div className="flex flex-col bg-green-50 rounded-lg p-7">
-              <div className="bg-green-100 p-3.5 md:p-5 rounded-full m-auto">
-                <p className="text-2xl md:text-3xl text-green-600">
-                  {projectsCompleted}
+              <div className="flex flex-col bg-red-50 rounded-lg p-7">
+                <div className="bg-red-100 p-3.5 md:p-5 rounded-full m-auto">
+                  <p className="text-2xl md:text-3xl text-red-800">0</p>
+                </div>
+                <p className=" text-sm text-center text-red-800 font-semibold mt-2">
+                  Late
                 </p>
               </div>
-              <p className=" text-sm text-center text-green-600 font-semibold mt-2">
-                Completed
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white gap-4 p-4 md:p-6 rounded-lg">
-          <div className="flex justify-between h-11">
-            <h3 className="text-3xl font-bold dark:text-white">
-              {structures.length}
-            </h3>
-          </div>
-          <p className="text-gray-500 mb-4">Weekly Inspections</p>
-          <div className="w-full mt-auto">
-            <div style={{ height: "300px" }}>
-              <ApexChart
-                type="bar"
-                options={options}
-                series={series}
-                height={"100%"}
-                width={"100%"}
-              />
+              <div className="flex flex-col bg-green-50 rounded-lg p-7">
+                <div className="bg-green-100 p-3.5 md:p-5 rounded-full m-auto">
+                  <p className="text-2xl md:text-3xl text-green-600">
+                    {projectsCompleted}
+                  </p>
+                </div>
+                <p className=" text-sm text-center text-green-600 font-semibold mt-2">
+                  Completed
+                </p>
+              </div>
             </div>
           </div>
+
+          <div className="bg-white gap-4 p-4 md:p-6 rounded-lg">
+            <div className="flex justify-between h-11">
+              <h3 className="text-3xl font-bold dark:text-white">
+                {structures.length}
+              </h3>
+            </div>
+            <p className="text-gray-500 mb-4">Weekly Inspections</p>
+            <div className="w-full mt-auto">
+              <div style={{ height: "300px" }}>
+                <ApexChart
+                  type="bar"
+                  options={options}
+                  series={series}
+                  height={"100%"}
+                  width={"100%"}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white gap-4 p-4 md:p-6 rounded-lg">
+            <RevenueChart invoices={invoices} />
+          </div>
         </div>
-        <div className="bg-white gap-4 p-4 md:p-6 rounded-lg">
-          <RevenueChart invoices={invoices} />
-        </div>
-      </div>
+      </AuthorizedWrapper>
 
       <section className="grid grid-col p-0 rounded-md gap-4 mb-4">
         <div className="flex flex-col col-span-5 gap-3">

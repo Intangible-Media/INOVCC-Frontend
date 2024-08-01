@@ -211,12 +211,6 @@ export default function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      {/* <section className="grid grid-cols-1">
-        <Button className="bg-dark-blue-700 text-white w-full shrink-0 self-start">
-          <p className="mr-3">{"Schedule Structure"}</p>
-        </Button>
-      </section> */}
-
       <section className="grid grid-col md:grid-cols-8 p-0 rounded-md gap-4">
         <div className="flex flex-col col-span-5 gap-3">
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">

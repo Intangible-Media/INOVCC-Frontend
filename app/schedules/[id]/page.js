@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import Timeline from "../../../components/Timeline";
 import { useLoading } from "../../../context/LoadingContext";
+import MapPanelalt from "../../../components/Panel/MapPanelalt";
 
 import {
   downloadFilesAsZip,
@@ -191,6 +192,7 @@ export default function Page({ params }) {
     );
 
     const fetchStructure = async () => {
+      // console.log("session", session);
       const response = await getAllStructure({
         jwt: session?.accessToken,
         query: structureQuery,
@@ -263,11 +265,11 @@ export default function Page({ params }) {
     };
 
     return (
-      <div className="flex flex-col gap-2 h-[430px] overflow-scroll">
+      <div className="flex flex-col gap-2 overflow-scroll">
         {groupedStructures.map((structureGroup, index) => (
           <div className="flex flex-col gap-2" key={`structure-group-${index}`}>
             <div
-              className="border border-gray-300 p-4 rounded-md"
+              className="border border-gray-300 p-3 rounded-md sticky"
               onClick={() => toggleGroup(index)}
             >
               <h3 className="text-base text-gray-700 font-medium cursor-pointer">
@@ -282,9 +284,6 @@ export default function Page({ params }) {
                     className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
                     onClick={() => {
                       setSelectedStructure(structure);
-                      router.push(
-                        `/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`
-                      );
                     }}
                   >
                     <div className="flex">
@@ -332,82 +331,92 @@ export default function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      <h1 className="leading-tight text-2xl font-medium">
-        {team?.attributes.name || "Team Name"}
-      </h1>
+      <div className="flex justify-between">
+        <h1 className="leading-tight text-2xl font-medium">
+          {team?.attributes.name || "Team Name"}
+        </h1>
+        <div className="relative flex gap-4 w-[300px]">
+          <Datepicker
+            title="Flowbite Datepicker"
+            className="w-full"
+            onSelectedDateChanged={(date) => setDate(date)}
+          />
+          <Button
+            className="bg-dark-blue-700 text-white"
+            onClick={async (e) => {
+              showLoading(
+                `Downloading all documents for ${structures.length} structures`
+              );
+              const formattedStructures =
+                convertInspectionsToZipArgs(structures);
 
-      <section className="grid grid-cols-1 md:grid-cols-2 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm ">
-        <div className="flex flex-col justify-between p-3 md:p-6 gap-3 order-2 md:order-1">
-          <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden md:flex">
-            <div className="grid grid-cols-3 gap-3 w-full">
-              <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
-                <div className="bg-yellow-100 p-2.5 rounded-full">
-                  <p className="text-xl text-yellow-800">
-                    {notInspectedStructuresCount}
+              try {
+                const response = await downloadFilesAsZipWithSubfolders(
+                  formattedStructures
+                );
+
+                showSuccess("Download finished successfully!");
+              } catch (error) {
+                console.error(error);
+                hideLoading();
+              }
+            }}
+          >
+            <DownloadOutlineIcon />
+          </Button>
+        </div>
+      </div>
+
+      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm overflow-scroll ">
+        {selectedStructure ? (
+          <div className=" col-span-2 h-full overflow-scroll">
+            <MapPanelalt
+              structureId={selectedStructure.id}
+              setSelectedStructure={setSelectedStructure}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[650px]">
+            <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden">
+              <div className="grid grid-cols-3 gap-3 w-full">
+                <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
+                  <div className="bg-yellow-100 p-2.5 rounded-full">
+                    <p className="text-xl text-yellow-800">
+                      {notInspectedStructuresCount}
+                    </p>
+                  </div>
+                  <p className="self-center text-sm text-left text-yellow-800 font-semibold mt-2">
+                    Not Inspected
                   </p>
                 </div>
-                <p className="self-center text-sm text-left text-yellow-800 font-semibold mt-2">
-                  Not Inspected
-                </p>
-              </div>
-              <div className="flex bg-red-50 gap-4 rounded-lg p-4">
-                <div className="bg-red-100 p-2.5 rounded-full">
-                  <p className="text-xl text-red-800">
-                    {cannotInspectStructuresCount}
+                <div className="flex bg-red-50 gap-4 rounded-lg p-4">
+                  <div className="bg-red-100 p-2.5 rounded-full">
+                    <p className="text-xl text-red-800">
+                      {cannotInspectStructuresCount}
+                    </p>
+                  </div>
+                  <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
+                    Uninspectable
                   </p>
                 </div>
-                <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
-                  Uninspectable
-                </p>
-              </div>
-              <div className="flex bg-green-50 gap-4 rounded-lg p-4">
-                <div className="bg-green-100 p-2.5 rounded-full">
-                  <p className="text-xl text-green-600">
-                    {inspectedStructuresCount}
+                <div className="flex bg-green-50 gap-4 rounded-lg p-4">
+                  <div className="bg-green-100 p-2.5 rounded-full">
+                    <p className="text-xl text-green-600">
+                      {inspectedStructuresCount}
+                    </p>
+                  </div>
+                  <p className="self-center text-sm text-center text-green-600 font-semibold mt-2">
+                    Inspected
                   </p>
                 </div>
-                <p className="self-center text-sm text-center text-green-600 font-semibold mt-2">
-                  Inspected
-                </p>
               </div>
             </div>
+
+            <MapStructuresTabs groupedStructures={groupedStructures} />
           </div>
+        )}
 
-          <MapStructuresTabs groupedStructures={groupedStructures} />
-
-          <div className="relative flex gap-4">
-            <Datepicker
-              title="Flowbite Datepicker"
-              className="w-full"
-              onSelectedDateChanged={(date) => setDate(date)}
-            />
-            <Button
-              className="bg-dark-blue-700 text-white"
-              onClick={async (e) => {
-                showLoading(
-                  `Downloading all documents for ${structures.length} structures`
-                );
-                const formattedStructures =
-                  convertInspectionsToZipArgs(structures);
-
-                try {
-                  const response = await downloadFilesAsZipWithSubfolders(
-                    formattedStructures
-                  );
-
-                  showSuccess("Download finished successfully!");
-                } catch (error) {
-                  console.error(error);
-                  hideLoading();
-                }
-              }}
-            >
-              <DownloadOutlineIcon />
-            </Button>
-          </div>
-        </div>
-
-        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full order-1 md:order-2">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full col-span-3">
           <MapboxMap
             lng={
               selectedStructure?.attributes.longitude ||

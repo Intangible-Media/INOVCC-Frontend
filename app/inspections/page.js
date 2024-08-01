@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { Button, Progress, Select, Datepicker } from "flowbite-react";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
@@ -53,6 +53,7 @@ export default function Dashboard() {
   const formattedEndDate = endDate.toISOString();
 
   const structuresQuery = qs.stringify({
+    field: ["mapSection"],
     filters: {
       inspectionDate: {
         $gt: formattedStartDate,
@@ -114,122 +115,75 @@ export default function Dashboard() {
       .toUpperCase()}`;
   };
 
-  /**
-   * This effect is responsible for fetching inspection data, structure data, and favorite inspections data.
-   * It runs whenever the `session` or `inspectionQuery` changes.
-   */
-  useEffect(() => {
-    /**
-     * This async function fetches the data from the server.
-     */
-    const fetchInspectionData = async () => {
-      // Check if there is an access token in the session
-      if (session?.accessToken) {
-        /**
-         * This async function fetches data from a specific API endpoint.
-         * @param {string} url - The API endpoint to fetch data from.
-         * @param {string} query - The query parameters to include in the request.
-         * @returns {Promise} A promise that resolves to the fetched data.
-         */
-        const fetchData = async (url, query) => {
-          try {
-            // Fetch the data from the server
-            const response = await axios.get(
-              `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/${url}?${query}`,
-              {
-                headers: { Authorization: `Bearer ${session.accessToken}` },
-              }
-            );
-            // Return the fetched data
-            return response.data.data;
-          } catch (error) {
-            // Log any errors that occurred while fetching the data
-            console.error(`Error fetching ${url}`, error.response || error);
+  const fetchData = useCallback(
+    async (url, query) => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/${url}?${query}`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
           }
-        };
+        );
+        return response.data.data;
+      } catch (error) {
+        console.error(`Error fetching ${url}`, error.response || error);
+        return null;
+      }
+    },
+    [session?.accessToken]
+  );
 
-        // Fetch the inspection data, structure data, and favorite inspections data concurrently
-        const [inspections, structures, favoriteInspections, clients] =
-          await Promise.all([
-            fetchData("inspections", inspectionQuery),
-            fetchData("structures", structuresQuery),
-            fetchData("inspections", favoriteInspectionsQuery),
-            fetchData("clients", ""),
-          ]);
-
-        // Update the state with the fetched data if it was successfully fetched
+  useEffect(() => {
+    const fetchInspectionData = async () => {
+      if (session?.accessToken) {
+        const inspections = await fetchData("inspections", inspectionQuery);
         if (inspections) setInspections(inspections);
+
+        const structures = await fetchData("structures", structuresQuery);
         if (structures) setDateRanggStructures(structures);
-        console.log(structures);
-        if (favoriteInspections) {
-          setFavoriteInspections(favoriteInspections);
-          console.log(favoriteInspections);
-        }
+
+        const favoriteInspections = await fetchData(
+          "inspections",
+          favoriteInspectionsQuery
+        );
+        if (favoriteInspections) setFavoriteInspections(favoriteInspections);
+
+        const clients = await fetchData("clients", "");
         if (clients) setClients(clients);
       }
     };
 
-    // Call the fetch function
     fetchInspectionData();
-  }, [session, inspectionQuery, startDate, endDate]); // The effect depends on `session` and `inspectionQuery`
+  }, [session, inspectionQuery, startDate, endDate, fetchData]);
 
-  /**
-   * Processes structure data and prepares it for charting.
-   *
-   * @param {Array} structureData - The structure data to process. Each element should be an object with an `attributes` property, which should be an object with `inspectionDate` and `type` properties.
-   */
   const processStructureData = (structureData) => {
-    // Initialize an empty object to store the counts of each type for each date
     const countsByTypeAndDate = {};
 
-    // Initialize the minimum and maximum dates to the inspection date of the first structure
     let minDate = Infinity;
     let maxDate = -Infinity;
 
-    // Iterate over each structure in the data
     structureData.forEach((structure) => {
-      // Convert the inspection date to a timestamp
       const date = new Date(structure.attributes.inspectionDate).getTime();
-
-      // Update the minimum and maximum dates if necessary
       minDate = Math.min(minDate, date);
       maxDate = Math.max(maxDate, date);
 
-      // Get the type of the structure
       const type = structure.attributes.type;
-
-      // Initialize the count object for this type if it doesn't exist yet
       countsByTypeAndDate[type] = countsByTypeAndDate[type] || {};
-
-      // Increment the count for this type on this date
       countsByTypeAndDate[type][date] =
         (countsByTypeAndDate[type][date] || 0) + 1;
     });
 
-    // Convert the counts into a series format suitable for ApexCharts
     const series = Object.entries(countsByTypeAndDate).map(([type, dates]) => {
-      // Initialize an empty array to store the series data for this type
       const seriesData = [];
-
-      // Iterate over each date in the range from the minimum to the maximum date
       for (let date = minDate; date <= maxDate; date += 24 * 60 * 60 * 1000) {
-        // Add the count for this type on this date to the series data, or 0 if there is no count
         seriesData.push([date, dates[date] || 0]);
       }
-
-      // Return the series data for this type, limited to the first 25 entries
       return { name: type, data: seriesData.slice(0, 25) };
     });
 
-    // Update the chart series with the new data
     setChartSeries(series);
   };
 
-  /**
-   * Function to group structures by their type.
-   * @param {Array} structures - The array of structure objects.
-   * @returns {Object} An object with keys as types and values as arrays of structures.
-   */
   function groupStructuresByType(structures) {
     return structures.reduce((acc, structure) => {
       const type = structure.attributes.type;
@@ -248,7 +202,6 @@ export default function Dashboard() {
       name: type,
       count: groupedStructures[type].length,
     };
-    console.log(groupedStructures[type]);
   });
 
   return (
@@ -256,12 +209,6 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 my-4">
         <InspectionCreateDrawer />
       </div>
-
-      {/* <div className="grid grid-cols-1 gap-4 mb-4 shadow-none">
-        <div className="border-gray-300 rounded-lg dark:border-gray-600 bg-white p-0 shadow-none">
-          <StructureTypesNumbers structures={allStructures} />
-        </div>
-      </div> */}
 
       <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-200 rounded-md overflow-hidden bg-white p-4 md:p-6">
         <div className="flex flex-col md:flex-row bg-white gap-6 justify-between">
@@ -274,7 +221,6 @@ export default function Dashboard() {
             </h6>
           </div>
           <div className="flex justify-between">
-            {/* <h3 className="text-xl font-bold dark:text-white">Report</h3> */}
             <div className="hidden md:flex flex-col w-full md:flex-row gap-3">
               <Select
                 className="w-full md:w-52"
@@ -320,7 +266,6 @@ export default function Dashboard() {
                   endDate={endDate}
                 />
               </div>
-              {/* <StructureTypesNumbers structures={allStructures} /> */}
             </div>
           </div>
           <div className="flex flex-col justify-between col-span-4 md:col-span-1">
@@ -340,7 +285,7 @@ export default function Dashboard() {
 
               {allStructureTypes.map((type, index) => {
                 const backgroundColor = colors[index];
-                const lighterColor = lightenColor(backgroundColor, 40); // Adjust the percentage as needed
+                const lighterColor = lightenColor(backgroundColor, 40);
 
                 return (
                   <div
