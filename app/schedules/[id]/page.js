@@ -42,17 +42,42 @@ export default function Page({ params }) {
   const [groupedStructures, setGroupedStructures] = useState([]);
   const [zoom, setZoom] = useState(20);
   const [myTasks, setMyTasks] = useState([]);
-  const [activeCoordinate, setActiveCoordinate] = useState([78.0421, 27.1751]);
+  const [activeCoordinate, setActiveCoordinate] = useState([0, 0]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [team, setTeam] = useState(null);
   const [date, setDate] = useState(
     new Date(convertToLongDateFormat(new Date()))
   );
 
-  const coordinates = structures.map((structure) => [
-    structure.attributes.longitude,
-    structure.attributes.latitude,
-  ]);
+  const getGeoLocationForStructure = async () => {
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setActiveCoordinate([longitude, latitude]);
+        // setUpdatedStructure((prevStructure) => ({
+        //   ...prevStructure,
+        //   attributes: {
+        //     ...prevStructure.attributes,
+        //     longitude: longitude,
+        //     latitude: latitude,
+        //   },
+        // }));
+      },
+      (error) => {
+        console.error("Error getting geolocation:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   const iconMap = {
     red: "/location-red.png",
@@ -245,6 +270,10 @@ export default function Page({ params }) {
     fetchStructure();
   }, [session, date]);
 
+  useEffect(() => {
+    getGeoLocationForStructure();
+  }, []);
+
   const TeamCard = () => (
     <div className="flex w-full justify-between bg-white p-6 rounded-md align-middle shadow">
       <div className="flex gap-4">
@@ -333,7 +362,7 @@ export default function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      <div className="flex justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between">
         <h1 className="leading-tight text-2xl font-medium">
           {team?.attributes.name || "Team Name"}
         </h1>
@@ -371,14 +400,14 @@ export default function Page({ params }) {
 
       <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm overflow-scroll ">
         {selectedStructure ? (
-          <div className=" col-span-2 h-full overflow-scroll">
+          <div className=" col-span-2 h-full overflow-scroll order-2 md:order-1">
             <MapPanelalt
               structureId={selectedStructure.id}
               setSelectedStructure={setSelectedStructure}
             />
           </div>
         ) : (
-          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[650px]">
+          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[650px] order-2 md:order-1">
             <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden">
               <div className="grid grid-cols-3 gap-3 w-full">
                 <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
@@ -418,7 +447,7 @@ export default function Page({ params }) {
           </div>
         )}
 
-        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full col-span-3">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full col-span-3 order-1 md:order-2">
           <MapboxMap
             lng={
               selectedStructure?.attributes.longitude ||

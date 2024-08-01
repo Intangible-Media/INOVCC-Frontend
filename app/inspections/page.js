@@ -12,6 +12,7 @@ import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDra
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
 import ActivityLog from "../../components/ActivityLog";
+import ProtectedContent from "../../components/ProtectedContent";
 import { SearchIconSmWhite } from "../../public/icons/intangible-icons";
 import StructureGraph from "../../components/Charts/StructureGraph";
 import { GoPlus } from "react-icons/go";
@@ -210,109 +211,111 @@ export default function Dashboard() {
         <InspectionCreateDrawer />
       </div>
 
-      <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-200 rounded-md overflow-hidden bg-white p-4 md:p-6">
-        <div className="flex flex-col md:flex-row bg-white gap-6 justify-between">
-          <div>
-            <h3 className="text-xl font-bold dark:text-white mb-1">
-              Structure Reports
-            </h3>
-            <h6 className="text-sm font-light text-gray-400">
-              Filter and download
-            </h6>
-          </div>
-          <div className="flex justify-between">
-            <div className="hidden md:flex flex-col w-full md:flex-row gap-3">
-              <Select
-                className="w-full md:w-52"
-                onChange={(e) => setClientSelected(e.target.value)}
-              >
-                <option value={null}>All Clients</option>
-                {clients.map((client, index) => (
-                  <option key={index} value={client.id}>
-                    {client.attributes.name}
-                  </option>
-                ))}
-              </Select>
-              <Select
-                className="w-full md:w-52"
-                onChange={(e) => setAggregation(e.target.value)}
-              >
-                <option value={null}>Choose Aggregation</option>
-                <option value={"day"}>Days</option>
-                <option value={"month"}>Months</option>
-              </Select>
-              <Datepicker
-                className="w-full md:w-52"
-                defaultDate={startDate}
-                onSelectedDateChanged={(date) => setStartDate(date)}
-              />
-              <Datepicker
-                className="w-full md:w-52"
-                defaultDate={endDate}
-                onSelectedDateChanged={(date) => setEndDate(date)}
-              />
+      <ProtectedContent requiredRoles={["Admin"]}>
+        <div className="flex flex-col gap-0 mb-4 shadow-none border border-gray-200 rounded-md overflow-hidden bg-white p-4 md:p-6">
+          <div className="flex flex-col md:flex-row bg-white gap-6 justify-between">
+            <div>
+              <h3 className="text-xl font-bold dark:text-white mb-1">
+                Structure Reports
+              </h3>
+              <h6 className="text-sm font-light text-gray-400">
+                Filter and download
+              </h6>
             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 gap-3 md:pt-6">
-          <div className="col-span-4 md:col-span-3">
-            <div className="w-full mt-auto">
-              <div className="overflow-x-auto overflow-y-hidden">
-                <StructureGraph
-                  structures={dateRanggStructures}
-                  aggregation={aggregation}
-                  startDate={startDate}
-                  endDate={endDate}
+            <div className="flex justify-between">
+              <div className="hidden md:flex flex-col w-full md:flex-row gap-3">
+                <Select
+                  className="w-full md:w-52"
+                  onChange={(e) => setClientSelected(e.target.value)}
+                >
+                  <option value={null}>All Clients</option>
+                  {clients.map((client, index) => (
+                    <option key={index} value={client.id}>
+                      {client.attributes.name}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  className="w-full md:w-52"
+                  onChange={(e) => setAggregation(e.target.value)}
+                >
+                  <option value={null}>Choose Aggregation</option>
+                  <option value={"day"}>Days</option>
+                  <option value={"month"}>Months</option>
+                </Select>
+                <Datepicker
+                  className="w-full md:w-52"
+                  defaultDate={startDate}
+                  onSelectedDateChanged={(date) => setStartDate(date)}
+                />
+                <Datepicker
+                  className="w-full md:w-52"
+                  defaultDate={endDate}
+                  onSelectedDateChanged={(date) => setEndDate(date)}
                 />
               </div>
             </div>
           </div>
-          <div className="flex flex-col justify-between col-span-4 md:col-span-1">
-            <div className=" grid grid-cols-2 gap-4 overflow-scroll max-h-[250px] md:max-h-[400px]">
-              <div
-                className={`flex col-span-2 rounded-lg px-7 gap-4 justify-center bg-white hover:bg-gray-50 border border-gray-300 h-32`}
-              >
-                <div className="flex w-14 h-14 rounded-full my-auto text-center bg-dark-blue-700">
-                  <p className={`text-xl text-white m-auto text-center`}>
-                    {dateRanggStructures.length}
-                  </p>
+
+          <div className="grid grid-cols-4 gap-3 md:pt-6">
+            <div className="col-span-4 md:col-span-3">
+              <div className="w-full mt-auto">
+                <div className="overflow-x-auto overflow-y-hidden">
+                  <StructureGraph
+                    structures={dateRanggStructures}
+                    aggregation={aggregation}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
                 </div>
-                <p className=" text-xs text-center font-semibold text-dark-blue-700 my-auto ">
-                  Total Structures
-                </p>
               </div>
-
-              {allStructureTypes.map((type, index) => {
-                const backgroundColor = colors[index];
-                const lighterColor = lightenColor(backgroundColor, 40);
-
-                return (
-                  <div
-                    className={`flex flex-col rounded-lg p-7 aspect-square bg-white hover:bg-gray-50 border border-gray-300`}
-                    key={index}
-                  >
-                    <div
-                      className="flex w-14 h-14 rounded-full m-auto text-center"
-                      style={{ backgroundColor }}
-                    >
-                      <p className={`text-xl text-white m-auto text-center`}>
-                        {type.count}
-                      </p>
-                    </div>
-                    <p
-                      className=" text-xs text-center font-semibold mt-2"
-                      style={{ color: backgroundColor }}
-                    >
-                      {type.name}
+            </div>
+            <div className="flex flex-col justify-between col-span-4 md:col-span-1">
+              <div className=" grid grid-cols-2 gap-4 overflow-scroll max-h-[250px] md:max-h-[400px]">
+                <div
+                  className={`flex col-span-2 rounded-lg px-7 gap-4 justify-center bg-white hover:bg-gray-50 border border-gray-300 h-32`}
+                >
+                  <div className="flex w-14 h-14 rounded-full my-auto text-center bg-dark-blue-700">
+                    <p className={`text-xl text-white m-auto text-center`}>
+                      {dateRanggStructures.length}
                     </p>
                   </div>
-                );
-              })}
+                  <p className=" text-xs text-center font-semibold text-dark-blue-700 my-auto ">
+                    Total Structures
+                  </p>
+                </div>
+
+                {allStructureTypes.map((type, index) => {
+                  const backgroundColor = colors[index];
+                  const lighterColor = lightenColor(backgroundColor, 40);
+
+                  return (
+                    <div
+                      className={`flex flex-col rounded-lg p-7 aspect-square bg-white hover:bg-gray-50 border border-gray-300`}
+                      key={index}
+                    >
+                      <div
+                        className="flex w-14 h-14 rounded-full m-auto text-center"
+                        style={{ backgroundColor }}
+                      >
+                        <p className={`text-xl text-white m-auto text-center`}>
+                          {type.count}
+                        </p>
+                      </div>
+                      <p
+                        className=" text-xs text-center font-semibold mt-2"
+                        style={{ color: backgroundColor }}
+                      >
+                        {type.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ProtectedContent>
 
       {favoriteInspections.length > 0 && (
         <div className="flex flex-col gap-3 p-6 mb-4 bg-gray-50 border border-gray-200 rounded-md">

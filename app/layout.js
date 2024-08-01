@@ -21,6 +21,7 @@ import "./globals.css";
 import path from "path";
 import AuthorizationWrapper from "../components/Auth/AuthorizationWrapper";
 import { Collapse } from "flowbite";
+import ProtectedContent from "../components/ProtectedContent";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -459,10 +460,7 @@ export default function RootLayout({ children }) {
               {!isCollapsed && <span className="ml-3">Schedules</span>}
             </Link>
           </li>
-          <AuthorizationWrapper
-            authorization={4}
-            userRole={session?.user.role.name}
-          >
+          <ProtectedContent requiredRoles={["Admin"]}>
             <li>
               <Link
                 href="/tasks"
@@ -568,7 +566,7 @@ export default function RootLayout({ children }) {
                 {!isCollapsed && <span className="ml-3">Clients</span>}
               </Link>
             </li>
-          </AuthorizationWrapper>
+          </ProtectedContent>
         </ul>
       </div>
     );

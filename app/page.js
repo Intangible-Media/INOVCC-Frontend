@@ -12,6 +12,7 @@ import qs from "qs";
 import dynamic from "next/dynamic";
 import RevenueChart from "../components/Charts/RevenueChart";
 import AuthorizedWrapper from "../components/Auth/AuthorizationWrapper";
+import ProtectedContent from "../components/ProtectedContent";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -457,7 +458,7 @@ export default function Home() {
 
   return (
     <>
-      <AuthorizedWrapper authorization={4} userRole={session?.user.role.name}>
+      <ProtectedContent requiredRoles={["Admin"]}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-4">
           <div className="flex flex-col justify-between bg-white gap-0 p-4 md:p-6 rounded-lg">
             <div className="h-11">
@@ -535,7 +536,7 @@ export default function Home() {
             <RevenueChart invoices={invoices} />
           </div>
         </div>
-      </AuthorizedWrapper>
+      </ProtectedContent>
 
       <section className="grid grid-col p-0 rounded-md gap-4 mb-4">
         <div className="flex flex-col col-span-5 gap-3">
