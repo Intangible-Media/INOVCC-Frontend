@@ -11,6 +11,7 @@ import InspectionModal from "../../components/Modals/InspectionModal";
 import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
+import { getAllStructure } from "../../utils/api/structures";
 import ActivityLog from "../../components/ActivityLog";
 import ProtectedContent from "../../components/ProtectedContent";
 import { SearchIconSmWhite } from "../../public/icons/intangible-icons";
@@ -140,7 +141,11 @@ export default function Dashboard() {
         const inspections = await fetchData("inspections", inspectionQuery);
         if (inspections) setInspections(inspections);
 
-        const structures = await fetchData("structures", structuresQuery);
+        const apiParams = {
+          jwt: session.accessToken,
+          query: structuresQuery,
+        };
+        const structures = await getAllStructure(apiParams);
         if (structures) setDateRanggStructures(structures);
 
         const favoriteInspections = await fetchData(
