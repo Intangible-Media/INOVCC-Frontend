@@ -223,20 +223,17 @@ export default function Page({ params }) {
         query: structureQuery,
       });
 
-      setStructures(response.data.data);
+      setStructures(response);
 
-      const groupedByInspectionId = response.data.data.reduce(
-        (acc, structure) => {
-          const inspectionId = structure.attributes.inspection.data.id;
-          const mapName = structure.attributes.inspection.data.attributes.name;
-          if (!acc[inspectionId]) {
-            acc[inspectionId] = { mapName, structures: [] };
-          }
-          acc[inspectionId].structures.push(structure);
-          return acc;
-        },
-        {}
-      );
+      const groupedByInspectionId = response.reduce((acc, structure) => {
+        const inspectionId = structure.attributes.inspection.data.id;
+        const mapName = structure.attributes.inspection.data.attributes.name;
+        if (!acc[inspectionId]) {
+          acc[inspectionId] = { mapName, structures: [] };
+        }
+        acc[inspectionId].structures.push(structure);
+        return acc;
+      }, {});
 
       const groupedArray = Object.keys(groupedByInspectionId).map((key) => ({
         inspectionId: key,

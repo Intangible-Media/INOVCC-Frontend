@@ -418,9 +418,9 @@ export default function Home() {
       };
       // Eventually you will want to do a Promise.all for all of the other project types
       const structuresResponse = await getAllStructure(apiParams);
-      console.log("structuresResponse.data.data");
-      console.log(structuresResponse.data.data);
-      setStructures(structuresResponse.data.data);
+      console.log("structuresResponse");
+      console.log(structuresResponse);
+      setStructures(structuresResponse);
     };
 
     const fetchInvoices = async () => {

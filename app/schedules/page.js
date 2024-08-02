@@ -144,8 +144,8 @@ export default function Page({ params }) {
         jwt: session.accessToken,
         query: structureQuery,
       });
-      console.log(structures.data.data);
-      setStructures(structures.data.data);
+      console.log(structures);
+      setStructures(structures);
     };
 
     fetchTeams();
