@@ -42,7 +42,7 @@ export default function Page({ params }) {
   const [groupedStructures, setGroupedStructures] = useState([]);
   const [zoom, setZoom] = useState(20);
   const [myTasks, setMyTasks] = useState([]);
-  const [activeCoordinate, setActiveCoordinate] = useState([0, 0]);
+  const [activeCoordinate, setActiveCoordinate] = useState([78.0421, 27.1751]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [team, setTeam] = useState(null);
   const [date, setDate] = useState(
@@ -248,12 +248,12 @@ export default function Page({ params }) {
 
       setGroupedStructures(groupedArray);
 
-      if (response.data.data.length > 0) {
-        setActiveCoordinate([
-          response.data.data[0].attributes.longitude,
-          response.data.data[0].attributes.latitude,
-        ]);
-      }
+      // if (response.data.data.length > 0) {
+      //   setActiveCoordinate([
+      //     response.data.data[0].attributes.longitude,
+      //     response.data.data[0].attributes.latitude,
+      //   ]);
+      // }
     };
 
     const fetchTeam = async () => {
@@ -273,6 +273,21 @@ export default function Page({ params }) {
   useEffect(() => {
     getGeoLocationForStructure();
   }, []);
+
+  useEffect(() => {
+    if (!selectedStructure) return;
+
+    const longitude = selectedStructure?.attributes.longitude;
+    const latitude = selectedStructure?.attributes.latitude;
+
+    if ((longitude, latitude)) {
+      console.log("There is something ehre");
+      setActiveCoordinate([
+        selectedStructure.attributes.longitude,
+        selectedStructure.attributes.latitude,
+      ]);
+    }
+  }, [selectedStructure]);
 
   const TeamCard = () => (
     <div className="flex w-full justify-between bg-white p-6 rounded-md align-middle shadow">
@@ -449,16 +464,8 @@ export default function Page({ params }) {
 
         <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full col-span-3 order-1 md:order-2">
           <MapboxMap
-            lng={
-              selectedStructure?.attributes.longitude ||
-              activeCoordinate[0] ||
-              78.0421
-            }
-            lat={
-              selectedStructure?.attributes.latitude ||
-              activeCoordinate[1] ||
-              27.1751
-            }
+            lng={activeCoordinate[0]}
+            lat={activeCoordinate[1]}
             zoom={16}
             style="mapbox://styles/mapbox/standard-beta"
             coordinates={structures}

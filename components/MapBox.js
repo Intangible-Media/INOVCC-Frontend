@@ -83,6 +83,28 @@ const MapboxMap = ({
 
     // Function to execute map operations
     const executeMapOperations = () => {
+      if (!navigator.geolocation) {
+        console.error("Geolocation is not supported by your browser");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const currentPosition = new mapboxgl.Marker()
+            .setLngLat([longitude, latitude])
+            .addTo(map.current);
+        },
+        (error) => {
+          console.error("Error getting geolocation:", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        }
+      );
+
       coordinates.forEach((structure) => {
         const color = getColorBasedOnStatus(structure.attributes.status);
         const iconName = `profile-icon-${color}`;
@@ -146,47 +168,6 @@ const MapboxMap = ({
           layout: {
             "icon-image": ["get", "icon"],
             "icon-size": 0.6, // Adjust icon size as needed
-          },
-        });
-      }
-    };
-
-    const executeMapOperationsold = () => {
-      coordinates.forEach(([lng, lat]) => {
-        new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map.current);
-      });
-
-      const geojsonData = {
-        type: "FeatureCollection",
-        features: coordinates.map(([lng, lat], index) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [lng, lat],
-          },
-          properties: {
-            id: index,
-          },
-        })),
-      };
-
-      if (!map.current.getSource("markers")) {
-        map.current.addSource("markers", {
-          type: "geojson",
-          data: geojsonData,
-        });
-      } else {
-        map.current.getSource("markers").setData(geojsonData);
-      }
-
-      if (!map.current.getLayer("marker-layer")) {
-        map.current.addLayer({
-          id: "marker-layer",
-          type: "symbol",
-          source: "markers",
-          layout: {
-            "icon-image": "marker-15",
-            "icon-size": 1,
           },
         });
       }
