@@ -14,6 +14,7 @@ import StructureTypesNumbers from "../../components/StructureTypesNumbers";
 import ActivityLog from "../../components/ActivityLog";
 import ProtectedContent from "../../components/ProtectedContent";
 import { SearchIconSmWhite } from "../../public/icons/intangible-icons";
+import { getAllStructure } from "../../utils/api/structures";
 import StructureGraph from "../../components/Charts/StructureGraph";
 import { GoPlus } from "react-icons/go";
 import qs from "qs";
@@ -136,22 +137,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchInspectionData = async () => {
-      if (session?.accessToken) {
-        const inspections = await fetchData("inspections", inspectionQuery);
-        if (inspections) setInspections(inspections);
+      if (!session) return;
 
-        const structures = await fetchData("structures", structuresQuery);
-        if (structures) setDateRanggStructures(structures);
+      const [inspections, structures, favoriteInspections, clients] =
+        await Promise.all([
+          fetchData("inspections", inspectionQuery),
+          getAllStructure({ jwt: session.accessToken, query: structuresQuery }),
+          fetchData("inspections", favoriteInspectionsQuery),
+          fetchData("clients", ""),
+        ]);
 
-        const favoriteInspections = await fetchData(
-          "inspections",
-          favoriteInspectionsQuery
-        );
-        if (favoriteInspections) setFavoriteInspections(favoriteInspections);
-
-        const clients = await fetchData("clients", "");
-        if (clients) setClients(clients);
-      }
+      if (inspections) setInspections(inspections);
+      if (structures) setDateRanggStructures(structures);
+      if (favoriteInspections) setFavoriteInspections(favoriteInspections);
+      if (clients) setClients(clients);
     };
 
     fetchInspectionData();
