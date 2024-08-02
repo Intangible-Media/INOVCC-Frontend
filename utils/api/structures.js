@@ -20,23 +20,23 @@ export const getStructure = (data) => {
   );
 };
 
-// /**
-//  * Retrieves all structures.
-//  * @param {Object} data - The data for the request.
-//  * @param {string} data.jwt - The JWT for authentication.
-//  * @param {Object} data.query - The query parameters for the request.
-//  * @returns {Promise} - The Axios promise with the response from the API.
-//  */
-// export const getAllStructure = (data) => {
-//   return axios.get(
-//     `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${data.jwt}`,
-//       },
-//     }
-//   );
-// };
+/**
+ * Retrieves all structures.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {Object} data.query - The query parameters for the request.
+ * @returns {Promise} - The Axios promise with the response from the API.
+ */
+export const getAllStructure = (data) => {
+  return axios.get(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
+    {
+      headers: {
+        Authorization: `Bearer ${data.jwt}`,
+      },
+    }
+  );
+};
 
 /**
  * Retrieves all structures concurrently.
@@ -45,7 +45,7 @@ export const getStructure = (data) => {
  * @param {string} data.query - The pre-processed query string for the request.
  * @returns {Promise<Array>} - A promise that resolves to an array of all structures.
  */
-export const getAllStructure = async (data) => {
+export const getAllStructurePaginated = async (data) => {
   // Fetch the first page to get pagination info
   const initialResponse = await axios.get(
     `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}&pagination[page]=1`,
