@@ -11,10 +11,10 @@ import InspectionModal from "../../components/Modals/InspectionModal";
 import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
-import { getAllStructure } from "../../utils/api/structures";
 import ActivityLog from "../../components/ActivityLog";
 import ProtectedContent from "../../components/ProtectedContent";
 import { SearchIconSmWhite } from "../../public/icons/intangible-icons";
+import { getAllStructure } from "../../utils/api/structures";
 import StructureGraph from "../../components/Charts/StructureGraph";
 import { GoPlus } from "react-icons/go";
 import qs from "qs";
@@ -137,26 +137,37 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchInspectionData = async () => {
-      if (session?.accessToken) {
-        const inspections = await fetchData("inspections", inspectionQuery);
-        if (inspections) setInspections(inspections);
+      if (!session) return;
 
-        const apiParams = {
-          jwt: session.accessToken,
-          query: structuresQuery,
-        };
-        const structures = await getAllStructure(apiParams);
-        if (structures) setDateRanggStructures(structures);
+      //const inspections = await fetchData("inspections", inspectionQuery);
+      const apiParams = {
+        jwt: session.accessToken,
+        query: structuresQuery,
+      };
+      // const structures = await getAllStructure(apiParams);
 
-        const favoriteInspections = await fetchData(
-          "inspections",
-          favoriteInspectionsQuery
-        );
-        if (favoriteInspections) setFavoriteInspections(favoriteInspections);
+      // const favoriteInspections = await fetchData(
+      //   "inspections",
+      //   favoriteInspectionsQuery
+      // );
+      // const clients = await fetchData("clients", "");
 
-        const clients = await fetchData("clients", "");
-        if (clients) setClients(clients);
-      }
+      const [inspections, structures, favoriteInspections, clients] =
+        await Promise.all([
+          fetchData("inspections", inspectionQuery, session.accessToken),
+          getAllStructure(apiParams),
+          fetchData(
+            "inspections",
+            favoriteInspectionsQuery,
+            session.accessToken
+          ),
+          fetchData("clients", "", session.accessToken),
+        ]);
+
+      if (inspections) setInspections(inspections);
+      if (structures) setDateRanggStructures(structures);
+      if (favoriteInspections) setFavoriteInspections(favoriteInspections);
+      if (clients) setClients(clients);
     };
 
     fetchInspectionData();
