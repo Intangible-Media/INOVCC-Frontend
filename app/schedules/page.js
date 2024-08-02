@@ -130,26 +130,45 @@ export default function Page({ params }) {
   useEffect(() => {
     if (!session) return;
 
-    const fetchTeams = async () => {
-      const teams = await getAllTeams({
-        jwt: session.accessToken,
-        query: teamsQuery,
-      });
-      console.log(teams.data.data);
-      setTeams(teams.data.data);
+    // const fetchTeams = async () => {
+    //   const teams = await getAllTeams({
+    //     jwt: session.accessToken,
+    //     query: teamsQuery,
+    //   });
+    //   console.log(teams.data.data);
+    //   setTeams(teams.data.data);
+    // };
+
+    // const fetchStructures = async () => {
+    //   const structures = await getAllStructure({
+    //     jwt: session.accessToken,
+    //     query: structureQuery,
+    //   });
+    //   console.log(structures);
+    //   setStructures(structures);
+    // };
+
+    // fetchTeams();
+    // fetchStructures();
+
+    const getPageData = async () => {
+      try {
+        const [teams, structures] = await Promise.all([
+          getAllTeams({ jwt: session.accessToken, query: teamsQuery }),
+          getAllStructure({ jwt: session.accessToken, query: structureQuery }),
+        ]);
+
+        console.log(teams.data.data);
+        console.log(structures);
+
+        setTeams(teams.data.data);
+        setStructures(structures);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
-    const fetchStructures = async () => {
-      const structures = await getAllStructure({
-        jwt: session.accessToken,
-        query: structureQuery,
-      });
-      console.log(structures);
-      setStructures(structures);
-    };
-
-    fetchTeams();
-    fetchStructures();
+    getPageData();
   }, [session]);
 
   const ProgressCard = ({ team }) => {
