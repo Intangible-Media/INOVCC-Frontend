@@ -557,6 +557,15 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
               <div className="flex flex-col px-6 md:px-8  pt-6 pb-8">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
 
+                <div className="flex justify-end gap-2">
+                  <Button
+                    className="bg-dark-blue-700 text-white w-full mb-5"
+                    onClick={() => submitStructure()}
+                  >
+                    Save
+                  </Button>
+                </div>
+
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col">
                     <label className="text-xs" htmlFor="structureName">
@@ -858,15 +867,15 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col justify-end gap-2">
                   <Button
-                    className=" bg-red-800 text-white mt-5"
+                    className=" bg-red-800 text-white mt-5 w-full"
                     onClick={() => removeStructure(structure)}
                   >
                     Delete
                   </Button>
                   <Button
-                    className="bg-dark-blue-700 text-white mt-5"
+                    className="bg-dark-blue-700 text-white w-full"
                     onClick={() => submitStructure()}
                   >
                     Save

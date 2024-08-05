@@ -338,10 +338,15 @@ export default function Page({ params }) {
                       />
                       <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
                         <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                          {structure.attributes.mapSection}
+                          <span className=" w-36 shorten-text">
+                            {structure.attributes.mapSection}
+                          </span>
                           <span className="flex items-center font-light ml-1">
                             {` / ${structure.attributes.type}`}
                           </span>
+                          {/* <span className="flex items-center font-light ml-1">
+                            {` / ${structure.attributes.type}`}
+                          </span> */}
                         </h5>
                         <DirectionsComponent />
                       </div>
