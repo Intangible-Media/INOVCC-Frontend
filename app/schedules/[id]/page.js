@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import qs from "qs";
@@ -174,7 +174,7 @@ export default function Page({ params }) {
     downloadFilesAsZipWithSubfolders(zipArgs, `${new Date()}-inspections.zip`);
   };
 
-  useEffect(() => {
+  const fetchStructure = useCallback(async () => {
     if (!session) return;
 
     const structureQuery = qs.stringify(
@@ -190,12 +190,12 @@ export default function Page({ params }) {
             },
             {
               scheduleStart: {
-                $lte: date, // scheduleStart should be on or before today
+                $lte: date,
               },
             },
             {
               scheduleEnd: {
-                $gte: date, // scheduleEnd should be on or after today
+                $gte: date,
               },
             },
           ],
@@ -217,10 +217,9 @@ export default function Page({ params }) {
       }
     );
 
-    const fetchStructure = async () => {
-      // console.log("session", session);
+    try {
       const response = await getAllStructure({
-        jwt: session?.accessToken,
+        jwt: session.accessToken,
         query: structureQuery,
       });
 
@@ -245,16 +244,15 @@ export default function Page({ params }) {
       }));
 
       setGroupedStructures(groupedArray);
+    } catch (error) {
+      console.error("Error fetching structures:", error);
+    }
+  }, [session, params.id, date]);
 
-      // if (response.data.data.length > 0) {
-      //   setActiveCoordinate([
-      //     response.data.data[0].attributes.longitude,
-      //     response.data.data[0].attributes.latitude,
-      //   ]);
-      // }
-    };
+  const fetchTeam = useCallback(async () => {
+    if (!session) return;
 
-    const fetchTeam = async () => {
+    try {
       const apiParams = {
         jwt: session.accessToken,
         id: params.id,
@@ -262,11 +260,15 @@ export default function Page({ params }) {
       };
       const response = await getTeam(apiParams);
       setTeam(response.data.data);
-    };
+    } catch (error) {
+      console.error("Error fetching team:", error);
+    }
+  }, [session, params.id]);
 
+  useEffect(() => {
     fetchTeam();
     fetchStructure();
-  }, [session, date]);
+  }, [fetchTeam, fetchStructure]);
 
   useEffect(() => {
     getGeoLocationForStructure();
