@@ -1134,7 +1134,15 @@ const AddInspectorForm = ({
     const fetchUsers = async () => {
       if (!session) return;
 
-      const query = qs.stringify({ populate: "*" }, { encodeValuesOnly: true });
+      const query = qs.stringify(
+        {
+          populate: {
+            picture: "*",
+            role: "*",
+          },
+        },
+        { encodeValuesOnly: true }
+      );
       const apiParams = { jwt: session?.accessToken, query };
 
       try {
