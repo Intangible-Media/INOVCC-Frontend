@@ -302,7 +302,7 @@ export default function InspectionTable({ inspectionData }) {
                     </Link>
                   </Table.Cell>
                   <Table.Cell className="text-left">
-                    {/* <div className="flex gap-2">
+                    <div className="flex gap-2">
                       <div className="flex w-7 h-7 bg-gray-200 rounded-full text-gray-700">
                         <p className="text-xs m-auto">
                           {highlightMatch(
@@ -339,7 +339,7 @@ export default function InspectionTable({ inspectionData }) {
                           )}
                         </p>
                       </div>
-                    </div> */}
+                    </div>
                   </Table.Cell>
 
                   <Table.Cell className="whitespace-nowrap shrink-0">
