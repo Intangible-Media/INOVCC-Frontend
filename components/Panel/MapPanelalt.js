@@ -1228,9 +1228,14 @@ const AddInspectorForm = ({
         <>
           <div className="flex flex-col force-w-full border-b-2 text-gray-700 hover:border-x-0 hover:border-t-0">
             <label className="text-xs">Add Inspectors</label>
-            <Button onClick={() => setOpenInspectorsModal(true)}>
+
+            <h4
+              className="text-base py-3 text-black"
+              onClick={() => setOpenInspectorsModal(true)}
+            >
               Edit Inspectors List
-            </Button>
+            </h4>
+
             <Modal
               show={openInspectorsModal}
               onClose={() => setOpenInspectorsModal(false)}
