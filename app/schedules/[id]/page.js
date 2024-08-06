@@ -384,7 +384,7 @@ export default function Page({ params }) {
         <h1 className="leading-tight text-2xl font-medium">
           {team?.attributes.name || "Team Name"}
         </h1>
-        <div className="relative flex gap-4 w-[400px]">
+        <div className="relative flex gap-4 w-full md:w-[400px]">
           <Datepicker
             title="Flowbite Datepicker"
             className="w-full bg-white"
