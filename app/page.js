@@ -395,20 +395,17 @@ export default function Home() {
         jwt: session?.accessToken,
         query: projectsQuery,
       };
-      // Eventually you will want to do a Promise.all for all of the other project types
-      const inspectionResponse = await getAllInspections(apiParams);
-      // console.log("inspectionResponse.data.data");
-      // console.log(inspectionResponse.data.data);
-      setInspections(inspectionResponse.data.data);
+      const response = await getAllInspections(apiParams);
+      return response;
     };
 
     const fetchTeams = async () => {
-      const teams = await getAllTeams({
-        jwt: session.accessToken,
+      const apiParams = {
+        jwt: session?.accessToken,
         query: teamsQuery,
-      });
-      console.log(teams.data.data);
-      setTeams(teams.data.data);
+      };
+      const response = await getAllTeams(apiParams);
+      return response.data.data;
     };
 
     const fetchStructures = async () => {
@@ -416,11 +413,8 @@ export default function Home() {
         jwt: session?.accessToken,
         query: structuresQuery,
       };
-      // Eventually you will want to do a Promise.all for all of the other project types
-      const structuresResponse = await getAllStructure(apiParams);
-      console.log("structuresResponse");
-      console.log(structuresResponse);
-      setStructures(structuresResponse);
+      const response = await getAllStructure(apiParams);
+      return response;
     };
 
     const fetchInvoices = async () => {
@@ -428,15 +422,30 @@ export default function Home() {
         jwt: session?.accessToken,
         query: "",
       };
-      const invoiceResponse = await getAllInvoices(apiParams);
-
-      setInvoices(invoiceResponse.data.data);
+      const response = await getAllInvoices(apiParams);
+      return response.data.data;
     };
 
-    fetchProjects();
-    fetchTeams();
-    fetchStructures();
-    fetchInvoices();
+    const fetchData = async () => {
+      try {
+        const [projects, teams, structures, invoices] = await Promise.all([
+          fetchProjects(),
+          fetchTeams(),
+          fetchStructures(),
+          fetchInvoices(),
+        ]);
+
+        setInspections(projects);
+        setTeams(teams);
+        setStructures(structures);
+        setInvoices(invoices);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Handle the error appropriately here (e.g., show an error message)
+      }
+    };
+
+    fetchData();
   }, [session]);
 
   const ProgressCard = ({ team }) => {

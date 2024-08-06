@@ -20,21 +20,53 @@ export const getInspection = (data) => {
 };
 
 /**
- * Retrieves all inspections.
+ * Retrieves all inspections concurrently.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
- * @param {Object} data.query - The query parameters for the request.
- * @returns {Promise} - The Axios promise with the response from the API.
+ * @param {string} data.query - The pre-processed query string for the request.
+ * @returns {Promise<Array>} - A promise that resolves to an array of all inspections.
  */
-export const getAllInspections = (data) => {
-  return axios.get(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}`,
+export const getAllInspections = async (data) => {
+  // Fetch the first page to get pagination info
+  const initialResponse = await axios.get(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}&pagination[page]=1&pagination[pageSize]=25`,
     {
       headers: {
         Authorization: `Bearer ${data.jwt}`,
       },
     }
   );
+
+  console.log("First page of inspections fetched");
+
+  const { meta } = initialResponse.data;
+  const totalPages = meta.pagination.pageCount;
+
+  console.log("Total pages of inspections:", totalPages);
+
+  // Create an array of promises for all pages
+  const promises = [];
+  for (let page = 1; page <= totalPages; page++) {
+    console.log("Fetching page:", page);
+    promises.push(
+      axios.get(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}&pagination[page]=${page}&pagination[pageSize]=25`,
+        {
+          headers: {
+            Authorization: `Bearer ${data.jwt}`,
+          },
+        }
+      )
+    );
+  }
+
+  // Wait for all promises to resolve
+  const responses = await Promise.all(promises);
+
+  // Combine all data into one array
+  const allInspections = responses.flatMap((response) => response.data.data);
+
+  return allInspections;
 };
 
 /**
