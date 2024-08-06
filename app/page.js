@@ -368,6 +368,7 @@ export default function Home() {
   );
 
   const structuresQuery = qs.stringify({
+    fields: ["type", "inspectionDate"],
     filters: {
       status: {
         $eq: "Inspected",
@@ -414,6 +415,7 @@ export default function Home() {
         query: structuresQuery,
       };
       const response = await getAllStructure(apiParams);
+      console.log("response structres apex charts", response);
       return response;
     };
 
