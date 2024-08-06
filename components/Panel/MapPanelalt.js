@@ -1,7 +1,14 @@
 import ImageCardSliderAlt from "../ImageCardSliderAlt";
 import { useEffect, useState, useMemo } from "react";
-import { Label, Dropdown, Button, FileInput, Datepicker } from "flowbite-react";
-import { ensureDomain } from "../../utils/strings";
+import {
+  Label,
+  Dropdown,
+  Button,
+  FileInput,
+  Datepicker,
+  Checkbox,
+  Modal,
+} from "flowbite-react";
 import { getAllUsers } from "../../utils/api/users";
 import {
   updateStructure,
@@ -32,6 +39,7 @@ import {
   structureStatuses,
   structureTypes,
 } from "../../utils/collectionListAttributes";
+import { CheckMark } from "../../public/icons/intangible-icons";
 
 export default function MapPanel({ structureId, setSelectedStructure }) {
   const { data: session, loading } = useSession();
@@ -867,6 +875,24 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                   </div>
                 </div>
 
+                <div className="flex flex-col gap-1 mt-4">
+                  <Label className="text-xs" htmlFor="structureFavorited">
+                    Favorite Structure
+                  </Label>
+                  <Checkbox
+                    defaultChecked={updatedStructure.attributes.favorited}
+                    onChange={(e) => {
+                      setUpdatedStructure({
+                        ...updatedStructure,
+                        attributes: {
+                          ...updatedStructure.attributes,
+                          favorited: e.target.checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
                 <div className="flex flex-col justify-end gap-2">
                   <Button
                     className=" bg-red-800 text-white mt-5 w-full"
@@ -1069,26 +1095,9 @@ const AddInspectorForm = ({
     ...currentInspectors,
   ]);
   const [structureInspectors, setStructureInspectors] = useState([]);
+  const [openInspectorsModal, setOpenInspectorsModal] = useState(false);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      if (!session) return;
-
-      const query = qs.stringify({ populate: "*" }, { encodeValuesOnly: true });
-      const apiParams = { jwt: session?.accessToken, query };
-
-      try {
-        const response = await getAllUsers(apiParams);
-        const filteredUsers = response.data.filter(
-          (user) =>
-            !currentInspectors.some((inspector) => inspector.id === user.id)
-        );
-        setAvailableInspectors(filteredUsers);
-      } catch (error) {
-        console.error("Error fetching users", error);
-      }
-    };
-
     const fetchStructure = async () => {
       if (!session) return;
 
@@ -1109,15 +1118,42 @@ const AddInspectorForm = ({
 
       try {
         const response = await getStructure(apiParams);
+
+        console.log("fetchStructure", response);
+
         setStructureInspectors(response.data.data.attributes.inspectors.data);
       } catch (error) {
         console.error("Error fetching structure", error);
       }
     };
 
-    fetchUsers();
     fetchStructure();
   }, [session, currentInspectors, structure.id]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!session) return;
+
+      const query = qs.stringify({ populate: "*" }, { encodeValuesOnly: true });
+      const apiParams = { jwt: session?.accessToken, query };
+
+      try {
+        const response = await getAllUsers(apiParams);
+        const filteredUsers = response.data.filter(
+          (user) =>
+            !currentInspectors.some((inspector) => inspector.id === user.id)
+        );
+
+        console.log("fetchUsers", response);
+
+        setAvailableInspectors(response.data);
+      } catch (error) {
+        console.error("Error fetching users", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     setUpdatedStructure((prev) => ({
@@ -1150,16 +1186,32 @@ const AddInspectorForm = ({
 
   const handleAssignInspector = (user) => {
     setAssignedInspectors((prev) => [...prev, user]);
-    setAvailableInspectors((prev) =>
-      prev.filter((inspector) => inspector.id !== user.id)
-    );
+    // setAvailableInspectors((prev) =>
+    //   prev.filter((inspector) => inspector.id !== user.id)
+    // );
   };
 
   const handleRemoveInspector = (user) => {
     setAssignedInspectors((prev) =>
       prev.filter((inspector) => inspector.id !== user.id)
     );
-    setAvailableInspectors((prev) => [...prev, user]);
+    //setAvailableInspectors((prev) => [...prev, user]);
+  };
+
+  // Function to check if the inspector is selected
+  const isInspectorSelected = (inspector) => {
+    return selectedInspectors.includes(inspector.id);
+  };
+
+  // Function to handle inspector selection
+  const handleInspectorClick = (inspector) => {
+    if (isInspectorSelected(inspector)) {
+      setSelectedInspectors(
+        selectedInspectors.filter((id) => id !== inspector.id)
+      );
+    } else {
+      setSelectedInspectors([...selectedInspectors, inspector.id]);
+    }
   };
 
   return (
@@ -1168,23 +1220,62 @@ const AddInspectorForm = ({
         <>
           <div className="flex flex-col force-w-full border-b-2 text-gray-700 hover:border-x-0 hover:border-t-0">
             <label className="text-xs">Add Inspectors</label>
-            <Dropdown
-              label="Add Inspectors"
-              className="force-w-full bg-white border-none hover:border-none hover:outline-none"
+            <Button onClick={() => setOpenInspectorsModal(true)}>
+              Edit Inspectors List
+            </Button>
+            <Modal
+              show={openInspectorsModal}
+              onClose={() => setOpenInspectorsModal(false)}
             >
-              {availableInspectors.map((user) => (
-                <Dropdown.Item
-                  key={user.id}
-                  onClick={() => handleAssignInspector(user)}
-                  className="w-full"
-                >
-                  {user.username || user.attributes.username}
-                </Dropdown.Item>
-              ))}
-            </Dropdown>
+              <Modal.Header>Edit Inspectors</Modal.Header>
+              <Modal.Body className="max-h-[450px] overflow-scroll">
+                {availableInspectors.map((user, index) => (
+                  <div
+                    key={`user-${index}`}
+                    className="flex justify-between p-4 pl-0 gap-4 w-full border-b border-gray-300"
+                    onClick={() => {
+                      const isAssignedAlready = assignedInspectors.some(
+                        (item) => item.id === user.id
+                      );
+
+                      if (isAssignedAlready) {
+                        return handleRemoveInspector(user);
+                      }
+                      handleAssignInspector(user);
+                    }}
+                  >
+                    <div className="flex justify-center gap-3">
+                      <AvatarImage
+                        customImage={
+                          user.picture?.url ||
+                          user.attributes?.picture.data?.attributes.url
+                        }
+                        customName={
+                          user.firstName || user.attributes?.firstName
+                        }
+                      />
+                      <h3 className="text-base leading-none font-medium shorten-text m-auto">
+                        {`${user.firstName} ${user.lastName}` || ""}
+                        <span className="text-base leading-none font-light text-gray-400 shrink-0">
+                          {" "}
+                          / {user.role?.name || ""}
+                        </span>
+                      </h3>
+                    </div>
+
+                    <Checkbox
+                      className="my-auto"
+                      defaultChecked={assignedInspectors.some(
+                        (item) => item.id === user.id
+                      )}
+                    />
+                  </div>
+                ))}
+              </Modal.Body>
+            </Modal>
           </div>
 
-          <div className="flex gap-1 items-center mt-4 -space-x-4 rtl:space-x-reverse">
+          <div className="flex gap-1 items-center mt-2 -space-x-4 rtl:space-x-reverse">
             {assignedInspectors.map((inspector) => (
               <div key={inspector.id} className="relative group">
                 <button

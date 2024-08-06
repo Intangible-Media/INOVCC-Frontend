@@ -12,6 +12,7 @@ import { Button, Datepicker } from "flowbite-react";
 import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
 import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
+import { FaRegStar } from "react-icons/fa6";
 import Timeline from "../../../components/Timeline";
 import { useLoading } from "../../../context/LoadingContext";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
@@ -337,16 +338,16 @@ export default function Page({ params }) {
                         style={{ height: 27 }}
                       />
                       <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                        <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                          <span className=" w-36 shorten-text">
+                        <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                          <span className="flex shorten-text">
                             {structure.attributes.mapSection}
+                            {structure.attributes.favorited && (
+                              <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
+                            )}
                           </span>
                           <span className="flex items-center font-light ml-1">
-                            {` / ${structure.attributes.type}`}
+                            {`${structure.attributes.type}`}
                           </span>
-                          {/* <span className="flex items-center font-light ml-1">
-                            {` / ${structure.attributes.type}`}
-                          </span> */}
                         </h5>
                         <DirectionsComponent />
                       </div>
