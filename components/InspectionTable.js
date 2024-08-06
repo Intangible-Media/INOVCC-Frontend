@@ -4,7 +4,6 @@ import { Checkbox, Table, Progress, Button } from "flowbite-react";
 import { useState, useEffect } from "react";
 import { Dropdown } from "flowbite-react";
 import Link from "next/link";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 const ITEMS_PER_PAGE = 15; // Define how many items you want per page
 
@@ -303,7 +302,7 @@ export default function InspectionTable({ inspectionData }) {
                     </Link>
                   </Table.Cell>
                   <Table.Cell className="text-left">
-                    <div className="flex gap-2">
+                    {/* <div className="flex gap-2">
                       <div className="flex w-7 h-7 bg-gray-200 rounded-full text-gray-700">
                         <p className="text-xs m-auto">
                           {highlightMatch(
@@ -340,7 +339,7 @@ export default function InspectionTable({ inspectionData }) {
                           )}
                         </p>
                       </div>
-                    </div>
+                    </div> */}
                   </Table.Cell>
 
                   <Table.Cell className="whitespace-nowrap shrink-0">
