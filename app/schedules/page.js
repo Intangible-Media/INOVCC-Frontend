@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import qs from "qs";
 import { getAllTeams } from "../../utils/api/teams";
 import { getAllStructure } from "../../utils/api/structures";
-import { off } from "process";
 import Link from "next/link";
 import DirectionsComponent from "../../components/DirectionsComponent";
 import { useRouter } from "next/navigation";
@@ -66,6 +65,36 @@ function convertToLongDateFormat(dateString) {
   return formattedDate;
 }
 
+const ProgressCard = ({ team, totalStructures, inspectedCount }) => {
+  const router = useRouter();
+
+  const progress = totalStructures
+    ? (inspectedCount / totalStructures) * 100
+    : 0;
+
+  return (
+    <div
+      className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
+      onClick={() => router.push(`/schedules/${team.id}`)}
+    >
+      <div className="flex flex-col gap-2">
+        <h4 className="leading-none font-medium text-md">
+          {team.attributes.name}
+        </h4>
+        <div className="flex gap-3">
+          <p className="text-xs">{totalStructures} Total</p>
+          <p className="text-xs">
+            {totalStructures - inspectedCount} Remaining
+          </p>
+        </div>
+      </div>
+      {totalStructures > 0 && (
+        <Progress progress={progress} textLabel="" size="md" color="blue" />
+      )}
+    </div>
+  );
+};
+
 export default function Page({ params }) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -110,9 +139,6 @@ export default function Page({ params }) {
         inspection: {
           fields: ["name"],
         },
-        // images: {
-        //   populate: "*", // Fully populate images
-        // },
       },
     },
     {
@@ -143,55 +169,31 @@ export default function Page({ params }) {
     getPageData();
   }, [session]);
 
-  const ProgressCard = ({ team }) => {
-    const router = useRouter();
+  // Precompute team structures mapping
+  const teamStructuresMap = useMemo(() => {
+    const map = {};
+    structures.forEach((structure) => {
+      const teamId = structure.attributes.team.data.id;
+      if (!map[teamId]) {
+        map[teamId] = { total: 0, inspected: 0 };
+      }
+      map[teamId].total += 1;
+      if (structure.attributes.status === "Inspected") {
+        map[teamId].inspected += 1;
+      }
+    });
+    return map;
+  }, [structures]);
 
-    // Memoize the structures to prevent unnecessary re-computations
-    const totalTeamStructures = useMemo(() => {
-      return structures.filter(
-        (structure) => structure.attributes.team.data.id === team.id
-      );
-    }, [structures, team.id]);
+  const scheduledTeams = useMemo(
+    () => teams.filter((team) => teamStructuresMap[team.id]?.total > 0),
+    [teams, teamStructuresMap]
+  );
 
-    const { inspectedCount, notInspectedCount } = useMemo(() => {
-      let inspected = 0;
-      let notInspected = 0;
-
-      totalTeamStructures.forEach((structure) => {
-        if (structure.attributes.status === "Inspected") {
-          inspected++;
-        } else {
-          notInspected++;
-        }
-      });
-
-      return { inspectedCount: inspected, notInspectedCount: notInspected };
-    }, [totalTeamStructures]);
-
-    const progress = totalTeamStructures.length
-      ? (inspectedCount / totalTeamStructures.length) * 100
-      : 0;
-
-    return (
-      <div
-        className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
-        onClick={() => router.push(`/schedules/${team.id}`)}
-      >
-        <div className="flex flex-col gap-2">
-          <h4 className="leading-none font-medium text-md">
-            {team.attributes.name}
-          </h4>
-          <div className="flex gap-3">
-            <p className="text-xs">{totalTeamStructures.length} Total</p>
-            <p className="text-xs">{notInspectedCount} Remaining</p>
-          </div>
-        </div>
-        {totalTeamStructures.length > 0 && (
-          <Progress progress={progress} textLabel="" size="md" color="blue" />
-        )}
-      </div>
-    );
-  };
+  const notScheduledTeams = useMemo(
+    () => teams.filter((team) => !teamStructuresMap[team.id]?.total),
+    [teams, teamStructuresMap]
+  );
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
@@ -200,38 +202,30 @@ export default function Page({ params }) {
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
             <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {teams.map((team, index) => {
-                const teamScheduledStructures = structures.filter(
-                  (structure) => {
-                    return structure.attributes.team.data.id === team.id;
-                  }
-                );
-
-                if (teamScheduledStructures.length > 0) {
-                  return (
-                    <ProgressCard key={index} team={team} showEmpty={false} />
-                  );
-                }
-              })}
+              {scheduledTeams.map((team, index) => (
+                <ProgressCard
+                  key={index}
+                  team={team}
+                  totalStructures={teamStructuresMap[team.id].total}
+                  inspectedCount={teamStructuresMap[team.id].inspected}
+                  showEmpty={false}
+                />
+              ))}
             </div>
 
             <h6 className=" text-xs text-gray-400 border-b border-gray-300 mt-6 mb-4 pb-2">
               Not Scheduled Teams
             </h6>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {teams.map((team, index) => {
-                const teamScheduledStructures = structures.filter(
-                  (structure) => {
-                    return structure.attributes.team.data.id === team.id;
-                  }
-                );
-
-                if (teamScheduledStructures.length === 0) {
-                  return (
-                    <ProgressCard key={index} team={team} showEmpty={false} />
-                  );
-                }
-              })}
+              {notScheduledTeams.map((team, index) => (
+                <ProgressCard
+                  key={index}
+                  team={team}
+                  totalStructures={0}
+                  inspectedCount={0}
+                  showEmpty={false}
+                />
+              ))}
             </div>
           </div>
           <StructureTypesNumbers structures={structures} />
@@ -280,8 +274,6 @@ export default function Page({ params }) {
                         {structure.attributes.status}
                       </span>
                     </p>
-
-                    {/* <EditIcon /> */}
                   </div>
                 </div>
               ))}
