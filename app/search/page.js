@@ -119,7 +119,7 @@ export default function Page() {
       try {
         const response = await getAllStructure(apiParams);
         console.log("structures", response);
-        setStructures(response.data.data);
+        setStructures(response);
       } catch (error) {
         console.error(error);
       }

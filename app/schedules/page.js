@@ -1,21 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import qs from "qs";
 import { getAllTeams } from "../../utils/api/teams";
 import { getAllStructure } from "../../utils/api/structures";
-import Link from "next/link";
 import DirectionsComponent from "../../components/DirectionsComponent";
 import { useRouter } from "next/navigation";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
-import { Button, Progress } from "flowbite-react";
-
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-const MapboxMap = dynamic(() => import("../../components/MapBox"), {
-  ssr: false,
-});
+import { Progress } from "flowbite-react";
 
 const iconMap = {
   red: "/location-red.png",
