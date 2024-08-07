@@ -397,6 +397,7 @@ export default function Home() {
         query: projectsQuery,
       };
       const response = await getAllInspections(apiParams);
+      console.log("response projects", response);
       return response;
     };
 

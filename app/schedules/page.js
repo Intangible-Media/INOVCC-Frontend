@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import qs from "qs";
@@ -77,25 +77,18 @@ export default function Page({ params }) {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const teamsQuery = qs.stringify(
-    {
-      populate: {
-        structures: {
-          filters: {
-            scheduleForInspection: {
-              $eq: today,
-            },
-          },
-        },
-      },
-    },
-    {
-      encodeValuesOnly: true, // prettify URL
-    }
-  );
+  const teamsQuery = "";
 
   const structureQuery = qs.stringify(
     {
+      fields: [
+        "mapSection",
+        "type",
+        "status",
+        "adminStatus",
+        "longitude",
+        "latitude",
+      ],
       filters: {
         $and: [
           {
@@ -117,9 +110,9 @@ export default function Page({ params }) {
         inspection: {
           fields: ["name"],
         },
-        images: {
-          populate: "*", // Fully populate images
-        },
+        // images: {
+        //   populate: "*", // Fully populate images
+        // },
       },
     },
     {
@@ -129,27 +122,6 @@ export default function Page({ params }) {
 
   useEffect(() => {
     if (!session) return;
-
-    // const fetchTeams = async () => {
-    //   const teams = await getAllTeams({
-    //     jwt: session.accessToken,
-    //     query: teamsQuery,
-    //   });
-    //   console.log(teams.data.data);
-    //   setTeams(teams.data.data);
-    // };
-
-    // const fetchStructures = async () => {
-    //   const structures = await getAllStructure({
-    //     jwt: session.accessToken,
-    //     query: structureQuery,
-    //   });
-    //   console.log(structures);
-    //   setStructures(structures);
-    // };
-
-    // fetchTeams();
-    // fetchStructures();
 
     const getPageData = async () => {
       try {
@@ -174,35 +146,30 @@ export default function Page({ params }) {
   const ProgressCard = ({ team }) => {
     const router = useRouter();
 
-    // const structures = team.attributes.structures.data || [];
+    // Memoize the structures to prevent unnecessary re-computations
+    const totalTeamStructures = useMemo(() => {
+      return structures.filter(
+        (structure) => structure.attributes.team.data.id === team.id
+      );
+    }, [structures, team.id]);
 
-    const totalTeamStructures = structures.filter(
-      (structure) => structure.attributes.team.data.id === team.id
-    );
+    const { inspectedCount, notInspectedCount } = useMemo(() => {
+      let inspected = 0;
+      let notInspected = 0;
 
-    const teamScheduledStructuresInspected = structures.filter((structure) => {
-      if (
-        structure.attributes.team.data.id === team.id &&
-        structure.attributes.status === "Inspected"
-      ) {
-        return structure;
-      }
-    });
-
-    const teamScheduledStructuresNotInspected = structures.filter(
-      (structure) => {
-        if (
-          structure.attributes.team.data.id === team.id &&
-          structure.attributes.status !== "Inspected"
-        ) {
-          return structure;
+      totalTeamStructures.forEach((structure) => {
+        if (structure.attributes.status === "Inspected") {
+          inspected++;
+        } else {
+          notInspected++;
         }
-      }
-    );
+      });
+
+      return { inspectedCount: inspected, notInspectedCount: notInspected };
+    }, [totalTeamStructures]);
 
     const progress = totalTeamStructures.length
-      ? (teamScheduledStructuresInspected.length / totalTeamStructures.length) *
-        100
+      ? (inspectedCount / totalTeamStructures.length) * 100
       : 0;
 
     return (
@@ -215,10 +182,8 @@ export default function Page({ params }) {
             {team.attributes.name}
           </h4>
           <div className="flex gap-3">
-            <p className=" text-xs">{totalTeamStructures.length} Total</p>
-            <p className=" text-xs">
-              {teamScheduledStructuresNotInspected.length} Remaining
-            </p>
+            <p className="text-xs">{totalTeamStructures.length} Total</p>
+            <p className="text-xs">{notInspectedCount} Remaining</p>
           </div>
         </div>
         {totalTeamStructures.length > 0 && (
