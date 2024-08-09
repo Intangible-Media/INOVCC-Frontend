@@ -1,6 +1,6 @@
 "use client";
 
-import { Dropdown, Avatar, Navbar, TextInput, Alert } from "flowbite-react";
+import { ThemeModeScript } from "flowbite-react";
 import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
 import { signOut } from "next-auth/react";
@@ -573,9 +573,10 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <title>INOVCC</title>
+        <ThemeModeScript />
       </head>
       <body className={`${inter.className} bg-gray-100`}>
         <AuthProvider>
