@@ -409,23 +409,38 @@ export default function Page({ params }) {
 
   function groupStructuresByType(structures) {
     return structures.reduce((acc, structure) => {
-      const status = structure.attributes.status;
+      const { status, adminStatus } = structure.attributes;
+
+      // Group by status
       if (!acc[status]) {
         acc[status] = [];
       }
       acc[status].push(structure);
+
+      // Check if adminStatus is "Uploaded" and add to the "Uploaded" group
+      if (adminStatus === "Uploaded") {
+        if (!acc["Uploaded"]) {
+          acc["Uploaded"] = [];
+        }
+        acc["Uploaded"].push(structure);
+      }
+
       return acc;
     }, {});
   }
 
   const groupedStructuresByType = groupStructuresByType(structures);
 
-  const allStructureTypes = Object.keys(groupedStructuresByType).map((type) => {
-    return {
-      name: type,
-      count: groupedStructuresByType[type].length,
-    };
-  });
+  const allStructureTypes = Object.keys(groupedStructuresByType).map(
+    (status) => {
+      return {
+        name: status,
+        count: groupedStructuresByType[status].length,
+      };
+    }
+  );
+
+  console.log("allStructureTypes", allStructureTypes);
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">

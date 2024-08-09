@@ -239,6 +239,26 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
     );
   };
 
+  const handleStartDateChange = (date) => {
+    setUpdatedStructure({
+      ...updatedStructure,
+      attributes: {
+        ...updatedStructure.attributes,
+        scheduleStart: date,
+      },
+    });
+  };
+
+  const handleEndDateChange = (date) => {
+    setUpdatedStructure({
+      ...updatedStructure,
+      attributes: {
+        ...updatedStructure.attributes,
+        scheduleEnd: date,
+      },
+    });
+  };
+
   const ShareButton = ({ structureId }) => {
     const currentUrl = window.location.href;
 
@@ -852,24 +872,37 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                       updatedStructure={updatedStructure}
                     />
                     <div className="flex flex-col w-full mt-3">
-                      <label
-                        className="text-xs mb-2"
-                        htmlFor="structureLatitude"
-                      >
-                        Schedule For Inspection
+                      <label className="text-xs mb-2" htmlFor="scheduleStart">
+                        Schedule Start
                       </label>
                       <Datepicker
-                        title="Flowbite Datepicker"
-                        className="w-full bg-white"
-                        onSelectedDateChanged={(date) =>
-                          setUpdatedStructure({
-                            ...updatedStructure,
-                            attributes: {
-                              ...updatedStructure.attributes,
-                              scheduleForInspection: date,
-                            },
-                          })
+                        defaultDate={
+                          new Date(
+                            updatedStructure.attributes.scheduleStart ||
+                              new Date.now()
+                          )
                         }
+                        title="Schedule Start Datepicker"
+                        className="w-full bg-white"
+                        onSelectedDateChanged={handleStartDateChange}
+                      />
+
+                      <label
+                        className="text-xs mb-2 mt-4"
+                        htmlFor="scheduleEnd"
+                      >
+                        Schedule End
+                      </label>
+                      <Datepicker
+                        defaultDate={
+                          new Date(
+                            updatedStructure.attributes.scheduleEnd ||
+                              new Date.now()
+                          )
+                        }
+                        title="Schedule End Datepicker"
+                        className="w-full bg-white"
+                        onSelectedDateChanged={handleEndDateChange}
                       />
                     </div>
                   </div>
