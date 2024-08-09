@@ -442,9 +442,24 @@ export default function Page({ params }) {
           <Button
             className="bg-dark-blue-700 text-white"
             onClick={async (e) => {
-              const inspectedStructures = structures.filter(
-                (structure) => structure.attributes.status === "Inspected"
-              );
+              const today = new Date(); // Get today's date
+
+              const inspectedStructures = structures.filter((structure) => {
+                const { status, inspectionDate } = structure.attributes;
+
+                if (status === "Inspected" && inspectionDate) {
+                  const inspectionDateObj = new Date(inspectionDate);
+
+                  // Check if inspectionDate is today
+                  return (
+                    inspectionDateObj.getFullYear() === today.getFullYear() &&
+                    inspectionDateObj.getMonth() === today.getMonth() &&
+                    inspectionDateObj.getDate() === today.getDate()
+                  );
+                }
+
+                return false;
+              });
 
               showLoading(
                 `Downloading all documents for ${inspectedStructures.length} structures`
