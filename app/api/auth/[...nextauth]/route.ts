@@ -1,4 +1,4 @@
-import NextAuth, { Session, User as NextAuthUser } from "next-auth";
+import NextAuth, { NextAuthOptions, Session, User as NextAuthUser } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
@@ -27,7 +27,7 @@ interface ExtendedSession extends Session {
   user?: ExtendedUser;
 }
 
-const handler = NextAuth({
+export const authOptions:NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
@@ -129,6 +129,8 @@ const handler = NextAuth({
       return extendedSession;
     },
   },
-});
+}
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

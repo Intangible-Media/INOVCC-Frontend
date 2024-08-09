@@ -24,18 +24,34 @@ export const getStructure = (data) => {
  * Retrieves all structures.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
- * @param {Object} data.query - The query parameters for the request.
- * @returns {Promise} - The Axios promise with the response from the API.
+ * @param {string} data.query - The query parameters for the request.
+ * @returns {Promise} - A promise with the response from the API.
  */
-export const getAllStructureold = (data) => {
-  return axios.get(
-    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
-    {
-      headers: {
-        Authorization: `Bearer ${data.jwt}`,
-      },
+export const fetchAllStructure = async (data) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${data.jwt}`,
+        },
+        next: {
+          revalidate: 10, // Optional: Revalidate this data every 10 seconds
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch structures");
     }
-  );
+
+    const structures = await response.json();
+    return structures;
+  } catch (error) {
+    console.error("Error fetching structures:", error);
+    throw error;
+  }
 };
 
 /**
