@@ -16,6 +16,7 @@ import { FaRegStar } from "react-icons/fa6";
 import Timeline from "../../../components/Timeline";
 import { useLoading } from "../../../context/LoadingContext";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
+import StructureGroupProgress from "../../../components/Charts/StructuresGroupProgress";
 
 import {
   downloadFilesAsZip,
@@ -313,67 +314,75 @@ export default function Page({ params }) {
     return (
       <div className="flex flex-col gap-2 overflow-scroll">
         {groupedStructures.map((structureGroup, index) => (
-          <div className="flex flex-col gap-2" key={`structure-group-${index}`}>
+          <div
+            className="flex flex-col border border-gray-300 rounded-md"
+            key={`structure-group-${index}`}
+          >
             <div
-              className="border border-gray-300 p-3 rounded-md sticky"
+              className="flex justify-between p-3 cursor-pointer"
               onClick={() => toggleGroup(index)}
             >
-              <h3 className="text-base text-gray-700 font-medium cursor-pointer">
+              <h3 className="text-base text-gray-700 font-medium inline-block">
                 {structureGroup.mapName}
               </h3>
+              <StructureGroupProgress structures={structureGroup.structures} />
             </div>
-            {expandedGroup === index && (
-              <div className="im-snapping overflow-scroll w-full h-full mb-4">
-                {structureGroup.structures.map((structure) => (
-                  <div
-                    key={`${structure.id}-${index}`}
-                    className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
-                    onClick={() => {
-                      setSelectedStructure(structure);
-                    }}
-                  >
-                    <div className="flex">
-                      <img
-                        src={loadIcon(
-                          getColorBasedOnStatus(structure.attributes.status)
-                        )}
-                        style={{ height: 27 }}
-                      />
-                      <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                        <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                          <span className="flex shorten-text">
-                            {structure.attributes.mapSection}
-                            {structure.attributes.favorited && (
-                              <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
+            <div
+              className={`overflow-hidden transition-max-height duration-200 ease-in-out ${
+                expandedGroup === index ? "max-h-[350px]" : "max-h-0"
+              }`}
+            >
+              {expandedGroup === index && (
+                <div className="overflow-auto w-full h-full mb-4">
+                  {structureGroup.structures.map((structure) => (
+                    <div
+                      key={`${structure.id}-${index}`}
+                      className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
+                      onClick={() => {
+                        setSelectedStructure(structure);
+                      }}
+                    >
+                      <div className="flex">
+                        <img
+                          src={loadIcon(
+                            getColorBasedOnStatus(structure.attributes.status)
+                          )}
+                          style={{ height: 27 }}
+                        />
+                        <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                          <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                            <span className="flex shorten-text">
+                              {structure.attributes.mapSection}
+                              {structure.attributes.favorited && (
+                                <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
+                              )}
+                            </span>
+                            <span className="flex items-center font-light ml-1">
+                              {`${structure.attributes.type}`}
+                            </span>
+                          </h5>
+                          <DirectionsComponent />
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                          <span
+                            className={`${getInspectionColor(
+                              structure.attributes.status
+                            )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+                          >
+                            {structure.attributes.status}
+                            {structure.attributes.status === "Uploaded" && (
+                              <CheckMark />
                             )}
                           </span>
-                          <span className="flex items-center font-light ml-1">
-                            {`${structure.attributes.type}`}
-                          </span>
-                        </h5>
-                        <DirectionsComponent />
+                        </p>
                       </div>
                     </div>
-                    <div className="flex gap-3">
-                      <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                        <span
-                          className={`${getInspectionColor(
-                            structure.attributes.status
-                          )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                        >
-                          {structure.attributes.status}
-                          {structure.attributes.status === "Uploaded" && (
-                            <CheckMark />
-                          )}
-                        </span>
-                      </p>
-
-                      {/* <EditIcon /> */}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
