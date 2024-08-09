@@ -2,8 +2,14 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 /**
- * Sorts an array of structures based on their status and then by a numeric field within each group.
- * The order is: "Not Inspected" first, others in the middle, "Inspected" second to last, "Uploaded" last.
+ * Sorts an array of structures based on their favorited status, then by their status,
+ * and then by a numeric field within each group.
+ *
+ * The order is:
+ * 1. Favorites, sorted in numeric order.
+ * 2. Non-favorites by status in the order: "Not Inspected", "Inspected", "Uploaded".
+ *    Within each status group, structures are sorted in numeric order.
+ *
  * @param {Array} structures - Array of structures to be sorted.
  * @returns {Array} - Sorted array of structures.
  */
@@ -19,9 +25,14 @@ export const sortStructuresByStatus = (structures) => {
       return -1; // a comes before b
     } else if (!favoritedA && favoritedB) {
       return 1; // b comes before a
+    } else if (favoritedA && favoritedB) {
+      // If both are favorited, sort by numeric field (e.g., mapSection)
+      const numberA = a.attributes.mapSection;
+      const numberB = b.attributes.mapSection;
+      return numberA - numberB;
     }
 
-    // If both are favorited or neither is favorited, sort by status
+    // If neither is favorited, sort by status first
     const statusA = a.attributes.status;
     const statusB = b.attributes.status;
 
@@ -41,10 +52,9 @@ export const sortStructuresByStatus = (structures) => {
       // Both statuses are in the order array, sort them based on their index in the order array
       return indexA - indexB;
     } else {
-      // If both have the same status, sort by a numeric field (e.g., structureNumber)
-      const numberA = a.attributes.structureNumber;
-      const numberB = b.attributes.structureNumber;
-
+      // If both have the same status, sort by numeric field (e.g., mapSection)
+      const numberA = a.attributes.mapSection;
+      const numberB = b.attributes.mapSection;
       return numberA - numberB;
     }
   });
