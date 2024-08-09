@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 /**
- * Sorts an array of structures based on their status.
+ * Sorts an array of structures based on their status and then by a numeric field within each group.
  * The order is: "Not Inspected" first, others in the middle, "Inspected" second to last, "Uploaded" last.
  * @param {Array} structures - Array of structures to be sorted.
  * @returns {Array} - Sorted array of structures.
@@ -37,9 +37,15 @@ export const sortStructuresByStatus = (structures) => {
     } else if (indexB === -1) {
       // If statusB is not in the order array, it should come after statusA
       return -1;
-    } else {
+    } else if (indexA !== indexB) {
       // Both statuses are in the order array, sort them based on their index in the order array
       return indexA - indexB;
+    } else {
+      // If both have the same status, sort by a numeric field (e.g., structureNumber)
+      const numberA = a.attributes.structureNumber;
+      const numberB = b.attributes.structureNumber;
+
+      return numberA - numberB;
     }
   });
 };

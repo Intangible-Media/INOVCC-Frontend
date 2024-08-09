@@ -388,7 +388,7 @@ export default function Page({ params }) {
             />
           </div>
         ) : (
-          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[650px] order-2 md:order-1">
+          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1">
             <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden">
               <div className="grid grid-cols-3 gap-3 w-full">
                 <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
