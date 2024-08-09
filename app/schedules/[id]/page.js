@@ -11,7 +11,6 @@ import { getAllStructure } from "../../../utils/api/structures";
 import { Button, Datepicker } from "flowbite-react";
 import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
-import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
 import { FaRegStar } from "react-icons/fa6";
 import Timeline from "../../../components/Timeline";
 import { useLoading } from "../../../context/LoadingContext";
@@ -19,16 +18,12 @@ import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import StructureGroupProgress from "../../../components/Charts/StructuresGroupProgress";
 
 import {
-  downloadFilesAsZip,
   downloadFilesAsZipWithSubfolders,
   convertInspectionsToZipArgs,
   sortStructuresByStatus,
-  isImage,
-  ensureDomain,
 } from "../../../utils/strings";
 import { DownloadOutlineIcon } from "../../../public/icons/intangible-icons";
 
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
   ssr: false,
 });
@@ -36,14 +31,8 @@ const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
 export default function Page({ params }) {
   const { showLoading, hideLoading, showSuccess } = useLoading();
   const { data: session } = useSession();
-  const router = useRouter();
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState([]);
-  const [zoom, setZoom] = useState(20);
-  const [myTasks, setMyTasks] = useState([]);
   const [activeCoordinate, setActiveCoordinate] = useState([78.0421, 27.1751]);
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [team, setTeam] = useState(null);
@@ -107,10 +96,6 @@ export default function Page({ params }) {
 
   const loadIcon = (color) => iconMap[color] || "/location-red.png";
 
-  const unSelectStructure = () => {
-    setSelectedStructure(null);
-  };
-
   const getColorBasedOnStatus = (status) => {
     switch (status.toLowerCase()) {
       case "uploaded":
@@ -149,31 +134,6 @@ export default function Page({ params }) {
 
     return formattedDate;
   }
-
-  const downloadStructureFromSchedule = async () => {
-    // showLoading(
-    //   `Downloading all documents for ${structures.length} structures`
-    // );
-    console.log("structures");
-    console.log(structures);
-    const formattedStructures = convertInspectionsToZipArgs(structures);
-
-    try {
-      const response = await downloadFilesAsZipWithSubfolders(
-        formattedStructures
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const formattedDate = convertToLongDateFormat(date);
-
-  const downloadForUpload = () => {
-    console.log("you are inside the function");
-    const zipArgs = convertInspectionsToZipArgs(structures);
-    downloadFilesAsZipWithSubfolders(zipArgs, `${new Date()}-inspections.zip`);
-  };
 
   const fetchStructure = useCallback(async () => {
     if (!session) return;
