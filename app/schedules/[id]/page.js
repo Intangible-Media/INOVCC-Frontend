@@ -8,7 +8,7 @@ import DirectionsComponent from "../../../components/DirectionsComponent";
 import AvatarImage from "../../../components/AvatarImage";
 import { CheckMark } from "../../../public/icons/intangible-icons";
 import { getAllStructure } from "../../../utils/api/structures";
-import { Button, Datepicker } from "flowbite-react";
+import { Button, Datepicker, Badge } from "flowbite-react";
 import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa6";
@@ -242,6 +242,10 @@ export default function Page({ params }) {
     }
   }, [selectedStructure]);
 
+  const structuresRescheduled = structures.filter(
+    (structure) => structure.attributes.status === "Reschedule"
+  );
+
   const TeamCard = () => (
     <div className="flex w-full justify-between bg-white p-6 rounded-md align-middle shadow">
       <div className="flex gap-4">
@@ -257,7 +261,7 @@ export default function Page({ params }) {
 
   const MapStructuresTabs = ({ groupedStructures }) => {
     const [expandedGroup, setExpandedGroup] = useState(null);
-    const router = useRouter();
+    const [expandRescheduled, setExpandRescheduled] = useState(false);
 
     const toggleGroup = (index) => {
       setExpandedGroup(expandedGroup === index ? null : index);
@@ -265,6 +269,76 @@ export default function Page({ params }) {
 
     return (
       <div className="flex flex-col gap-2 overflow-scroll">
+        <div className="flex flex-col border border-gray-300 rounded-md">
+          <div
+            className="flex justify-between p-3 cursor-pointer"
+            onClick={() => setExpandRescheduled(!expandRescheduled)}
+          >
+            <h3 className="text-base text-gray-700 font-medium flex gap-2 align-middle">
+              Rescheduled
+              <Badge href="#" className="mt-0.5">
+                {structuresRescheduled.length}
+              </Badge>
+            </h3>
+            <StructureGroupProgress structures={structuresRescheduled} />
+          </div>
+          <div
+            className={`overflow-hidden transition-max-height duration-200 ease-in-out ${
+              expandRescheduled ? "max-h-[350px]" : "max-h-0"
+            }`}
+          >
+            {expandRescheduled && (
+              <div className="overflow-auto w-full h-full mb-4">
+                {structuresRescheduled.map((structure, index) => (
+                  <div
+                    key={`${structure.id}-${index}-rescheduled`}
+                    className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
+                    onClick={() => {
+                      setSelectedStructure(structure);
+                    }}
+                  >
+                    <div className="flex">
+                      <img
+                        src={loadIcon(
+                          getColorBasedOnStatus(structure.attributes.status)
+                        )}
+                        style={{ height: 27 }}
+                      />
+                      <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                        <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                          <span className="flex shorten-text">
+                            {structure.attributes.mapSection}
+                            {structure.attributes.favorited && (
+                              <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
+                            )}
+                          </span>
+                          <span className="flex items-center font-light ml-1">
+                            {`${structure.attributes.type}`}
+                          </span>
+                        </h5>
+                        <DirectionsComponent />
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <p className="flex text-sm text-gray-700 dark:text-gray-400">
+                        <span
+                          className={`${getInspectionColor(
+                            structure.attributes.status
+                          )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
+                        >
+                          {structure.attributes.status}
+                          {structure.attributes.status === "Uploaded" && (
+                            <CheckMark />
+                          )}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
         {groupedStructures.map((structureGroup, index) => (
           <div
             className="flex flex-col border border-gray-300 rounded-md"
@@ -274,8 +348,11 @@ export default function Page({ params }) {
               className="flex justify-between p-3 cursor-pointer"
               onClick={() => toggleGroup(index)}
             >
-              <h3 className="text-base text-gray-700 font-medium inline-block">
+              <h3 className="text-base text-gray-700 font-medium flex gap-2 align-middle">
                 {structureGroup.mapName}
+                <Badge href="#" className="mt-0.5">
+                  {structureGroup.structures.length}
+                </Badge>
               </h3>
               <StructureGroupProgress structures={structureGroup.structures} />
             </div>
@@ -392,41 +469,6 @@ export default function Page({ params }) {
           </div>
         ) : (
           <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1">
-            <div className="flex-col bg-white p-0 rounded-lg gap-3 hidden">
-              <div className="grid grid-cols-3 gap-3 w-full">
-                <div className="flex bg-yellow-50 gap-4 rounded-lg p-4">
-                  <div className="bg-yellow-100 p-2.5 rounded-full">
-                    <p className="text-xl text-yellow-800">
-                      {notInspectedStructuresCount}
-                    </p>
-                  </div>
-                  <p className="self-center text-sm text-left text-yellow-800 font-semibold mt-2">
-                    Not Inspected
-                  </p>
-                </div>
-                <div className="flex bg-red-50 gap-4 rounded-lg p-4">
-                  <div className="bg-red-100 p-2.5 rounded-full">
-                    <p className="text-xl text-red-800">
-                      {cannotInspectStructuresCount}
-                    </p>
-                  </div>
-                  <p className="self-center text-sm text-center text-red-800 font-semibold mt-2">
-                    Uninspectable
-                  </p>
-                </div>
-                <div className="flex bg-green-50 gap-4 rounded-lg p-4">
-                  <div className="bg-green-100 p-2.5 rounded-full">
-                    <p className="text-xl text-green-600">
-                      {inspectedStructuresCount}
-                    </p>
-                  </div>
-                  <p className="self-center text-sm text-center text-green-600 font-semibold mt-2">
-                    Inspected
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <MapStructuresTabs groupedStructures={groupedStructures} />
           </div>
         )}
