@@ -662,9 +662,13 @@ export default function Page(props) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-5">
+      <div className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-1">
         <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
           {/* <Camera /> */}
+          <h5 className="leading-tight text-sm text-gray-500 font-medium">
+            Project ID:{" "}
+            {inspection?.projectId ? inspection.projectId : "Project ID"}
+          </h5>
           <h1 className="leading-tight text-2xl font-medium">
             {inspection?.name ? inspection.name : "Map Name Here"}
           </h1>

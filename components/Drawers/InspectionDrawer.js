@@ -98,6 +98,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     if (inspection) {
       setNewInspection({
         name: inspection.name || "",
+        projectId: inspection.projectId || "",
         structures: inspection.structures || [],
         documents: inspection.documents || [],
         client: inspection.client || 1,
@@ -179,6 +180,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     const payload = {
       data: {
         name: newInspection.name,
+        projectId: newInspection.projectId,
         client: newInspection.client.data.id,
       },
     };
@@ -873,6 +875,25 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                     setNewInspection({
                       ...newInspection,
                       name: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs" htmlFor="projectID">
+                  Project ID
+                </Label>
+                <input
+                  className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                  type="text"
+                  id="projectID"
+                  placeholder="Enter Project ID"
+                  value={newInspection.projectId || ""}
+                  onChange={(e) => {
+                    setNewInspection({
+                      ...newInspection,
+                      projectId: e.target.value,
                     });
                   }}
                 />

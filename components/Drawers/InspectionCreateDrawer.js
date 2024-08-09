@@ -504,6 +504,25 @@ const InspectionDrawer = ({ btnText }) => {
                 />
               </div>
 
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs" htmlFor="projectID">
+                  Project ID
+                </Label>
+                <input
+                  className="border-b-2 border-x-0 border-t-0 border-b-gray-200 pl-0"
+                  type="text"
+                  id="projectID"
+                  placeholder="Enter Project ID"
+                  value={newInspection.projectId || ""}
+                  onChange={(e) => {
+                    setNewInspection({
+                      ...newInspection,
+                      projectId: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+
               <div className="flex flex-col">
                 <div className="mb-2 block">
                   <Label htmlFor="client" value="Select Client" />
