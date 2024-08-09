@@ -3,18 +3,24 @@ import { saveAs } from "file-saver";
 
 /**
  * Sorts an array of structures based on their favorited status, then by their status,
- * and then by a numeric field within each group.
+ * and then by the mapSection field within each group. The mapSection field is treated as a hex string.
  *
  * The order is:
- * 1. Favorites, sorted in numeric order.
+ * 1. Favorites, sorted by mapSection in hex order.
  * 2. Non-favorites by status in the order: "Not Inspected", "Inspected", "Uploaded".
- *    Within each status group, structures are sorted in numeric order.
+ *    Within each status group, structures are sorted by mapSection in hex order.
  *
  * @param {Array} structures - Array of structures to be sorted.
  * @returns {Array} - Sorted array of structures.
  */
 export const sortStructuresByStatus = (structures) => {
   const order = ["Not Inspected", "Inspected", "Uploaded"];
+
+  const hexSort = (a, b) => {
+    const hexA = parseInt(a, 16);
+    const hexB = parseInt(b, 16);
+    return hexA - hexB;
+  };
 
   return structures.sort((a, b) => {
     // Check for favorited attribute first
@@ -26,10 +32,8 @@ export const sortStructuresByStatus = (structures) => {
     } else if (!favoritedA && favoritedB) {
       return 1; // b comes before a
     } else if (favoritedA && favoritedB) {
-      // If both are favorited, sort by numeric field (e.g., mapSection)
-      const numberA = a.attributes.mapSection;
-      const numberB = b.attributes.mapSection;
-      return numberA - numberB;
+      // If both are favorited, sort by mapSection using hex order
+      return hexSort(a.attributes.mapSection, b.attributes.mapSection);
     }
 
     // If neither is favorited, sort by status first
@@ -52,10 +56,8 @@ export const sortStructuresByStatus = (structures) => {
       // Both statuses are in the order array, sort them based on their index in the order array
       return indexA - indexB;
     } else {
-      // If both have the same status, sort by numeric field (e.g., mapSection)
-      const numberA = a.attributes.mapSection;
-      const numberB = b.attributes.mapSection;
-      return numberA - numberB;
+      // If both have the same status, sort by mapSection using hex order
+      return hexSort(a.attributes.mapSection, b.attributes.mapSection);
     }
   });
 };
