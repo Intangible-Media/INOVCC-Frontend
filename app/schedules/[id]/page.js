@@ -442,12 +442,14 @@ export default function Page({ params }) {
           <Button
             className="bg-dark-blue-700 text-white"
             onClick={async (e) => {
-              showLoading(
-                `Downloading all documents for ${structures.length} structures`
-              );
               const inspectedStructures = structures.filter(
                 (structure) => structure.attributes.status === "Inspected"
               );
+
+              showLoading(
+                `Downloading all documents for ${inspectedStructures.length} structures`
+              );
+
               const formattedStructures =
                 convertInspectionsToZipArgs(inspectedStructures);
 
