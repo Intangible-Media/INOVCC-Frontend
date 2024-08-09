@@ -359,8 +359,11 @@ export default function Page({ params }) {
               showLoading(
                 `Downloading all documents for ${structures.length} structures`
               );
+              const inspectedStructures = structures.filter(
+                (structure) => structure.attributes.status === "Inspected"
+              );
               const formattedStructures =
-                convertInspectionsToZipArgs(structures);
+                convertInspectionsToZipArgs(inspectedStructures);
 
               try {
                 const response = await downloadFilesAsZipWithSubfolders(
