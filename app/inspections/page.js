@@ -3,20 +3,14 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { Button, Progress, Select, Datepicker } from "flowbite-react";
-import { HiArrowNarrowRight, HiCalendar } from "react-icons/hi";
+import { Select, Datepicker } from "flowbite-react";
 import axios from "axios";
 import InspectionTable from "../../components/InspectionTable";
-import InspectionModal from "../../components/Modals/InspectionModal";
 import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
-import StructureTypesNumbers from "../../components/StructureTypesNumbers";
-import ActivityLog from "../../components/ActivityLog";
 import ProtectedContent from "../../components/ProtectedContent";
-import { SearchIconSmWhite } from "../../public/icons/intangible-icons";
 import { getAllStructure } from "../../utils/api/structures";
 import StructureGraph from "../../components/Charts/StructureGraph";
-import { GoPlus } from "react-icons/go";
 import qs from "qs";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });

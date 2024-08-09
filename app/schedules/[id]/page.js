@@ -50,14 +50,6 @@ export default function Page({ params }) {
       (position) => {
         const { latitude, longitude } = position.coords;
         setActiveCoordinate([longitude, latitude]);
-        // setUpdatedStructure((prevStructure) => ({
-        //   ...prevStructure,
-        //   attributes: {
-        //     ...prevStructure.attributes,
-        //     longitude: longitude,
-        //     latitude: latitude,
-        //   },
-        // }));
       },
       (error) => {
         console.error("Error getting geolocation:", error);
@@ -436,7 +428,7 @@ export default function Page({ params }) {
           </div>
         )}
 
-        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[350px] md:h-full col-span-3 order-1 md:order-2">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2">
           <MapboxMap
             lng={activeCoordinate[0]}
             lat={activeCoordinate[1]}

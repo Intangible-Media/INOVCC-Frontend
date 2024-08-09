@@ -592,7 +592,7 @@ export default function RootLayout({ children }) {
                 } mt-16 transition-all	`}
               >
                 <DynamicBreadcrumb />
-                <div className="px-4 md:px-6 pb-8">{children}</div>
+                <div className="px-6 md:px-6 pb-8">{children}</div>
               </div>
 
               <LoadingScreen />
