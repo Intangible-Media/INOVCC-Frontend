@@ -62,6 +62,19 @@ export const sortStructuresByStatus = (structures) => {
   });
 };
 
+export const formatToReadableTime = (isoString) => {
+  // Create a Date object from the ISO string
+  const date = new Date(isoString);
+
+  // Convert to a readable time format (e.g., "1:30 PM")
+  const options = {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  };
+  return date.toLocaleTimeString("en-US", options);
+};
+
 /**
  * Initiates a download of an image file from a Blob or File object.
  *

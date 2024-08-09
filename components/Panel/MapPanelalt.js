@@ -174,7 +174,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
         newAttributes.inspectionDate =
           updatedStructure.attributes.inspectionDate;
       } else if (status === "Inspected") {
-        newAttributes.inspectionDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+        newAttributes.inspectionDate = new Date(); // Format as YYYY-MM-DD
       }
 
       const payload = { data: newAttributes };

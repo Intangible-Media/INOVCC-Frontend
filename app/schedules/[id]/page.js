@@ -8,7 +8,7 @@ import DirectionsComponent from "../../../components/DirectionsComponent";
 import AvatarImage from "../../../components/AvatarImage";
 import { CheckMark } from "../../../public/icons/intangible-icons";
 import { getAllStructure } from "../../../utils/api/structures";
-import { Button, Datepicker, Badge } from "flowbite-react";
+import { Button, Datepicker, Badge, Table } from "flowbite-react";
 import { statusColors } from "../../../utils/collectionListAttributes";
 import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ import {
   downloadFilesAsZipWithSubfolders,
   convertInspectionsToZipArgs,
   sortStructuresByStatus,
+  formatToReadableTime,
 } from "../../../utils/strings";
 import { DownloadOutlineIcon } from "../../../public/icons/intangible-icons";
 
@@ -235,16 +236,34 @@ export default function Page({ params }) {
     (structure) => structure.attributes.status === "Reschedule"
   );
 
-  const TeamCard = () => (
-    <div className="flex w-full justify-between bg-white p-6 rounded-md align-middle shadow">
-      <div className="flex gap-4">
-        <AvatarImage />
-        <div className="flex flex-col align-middle justify-center gap-2">
-          <p className="leading-none text-sm font-medium text-gray-900">
-            {params.id}
-          </p>
-        </div>
-      </div>
+  const InspectedStructuresTable = ({ structures }) => (
+    <div className=" overflow-x-auto w-full">
+      <Table striped>
+        <Table.Head>
+          <Table.HeadCell>Name</Table.HeadCell>
+          <Table.HeadCell>Type</Table.HeadCell>
+          <Table.HeadCell>Status</Table.HeadCell>
+          <Table.HeadCell>Time</Table.HeadCell>
+        </Table.Head>
+        <Table.Body className="divide-y">
+          {structures.map((structure, index) => (
+            <Table.Row
+              key={index}
+              className="bg-white dark:border-gray-700 dark:bg-gray-800"
+            >
+              <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                {structure.attributes.mapSection}
+              </Table.Cell>
+              <Table.Cell> {structure.attributes.type}</Table.Cell>
+              <Table.Cell> {structure.attributes.status}</Table.Cell>
+              <Table.Cell>
+                {" "}
+                {formatToReadableTime(structure.attributes.inspectionDate)}
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
     </div>
   );
 
@@ -257,7 +276,7 @@ export default function Page({ params }) {
     };
 
     return (
-      <div className="flex flex-col gap-2 overflow-scroll">
+      <div className="flex flex-col gap-2">
         <div className="flex flex-col border border-gray-300 rounded-md">
           <div
             className="flex justify-between p-3 cursor-pointer"
@@ -272,12 +291,12 @@ export default function Page({ params }) {
             <StructureGroupProgress structures={structuresRescheduled} />
           </div>
           <div
-            className={`overflow-hidden transition-max-height duration-200 ease-in-out ${
+            className={`overflow-scroll transition-max-height duration-200 ease-in-out ${
               expandRescheduled ? "max-h-[350px]" : "max-h-0"
             }`}
           >
             {expandRescheduled && (
-              <div className="overflow-auto w-full h-full mb-4">
+              <div className="overflow-scroll w-full h-full mb-4">
                 {structuresRescheduled.map((structure, index) => (
                   <div
                     key={`${structure.id}-${index}-rescheduled`}
@@ -346,7 +365,7 @@ export default function Page({ params }) {
               <StructureGroupProgress structures={structureGroup.structures} />
             </div>
             <div
-              className={`overflow-hidden transition-max-height duration-200 ease-in-out ${
+              className={`overflow-scroll transition-max-height duration-200 ease-in-out ${
                 expandedGroup === index ? "max-h-[350px]" : "max-h-0"
               }`}
             >
@@ -407,7 +426,24 @@ export default function Page({ params }) {
     );
   };
 
-  function groupStructuresByType(structures) {
+  const structuresInspectedToday = structures.filter((structure) => {
+    const { status, inspectionDate } = structure.attributes;
+
+    if (status === "Inspected" && inspectionDate) {
+      const inspectionDateObj = new Date(inspectionDate);
+
+      // Check if inspectionDate is today
+      return (
+        inspectionDateObj.getFullYear() === date.getFullYear() &&
+        inspectionDateObj.getMonth() === date.getMonth() &&
+        inspectionDateObj.getDate() === date.getDate()
+      );
+    }
+
+    return false;
+  });
+
+  const groupStructuresByType = (structures) => {
     return structures.reduce((acc, structure) => {
       const { status, adminStatus } = structure.attributes;
 
@@ -427,7 +463,7 @@ export default function Page({ params }) {
 
       return acc;
     }, {});
-  }
+  };
 
   const groupedStructuresByType = groupStructuresByType(structures);
 
@@ -439,8 +475,6 @@ export default function Page({ params }) {
       };
     }
   );
-
-  console.log("allStructureTypes", allStructureTypes);
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
@@ -457,8 +491,6 @@ export default function Page({ params }) {
           <Button
             className="bg-dark-blue-700 text-white"
             onClick={async (e) => {
-              const today = new Date(); // Get today's date
-
               const inspectedStructures = structures.filter((structure) => {
                 const { status, inspectionDate } = structure.attributes;
 
@@ -467,9 +499,9 @@ export default function Page({ params }) {
 
                   // Check if inspectionDate is today
                   return (
-                    inspectionDateObj.getFullYear() === today.getFullYear() &&
-                    inspectionDateObj.getMonth() === today.getMonth() &&
-                    inspectionDateObj.getDate() === today.getDate()
+                    inspectionDateObj.getFullYear() === date.getFullYear() &&
+                    inspectionDateObj.getMonth() === date.getMonth() &&
+                    inspectionDateObj.getDate() === date.getDate()
                   );
                 }
 
@@ -509,7 +541,7 @@ export default function Page({ params }) {
             />
           </div>
         ) : (
-          <div className="flex flex-col p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1">
+          <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto">
             <div className="flex gap-4 overflow-x-scroll max-h-[250px] md:max-h-[400px]">
               <div
                 className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
@@ -551,11 +583,19 @@ export default function Page({ params }) {
               })}
             </div>
 
-            <h3 className="text-xl font-bold dark:text-white mb-1 mt-3">
-              Maps
-            </h3>
+            <div className="flex flex-col gap-4 mt-8">
+              <h3 className="text-xl font-bold dark:text-white">Maps</h3>
 
-            <MapStructuresTabs groupedStructures={groupedStructures} />
+              <MapStructuresTabs groupedStructures={groupedStructures} />
+            </div>
+
+            <div className="flex flex-col gap-4 mt-8">
+              <h3 className="text-xl font-bold dark:text-white">
+                Todays Inspection
+              </h3>
+
+              <InspectedStructuresTable structures={structuresInspectedToday} />
+            </div>
           </div>
         )}
 
@@ -573,7 +613,7 @@ export default function Page({ params }) {
         <h3 className="text-xl font-bold dark:text-white mb-6">
           Inspections Timeline
         </h3>
-        <Timeline structures={inspectedStructures} />
+        <Timeline structures={structuresInspectedToday} />
       </section>
     </div>
   );
