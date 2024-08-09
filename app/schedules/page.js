@@ -1,10 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import qs from "qs";
-import { getAllTeams } from "../../utils/api/teams";
-import { getAllStructure, fetchAllStructure } from "../../utils/api/structures";
+import { fetchAllStructure } from "../../utils/api/structures";
 import ProgressCard from "../../components/Cards/Progress";
-import { useSession } from "next-auth/react";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
 
 export default async function Page({ params }) {
@@ -18,51 +16,6 @@ export default async function Page({ params }) {
 
   //console.log(session);
   const today = new Date().toISOString().split("T")[0];
-
-  const teamsQuery = "";
-
-  const structureScheduled = qs.stringify(
-    {
-      fields: [
-        "mapSection",
-        "type",
-        "status",
-        "adminStatus",
-        "longitude",
-        "latitude",
-      ],
-      filters: {
-        $and: [
-          {
-            status: {
-              $eq: "Inspected",
-            },
-          },
-          {
-            scheduleStart: {
-              $lte: today, // scheduleStart should be on or before today
-            },
-          },
-          {
-            scheduleEnd: {
-              $gte: today, // scheduleEnd should be on or after today
-            },
-          },
-        ],
-      },
-      populate: {
-        team: {
-          fields: ["name"],
-        },
-        inspection: {
-          fields: ["name"],
-        },
-      },
-    },
-    {
-      encodeValuesOnly: true, // This prevents the keys from being URL-encoded
-    }
-  );
 
   const structureQuery = qs.stringify(
     {
