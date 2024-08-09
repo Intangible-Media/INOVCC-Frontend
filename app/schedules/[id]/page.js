@@ -9,6 +9,7 @@ import AvatarImage from "../../../components/AvatarImage";
 import { CheckMark } from "../../../public/icons/intangible-icons";
 import { getAllStructure } from "../../../utils/api/structures";
 import { Button, Datepicker, Badge } from "flowbite-react";
+import { statusColors } from "../../../utils/collectionListAttributes";
 import { getTeam } from "../../../utils/api/teams";
 import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa6";
@@ -68,18 +69,6 @@ export default function Page({ params }) {
     drkgreen: "/location-dark.png",
     green: "/location-green.png",
   };
-
-  const notInspectedStructuresCount = structures.filter(
-    (structure) => structure.attributes.status === "Not Inspected"
-  ).length;
-
-  const inspectedStructuresCount = structures.filter(
-    (structure) => structure.attributes.status === "Inspected"
-  ).length;
-
-  const cannotInspectStructuresCount = structures.filter(
-    (structure) => structure.attributes.status === "Uninspectable"
-  ).length;
 
   const inspectedStructures = structures.filter((structure) => {
     const statuses = ["Inspected", "Uploaded", "Uninspectable"];
@@ -418,6 +407,26 @@ export default function Page({ params }) {
     );
   };
 
+  function groupStructuresByType(structures) {
+    return structures.reduce((acc, structure) => {
+      const status = structure.attributes.status;
+      if (!acc[status]) {
+        acc[status] = [];
+      }
+      acc[status].push(structure);
+      return acc;
+    }, {});
+  }
+
+  const groupedStructuresByType = groupStructuresByType(structures);
+
+  const allStructureTypes = Object.keys(groupedStructuresByType).map((type) => {
+    return {
+      name: type,
+      count: groupedStructuresByType[type].length,
+    };
+  });
+
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
       <div className="flex flex-col gap-3 md:flex-row md:justify-between">
@@ -468,7 +477,52 @@ export default function Page({ params }) {
             />
           </div>
         ) : (
-          <div className="flex flex-col justify-between p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1">
+          <div className="flex flex-col p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1">
+            <div className="flex gap-4 overflow-x-scroll max-h-[250px] md:max-h-[400px]">
+              <div
+                className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
+              >
+                <div className="flex w-14 h-14 rounded-full m-auto text-center bg-dark-blue-700">
+                  <p className={`text-xl text-white m-auto text-center`}>
+                    {structures.length}
+                  </p>
+                </div>
+                <p className="text-xs text-center font-semibold mt-2 text-dark-blue-700">
+                  Total
+                </p>
+              </div>
+
+              {allStructureTypes.map((type, index) => {
+                const backgroundColor = statusColors[type.name];
+
+                return (
+                  <div
+                    className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
+                    key={index}
+                  >
+                    <div
+                      className="flex w-14 h-14 rounded-full m-auto text-center"
+                      style={{ backgroundColor }}
+                    >
+                      <p className={`text-xl text-white m-auto text-center`}>
+                        {type.count}
+                      </p>
+                    </div>
+                    <p
+                      className="text-xs text-center font-semibold mt-2"
+                      style={{ color: backgroundColor }}
+                    >
+                      {type.name}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <h3 className="text-xl font-bold dark:text-white mb-1 mt-3">
+              Maps
+            </h3>
+
             <MapStructuresTabs groupedStructures={groupedStructures} />
           </div>
         )}
