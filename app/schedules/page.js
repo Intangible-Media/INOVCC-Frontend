@@ -95,8 +95,6 @@ export default async function Page({ params }) {
     <div className="flex gap-4 flex-col justify-between py-6">
       <section className="grid grid-col md:grid-cols-8 p-0 rounded-md gap-4">
         <div className="flex flex-col col-span-8 gap-3">
-          {/* <StructureTypesNumbers structures={structures.data} /> */}
-
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
             <h5 className="text-xl font-bold dark:text-white mb-3">
               Teams Scheduled
