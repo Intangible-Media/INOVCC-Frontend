@@ -4,6 +4,7 @@ import qs from "qs";
 import { fetchAllStructure } from "../../utils/api/structures";
 import ProgressCard from "../../components/Cards/Progress";
 import StructureTypesNumbers from "../../components/StructureTypesNumbers";
+import { getAllTeams } from "../../utils/api/teams";
 
 export default async function Page({ params }) {
   const session = await getServerSession(authOptions);
@@ -60,6 +61,11 @@ export default async function Page({ params }) {
     query: structureQuery,
   });
 
+  const teams = await getAllTeams({
+    jwt: session?.accessToken,
+    query: "",
+  });
+
   // Create a map to store team progress data
   const teamStructuresMap = {};
 
@@ -89,9 +95,13 @@ export default async function Page({ params }) {
     <div className="flex gap-4 flex-col justify-between py-6">
       <section className="grid grid-col md:grid-cols-8 p-0 rounded-md gap-4">
         <div className="flex flex-col col-span-8 gap-3">
+          {/* <StructureTypesNumbers structures={structures.data} /> */}
+
           <div className="shadow-sm border-gray-400 bg-slate-50 p-4 md:p-6 rounded-lg w-full h-full">
-            <h5 className="text-xl font-bold dark:text-white mb-3">Teams</h5>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <h5 className="text-xl font-bold dark:text-white mb-3">
+              Teams Scheduled
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {scheduledTeams.map((teamData, index) => (
                 <ProgressCard
                   key={index}
@@ -103,21 +113,14 @@ export default async function Page({ params }) {
             </div>
 
             <h6 className=" text-xs text-gray-400 border-b border-gray-300 mt-6 mb-4 pb-2">
-              Not Scheduled Teams
+              All Teams
             </h6>
-            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {notScheduledTeams.map((team, index) => (
-                <Progress
-                  key={index}
-                  team={team}
-                  totalStructures={0}
-                  inspectedCount={0}
-                  showEmpty={false}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {teams.data.data.map((team, index) => (
+                <ProgressCard key={index} team={team} showEmpty={false} />
               ))}
-            </div> */}
+            </div>
           </div>
-          <StructureTypesNumbers structures={structures.data} />
         </div>
       </section>
     </div>
