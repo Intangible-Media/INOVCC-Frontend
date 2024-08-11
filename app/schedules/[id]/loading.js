@@ -1,4 +1,4 @@
-export default function Page() {
+export default function Loading() {
   return (
     <div className="flex gap-4 flex-col justify-between py-6 animate-pulse">
       <section className="flex flex-between">
