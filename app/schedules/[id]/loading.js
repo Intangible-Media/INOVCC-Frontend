@@ -22,8 +22,11 @@ export default function Loading() {
             <div className="h-3 bg-slate-200 rounded-full dark:bg-gray-700 w-48"></div>
 
             <div className="flex flex-col gap-2">
-              {[0, 0, 0].map(() => (
-                <div className="border rounded-md bg-slate-50 p-5">
+              {[0, 0, 0].map((map, index) => (
+                <div
+                  key={`map-${index}`}
+                  className="border rounded-md bg-slate-50 p-5"
+                >
                   <div className="h-3 bg-slate-200 rounded-full dark:bg-gray-700 w-32 mr-auto"></div>
                 </div>
               ))}
@@ -34,8 +37,8 @@ export default function Loading() {
             <div className="h-3 bg-gray-200 rounded-full dark:bg-gray-700 w-48"></div>
 
             <div className="flex flex-col gap-0 border">
-              {[0, 0, 0].map(() => (
-                <div className="border-b p-4">
+              {[0, 0, 0].map((table, index) => (
+                <div key={`table-${index}`} className="border-b p-4">
                   <div className="h-3 bg-slate-200 rounded-full dark:bg-gray-700 w-32 mr-auto"></div>
                 </div>
               ))}
