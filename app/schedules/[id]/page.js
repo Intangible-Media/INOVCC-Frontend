@@ -30,6 +30,19 @@ const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
   ssr: false,
 });
 
+const convertToLongDateFormat = (dateString) => {
+  // Create a Date object from the input date string
+  const dateObject = new Date(dateString);
+
+  // Format the date object to "Month Day, Year" format
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
+    dateObject
+  );
+
+  return formattedDate;
+};
+
 export default function Page({ params }) {
   const { showLoading, hideLoading, showSuccess } = useLoading();
   const { data: session } = useSession();
@@ -104,19 +117,6 @@ export default function Page({ params }) {
     }
   };
 
-  function convertToLongDateFormat(dateString) {
-    // Create a Date object from the input date string
-    const dateObject = new Date(dateString);
-
-    // Format the date object to "Month Day, Year" format
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
-      dateObject
-    );
-
-    return formattedDate;
-  }
-
   const fetchStructure = useCallback(async () => {
     if (!session) return;
 
@@ -144,14 +144,8 @@ export default function Page({ params }) {
           ],
         },
         populate: {
-          team: {
-            fields: ["name"],
-          },
           inspection: {
             fields: ["name"],
-          },
-          images: {
-            populate: "*",
           },
         },
       },
@@ -609,11 +603,12 @@ export default function Page({ params }) {
           />
         </div>
       </section>
+
       <section className="p-6 bg-white rounded-md shadow-sm">
         <h3 className="text-xl font-bold dark:text-white mb-6">
           Inspections Timeline
         </h3>
-        <Timeline structures={structuresInspectedToday} />
+        {/* <Timeline structures={structuresInspectedToday} /> */}
       </section>
     </div>
   );
