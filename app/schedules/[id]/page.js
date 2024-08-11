@@ -184,7 +184,7 @@ export default function Page({ params }) {
     } catch (error) {
       console.error("Error fetching structures:", error);
     }
-  }, [session, params.id, date]);
+  }, [session, date]);
 
   const fetchTeam = useCallback(async () => {
     if (!session) return;
@@ -200,7 +200,7 @@ export default function Page({ params }) {
     } catch (error) {
       console.error("Error fetching team:", error);
     }
-  }, [session, params.id]);
+  }, [session]);
 
   useEffect(() => {
     fetchTeam();
@@ -278,9 +278,7 @@ export default function Page({ params }) {
           >
             <h3 className="text-base text-gray-700 font-medium flex gap-2 align-middle">
               Rescheduled
-              <Badge href="#" className="mt-0.5">
-                {structuresRescheduled.length}
-              </Badge>
+              <Badge className="mt-0.5">{structuresRescheduled.length}</Badge>
             </h3>
             <StructureGroupProgress structures={structuresRescheduled} />
           </div>
