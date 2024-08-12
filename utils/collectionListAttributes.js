@@ -22,6 +22,7 @@ export const statusColors = {
   Reschedule: "#F472B6",
   "Access Issue": "#EF4444",
   Uninspectable: "#000000",
+  Total: "#312E8E",
 };
 
 export const adminStatuses = [
