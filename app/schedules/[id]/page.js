@@ -350,7 +350,7 @@ export default function Page({ params }) {
             >
               <h3 className="text-base text-gray-700 font-medium flex gap-2 align-middle">
                 {structureGroup.mapName}
-                <Badge href="#" className="mt-0.5">
+                <Badge className="mt-0.5">
                   {structureGroup.structures.length}
                 </Badge>
               </h3>
