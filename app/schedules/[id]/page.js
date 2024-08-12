@@ -524,72 +524,69 @@ export default function Page({ params }) {
         </div>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm overflow-scroll ">
-        {selectedStructure ? (
-          <div className=" col-span-2 h-full overflow-scroll order-2 md:order-1">
+      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm overflow-scroll">
+        <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto md:relative">
+          {selectedStructure && (
             <MapPanelalt
               structureId={selectedStructure.id}
               setSelectedStructure={setSelectedStructure}
             />
-          </div>
-        ) : (
-          <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto md:relative">
-            <div className="flex gap-4 overflow-x-scroll max-h-[250px] md:max-h-[400px]">
-              <div
-                className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
-              >
-                <div className="flex w-14 h-14 rounded-full m-auto text-center bg-dark-blue-700">
-                  <p className={`text-xl text-white m-auto text-center`}>
-                    {structures.length}
-                  </p>
-                </div>
-                <p className="text-xs text-center font-semibold mt-2 text-dark-blue-700">
-                  Total
+          )}
+          <div className="flex gap-4 overflow-x-scroll max-h-[250px] md:max-h-[400px]">
+            <div
+              className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
+            >
+              <div className="flex w-14 h-14 rounded-full m-auto text-center bg-dark-blue-700">
+                <p className={`text-xl text-white m-auto text-center`}>
+                  {structures.length}
                 </p>
               </div>
+              <p className="text-xs text-center font-semibold mt-2 text-dark-blue-700">
+                Total
+              </p>
+            </div>
 
-              {allStructureTypes.map((type, index) => {
-                const backgroundColor = statusColors[type.name];
+            {allStructureTypes.map((type, index) => {
+              const backgroundColor = statusColors[type.name];
 
-                return (
+              return (
+                <div
+                  className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
+                  key={index}
+                >
                   <div
-                    className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
-                    key={index}
+                    className="flex w-14 h-14 rounded-full m-auto text-center"
+                    style={{ backgroundColor }}
                   >
-                    <div
-                      className="flex w-14 h-14 rounded-full m-auto text-center"
-                      style={{ backgroundColor }}
-                    >
-                      <p className={`text-xl text-white m-auto text-center`}>
-                        {type.count}
-                      </p>
-                    </div>
-                    <p
-                      className="text-xs text-center font-semibold mt-2"
-                      style={{ color: backgroundColor }}
-                    >
-                      {type.name}
+                    <p className={`text-xl text-white m-auto text-center`}>
+                      {type.count}
                     </p>
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col gap-4 mt-8">
-              <h3 className="text-xl font-bold dark:text-white">Maps</h3>
-
-              <MapStructuresTabs groupedStructures={groupedStructures} />
-            </div>
-
-            <div className="flex flex-col gap-4 mt-8">
-              <h3 className="text-xl font-bold dark:text-white">
-                Todays Inspection
-              </h3>
-
-              <InspectedStructuresTable structures={structuresInspectedToday} />
-            </div>
+                  <p
+                    className="text-xs text-center font-semibold mt-2"
+                    style={{ color: backgroundColor }}
+                  >
+                    {type.name}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        )}
+
+          <div className="flex flex-col gap-4 mt-8">
+            <h3 className="text-xl font-bold dark:text-white">Maps</h3>
+
+            <MapStructuresTabs groupedStructures={groupedStructures} />
+          </div>
+
+          <div className="flex flex-col gap-4 mt-8">
+            <h3 className="text-xl font-bold dark:text-white">
+              Todays Inspection
+            </h3>
+
+            <InspectedStructuresTable structures={structuresInspectedToday} />
+          </div>
+        </div>
 
         <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2">
           <MapboxMap
