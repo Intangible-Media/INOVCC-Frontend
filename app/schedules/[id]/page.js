@@ -533,7 +533,7 @@ export default function Page({ params }) {
             />
           </div>
         ) : (
-          <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto">
+          <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto md:relative">
             <div className="flex gap-4 overflow-x-scroll max-h-[250px] md:max-h-[400px]">
               <div
                 className={`flex flex-col rounded-lg p-7  bg-white hover:bg-gray-50 border border-gray-300 aspect-square flex-shrink-0 flex-grow-0 w-[150px]`}
