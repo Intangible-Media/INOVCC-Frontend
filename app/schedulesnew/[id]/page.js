@@ -4,6 +4,7 @@ import qs from "qs";
 import { statusColors } from "../../../utils/collectionListAttributes";
 import { fetchAllStructure } from "../../../utils/api/structures";
 import { getTeam } from "../../../utils/api/teams";
+import { redirect } from "next/navigation";
 import {
   sortStructuresByStatus,
   formatToReadableTime,
@@ -11,6 +12,7 @@ import {
 import dynamic from "next/dynamic";
 import InspectedStructuresTable from "../../../components/Tables/InspectedStructuresTable";
 import MapTabsDropdowns from "../../../components/MapTabsDropdowns";
+import ScheduleDate from "../../../components/ScheduleDate";
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
   ssr: false, // or ssr: false, depending on your needs
   loading: () => <Loading />, // Provide the loading component here
@@ -22,9 +24,25 @@ const Loading = () => (
   </div>
 );
 
-export default async function Page({ params }) {
+export default async function Page({ params, searchParams }) {
   const session = await getServerSession(authOptions);
-  const date = new Date();
+  let date;
+
+  if (searchParams?.date) {
+    const parsedDate = new Date(decodeURI(searchParams.date));
+
+    // Check if the parsed date is valid
+    if (!isNaN(parsedDate.getTime())) {
+      date = parsedDate;
+    } else {
+      date = new Date(); // Fallback to today's date if the date is invalid
+    }
+  } else {
+    date = new Date(); // Fallback to today's date if no date is provided
+  }
+
+  console.log("searchParams.date", searchParams.date);
+  console.log("date", date);
 
   if (!session) return <p>You must be logged in to view this page.</p>;
 
@@ -89,22 +107,22 @@ export default async function Page({ params }) {
     structures: sortStructuresByStatus(groupedByInspectionId[key].structures),
   }));
 
-  const structuresInspectedToday = structures.data.filter((structure) => {
-    const { status, inspectionDate } = structure.attributes;
+  // const structuresInspectedToday = structures.data.filter((structure) => {
+  //   const { status, inspectionDate } = structure.attributes;
 
-    if (status === "Inspected" && inspectionDate) {
-      const inspectionDateObj = new Date(inspectionDate);
+  //   if (status === "Inspected" && inspectionDate) {
+  //     const inspectionDateObj = new Date(inspectionDate);
 
-      // Check if inspectionDate is today
-      return (
-        inspectionDateObj.getFullYear() === date.getFullYear() &&
-        inspectionDateObj.getMonth() === date.getMonth() &&
-        inspectionDateObj.getDate() === date.getDate()
-      );
-    }
+  //     // Check if inspectionDate is today
+  //     return (
+  //       inspectionDateObj.getFullYear() === date.getFullYear() &&
+  //       inspectionDateObj.getMonth() === date.getMonth() &&
+  //       inspectionDateObj.getDate() === date.getDate()
+  //     );
+  //   }
 
-    return false;
-  });
+  //   return false;
+  // });
 
   const groupStructuresByType = (structures) => {
     return structures.data.reduce((acc, structure) => {
@@ -145,21 +163,28 @@ export default async function Page({ params }) {
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
-      <section className="flex flex-between">
+      <section className="flex justify-between">
         <h1 className="leading-tight text-2xl font-medium">
           {team?.data.data.attributes.name || "Team Name"}
-        </h1>{" "}
+        </h1>
+
+        <ScheduleDate date={date} teamId={params.id} />
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm ">
         <div className="p-3 md:p-6 gap-3 col-span-2 h-[475px] md:h-[650px] order-2 md:order-1 overflow-y-auto relative">
-          <StructureStatusStats
-            allStructureTypes={allStructureTypes}
-            totalStructures={structures.data.length}
-          />
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xl font-bold dark:text-white">
+              {date.toLocaleDateString()}
+            </h3>
+            <StructureStatusStats
+              allStructureTypes={allStructureTypes}
+              totalStructures={structures.data.length}
+            />
+          </div>
 
           <div className="flex flex-col gap-4 mt-8">
-            <h3 className="text-xl font-bold dark:text-white">
+            <h3 className="text-md font-bold dark:text-white">
               Maps Scheduled
             </h3>
 
@@ -170,9 +195,12 @@ export default async function Page({ params }) {
           </div>
 
           <div className="flex flex-col gap-4 mt-8">
-            <h3 className="text-xl font-bold dark:text-white">Inspected</h3>
+            <h3 className="text-md font-bold dark:text-white">
+              Inspected Structures
+            </h3>
             <div className="flex flex-col gap-0 border">
-              <InspectedStructuresTable structures={structuresInspectedToday} />
+              {/* TODO: replace with the acual dates */}
+              <InspectedStructuresTable structures={[]} />
             </div>
           </div>
         </div>

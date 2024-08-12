@@ -11,15 +11,15 @@ export default function StructureScheduledTag({ structure }) {
   );
   return (
     <div className="flex gap-2">
-      <h5 className="font-medium text-sm leading-none text-gray-800">
+      <h5 className="font-medium text-xs leading-none text-gray-800">
         Scheduled
       </h5>
       {scheduleStart && scheduleEnd ? (
-        <p className="font-medium text-sm leading-none text-gray-500">
+        <p className="font-medium text-xs leading-none text-gray-500">
           {`${formatedStartDate} - ${formatedEndDate}`}
         </p>
       ) : (
-        <p className="font-medium text-sm leading-none text-gray-500">
+        <p className="font-medium text-xs leading-none text-gray-500">
           Not Scheduled
         </p>
       )}

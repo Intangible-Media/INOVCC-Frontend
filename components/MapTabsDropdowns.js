@@ -7,6 +7,7 @@ import { FaRegStar } from "react-icons/fa6";
 import StructureGroupProgress from "./Charts/StructuresGroupProgress";
 import { CheckMark } from "../public/icons/intangible-icons";
 import DirectionsComponent from "./DirectionsComponent";
+import StructureScheduledTag from "./StructureScheduledTag";
 import { getColorBasedOnStatus, getInspectionColor } from "../utils/strings";
 import { useSelectedStructure } from "../context/SelectedStructureContext";
 import MapPanelalt from "./Panel/MapPanelalt";
@@ -78,7 +79,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                               {`${structure.attributes.type}`}
                             </span>
                           </h5>
-                          <DirectionsComponent />
+                          <StructureScheduledTag structure={structure} />
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -155,7 +156,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                                 {`${structure.attributes.type}`}
                               </span>
                             </h5>
-                            <DirectionsComponent />
+                            <StructureScheduledTag structure={structure} />
                           </div>
                         </div>
                         <div className="flex gap-3">
