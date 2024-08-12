@@ -270,13 +270,17 @@ const ImageSlider = ({
         >
           <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
             {activeImage.attributes.mime.startsWith("image/") ? (
-              <Image
+              // <Image
+              //   src={ensureDomain(activeImage.attributes.url)}
+              //   alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
+              //   layout="fill" // This makes the image fill the parent container
+              //   objectFit="cover" // Ensures the image covers the entire container
+              //   objectPosition="center" // Centers the image within the container
+              //   loading="lazy"
+              // />
+              <img
                 src={ensureDomain(activeImage.attributes.url)}
-                alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
-                layout="fill" // This makes the image fill the parent container
-                objectFit="cover" // Ensures the image covers the entire container
-                objectPosition="center" // Centers the image within the container
-                loading="lazy"
+                className="w-full h-full object-cover object-center"
               />
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
@@ -342,16 +346,20 @@ const ImageSlider = ({
                 </div>
 
                 {uploadedImages[currentIndex].type.startsWith("image/") ? (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={uploadedImages[currentIndex].url}
-                      alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
-                      layout="fill" // Makes the image fill the parent container
-                      objectFit="cover" // Ensures the image covers the entire container
-                      objectPosition="center" // Centers the image within the container
-                      loading="lazy"
-                    />
-                  </div>
+                  // <div className="relative w-full h-full">
+                  //   <Image
+                  //     src={uploadedImages[currentIndex].url}
+                  //     alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
+                  //     layout="fill" // Makes the image fill the parent container
+                  //     objectFit="cover" // Ensures the image covers the entire container
+                  //     objectPosition="center" // Centers the image within the container
+                  //     loading="lazy"
+                  //   />
+                  // </div>
+                  <img
+                    src={uploadedImages[currentIndex].url}
+                    className="w-full h-full object-cover object-center"
+                  />
                 ) : (
                   <div className="flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800">
                     <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-10">
@@ -502,22 +510,33 @@ const ImageSlider = ({
 
               if (image.attributes.mime.startsWith("image/")) {
                 return (
+                  // <div
+                  //   className="flex-shrink-0 w-full cursor-pointer"
+                  //   key={index}
+                  //   onClick={() => setActiveImage(image)}
+                  // >
+                  //   <div className="relative w-full h-full aspect-square z-10 rounded-md">
+                  //     <Image
+                  //       src={ensureDomain(smallestImageResolution)}
+                  //       alt="travel image"
+                  //       layout="fill" // Makes the image fill the parent container
+                  //       objectFit="cover" // Ensures the image covers the entire container
+                  //       objectPosition="center" // Centers the image within the container
+                  //       className="rounded-md" // Preserves the rounded corners
+                  //       loading="lazy"
+                  //     />
+                  //   </div>
+                  // </div>
                   <div
                     className="flex-shrink-0 w-full cursor-pointer"
                     key={index}
                     onClick={() => setActiveImage(image)}
                   >
-                    <div className="relative w-full h-full aspect-square z-10 rounded-md">
-                      <Image
-                        src={ensureDomain(smallestImageResolution)}
-                        alt="travel image"
-                        layout="fill" // Makes the image fill the parent container
-                        objectFit="cover" // Ensures the image covers the entire container
-                        objectPosition="center" // Centers the image within the container
-                        className="rounded-md" // Preserves the rounded corners
-                        loading="lazy"
-                      />
-                    </div>
+                    <img
+                      src={ensureDomain(smallestImageResolution)}
+                      alt="travel image"
+                      className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
+                    />
                   </div>
                 );
               }
