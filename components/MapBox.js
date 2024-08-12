@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import { useSelectedStructure } from "../context/SelectedStructureContext";
 import { getLocationDetails } from "../utils/api/mapbox";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -34,18 +35,11 @@ function getColorBasedOnStatus(status) {
   }
 }
 
-const MapboxMap = ({
-  lng,
-  lat,
-  zoom = 10,
-  style = "mapbox://styles/mapbox/streets-v11",
-  coordinates = [],
-}) => {
+const MapboxMap = ({ coordinates = [] }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [center, setCenter] = useState([lng, lat]);
-  const [mapZoom, setMapZoom] = useState(zoom);
-  const [selectedStructure, setSelectedStructure] = useState(null);
+  const [center, setCenter] = useState([0, 0]);
+  const { selectedStructure, setSelectedStructure } = useSelectedStructure();
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
@@ -53,11 +47,17 @@ const MapboxMap = ({
   useEffect(() => {
     if (map.current) return; // Initialize map only once
 
+    const { longitude, latitude } = selectedStructure?.attributes || {};
+
+    // Determine the center, falling back to the default center if necessary
+    const mapCenter =
+      longitude != null && latitude != null ? [longitude, latitude] : center;
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/standard-beta",
-      center: [lng, lat],
-      zoom: zoom,
+      center: mapCenter,
+      zoom: 10,
       pitch: 50,
     });
 
@@ -66,16 +66,32 @@ const MapboxMap = ({
       const isPhone = window.matchMedia("(max-width: 550px)").matches;
       const padding = isPhone ? { bottom: 400 } : { right: 400 };
       // map.current.easeTo({ padding: padding });
-
-      // Add traffic layer and zoom event
-      addTrafficLayer();
-      addZoomEvent();
     });
 
-    // return () => {
-    //   map.current.remove();
-    // };
-  }, [lng, lat, style, zoom]);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const currentPosition = new mapboxgl.Marker()
+          .setLngLat([longitude, latitude])
+          .addTo(map.current);
+
+        map.current.easeTo({
+          zoom: 18,
+          // padding: { left: 300 },
+          center: [longitude, latitude],
+          duration: 1000,
+        });
+      },
+      (error) => {
+        console.error("Error getting geolocation:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+    );
+  }, []);
 
   useEffect(() => {
     if (!map.current) return;
@@ -87,23 +103,6 @@ const MapboxMap = ({
         console.error("Geolocation is not supported by your browser");
         return;
       }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const currentPosition = new mapboxgl.Marker()
-            .setLngLat([longitude, latitude])
-            .addTo(map.current);
-        },
-        (error) => {
-          console.error("Error getting geolocation:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0,
-        }
-      );
 
       coordinates.forEach((structure) => {
         const color = getColorBasedOnStatus(structure.attributes.status);
@@ -186,76 +185,21 @@ const MapboxMap = ({
     };
   }, [coordinates]);
 
-  const addTrafficLayer = () => {
-    if (!map.current.getLayer("traffic")) {
-      if (!map.current.getSource("mapbox-traffic")) {
-        map.current.addSource("mapbox-traffic", {
-          type: "vector",
-          url: "mapbox://mapbox.mapbox-traffic-v1",
-        });
-      }
-
-      map.current.addLayer({
-        id: "traffic",
-        type: "line",
-        source: "mapbox-traffic",
-        "source-layer": "traffic",
-        minzoom: 0,
-        maxzoom: 22,
-        paint: {
-          "line-width": 5,
-          "line-color": [
-            "match",
-            ["get", "congestion"],
-            ["low"],
-            "hsl(138, 100%, 40%)",
-            ["moderate"],
-            "hsl(71, 100%, 64%)",
-            ["heavy"],
-            "hsl(28, 100%, 56%)",
-            ["severe"],
-            "hsl(0, 100%, 50%)",
-            "#000000",
-          ],
-        },
-        layout: {
-          visibility: "visible",
-        },
-      });
-    }
-  };
-
-  const addZoomEvent = () => {
-    const MIN_TRAFFIC_ZOOM_LEVEL = 17;
-    map.current.on("zoom", () => {
-      const currentZoom = map.current.getZoom();
-      if (map.current.getLayer("traffic")) {
-        map.current.setLayoutProperty(
-          "traffic",
-          "visibility",
-          currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL ? "visible" : "none"
-        );
-      }
-    });
-  };
-
   useEffect(() => {
     if (!map.current) return;
+    if (!selectedStructure) return;
 
-    const isPhone = window.matchMedia("(max-width: 550px)").matches;
-    const padding = isPhone ? { bottom: 400 } : { right: 450 };
+    const { longitude, latitude } = selectedStructure.attributes;
+
+    const mapCenter = longitude && latitude ? [longitude, latitude] : center;
 
     map.current.easeTo({
       zoom: 18,
       // padding: { left: 300 },
-      center: [lng, lat],
+      center: mapCenter,
       duration: 1000,
     });
-
-    getLocationDetails(lng, lat).catch((error) => {
-      console.error("Error getting location details:", error);
-    });
-  }, [lng, lat]);
+  }, [selectedStructure]);
 
   return (
     <div style={{ width: "100%", height: "100%" }}>

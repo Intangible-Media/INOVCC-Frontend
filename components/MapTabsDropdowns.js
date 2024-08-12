@@ -8,12 +8,14 @@ import StructureGroupProgress from "./Charts/StructuresGroupProgress";
 import { CheckMark } from "../public/icons/intangible-icons";
 import DirectionsComponent from "./DirectionsComponent";
 import { getColorBasedOnStatus, getInspectionColor } from "../utils/strings";
+import { useSelectedStructure } from "../context/SelectedStructureContext";
 import MapPanelalt from "./Panel/MapPanelalt";
 
 const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [expandRescheduled, setExpandRescheduled] = useState(false);
-  const [selectedStructure, setSelectedStructure] = useState(null);
+  // const [selectedStructure, setSelectedStructure] = useState(null);
+  const { selectedStructure, setSelectedStructure } = useSelectedStructure();
 
   const loadIcon = (color) => structurePinStatus[color] || "/location-red.png";
 

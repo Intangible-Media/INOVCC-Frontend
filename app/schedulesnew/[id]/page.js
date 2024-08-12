@@ -3,6 +3,7 @@ import { authOptions } from "../../api/auth/[...nextauth]/auth";
 import qs from "qs";
 import { statusColors } from "../../../utils/collectionListAttributes";
 import { fetchAllStructure } from "../../../utils/api/structures";
+import { getTeam } from "../../../utils/api/teams";
 import {
   sortStructuresByStatus,
   formatToReadableTime,
@@ -60,6 +61,12 @@ export default async function Page({ params }) {
       encodeValuesOnly: true,
     }
   );
+
+  const team = await getTeam({
+    jwt: session.accessToken,
+    id: params.id,
+    query: "",
+  });
 
   const structures = await fetchAllStructure({
     jwt: session.accessToken,
@@ -139,7 +146,9 @@ export default async function Page({ params }) {
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
       <section className="flex flex-between">
-        <div className="h-5 bg-slate-200 rounded-full dark:bg-gray-700 w-64 mb-4"></div>
+        <h1 className="leading-tight text-2xl font-medium">
+          {team?.data.data.attributes.name || "Team Name"}
+        </h1>{" "}
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm ">
@@ -163,7 +172,7 @@ export default async function Page({ params }) {
           <div className="flex flex-col gap-4 mt-8">
             <h3 className="text-xl font-bold dark:text-white">Inspected</h3>
             <div className="flex flex-col gap-0 border">
-              <InspectedStructuresTable structures={structures.data} />
+              <InspectedStructuresTable structures={structuresInspectedToday} />
             </div>
           </div>
         </div>
