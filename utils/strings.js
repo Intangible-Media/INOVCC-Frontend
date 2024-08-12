@@ -75,6 +75,11 @@ export const getColorBasedOnStatus = (status) => {
   }
 };
 
+export const formatDateToMonthDay = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
 export const getInspectionColor = (status) => {
   switch (status.toLowerCase()) {
     case "uploaded":

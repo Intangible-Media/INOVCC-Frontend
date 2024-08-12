@@ -9,6 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import { MdLocationPin, MdArrowBackIos } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import ImageCardGrid from "../ImageCardGrid";
+import StructureScheduledTag from "../StructureScheduledTag";
 import { HiHome } from "react-icons/hi";
 import Papa from "papaparse";
 import { useAlert } from "../../context/AlertContext";
@@ -1142,7 +1143,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                                 </span>
                               </h5>
 
-                              <DirectionsComponent />
+                              <StructureScheduledTag structure={structure} />
                             </div>
                           </div>
 

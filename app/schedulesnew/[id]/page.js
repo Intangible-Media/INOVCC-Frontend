@@ -7,8 +7,19 @@ import {
   sortStructuresByStatus,
   formatToReadableTime,
 } from "../../../utils/strings";
+import dynamic from "next/dynamic";
 import InspectedStructuresTable from "../../../components/Tables/InspectedStructuresTable";
 import MapTabsDropdowns from "../../../components/MapTabsDropdowns";
+const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
+  ssr: false, // or ssr: false, depending on your needs
+  loading: () => <Loading />, // Provide the loading component here
+});
+
+const Loading = () => (
+  <div className="flex justify-center items-center h-full">
+    <div className="loader">Loading Map...</div>
+  </div>
+);
 
 export default async function Page({ params }) {
   const session = await getServerSession(authOptions);
@@ -156,7 +167,15 @@ export default async function Page({ params }) {
             </div>
           </div>
         </div>
-        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2"></div>
+        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2">
+          <MapboxMap
+            lng={0}
+            lat={0}
+            zoom={16}
+            style="mapbox://styles/mapbox/standard-beta"
+            coordinates={structures.data}
+          />
+        </div>
       </section>
 
       <section>

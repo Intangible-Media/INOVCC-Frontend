@@ -11,6 +11,7 @@ import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
+import StructureScheduledTag from "../../../components/StructureScheduledTag";
 import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
@@ -33,6 +34,7 @@ import {
   convertInspectionsToZipArgs,
   sortStructuresByStatus,
   isImage,
+  formatDateToMonthDay,
   ensureDomain,
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
@@ -790,15 +792,14 @@ export default function Page(props) {
                       style={{ height: 27 }}
                     />
 
-                    <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
+                    <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal gap-1">
                       <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
                         {structure.attributes.mapSection}
                         <span className="flex items-center font-light ml-1">
                           {` / ${structure.attributes.type}`}
                         </span>
                       </h5>
-
-                      <DirectionsComponent />
+                      <StructureScheduledTag structure={structure} />
                     </div>
                   </div>
 
