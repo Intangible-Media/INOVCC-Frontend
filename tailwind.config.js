@@ -20,10 +20,21 @@ module.exports = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        slideUp: {
+          "0%": { transform: "translateX(100%)", opacity: ".75" },
+          "100%": { transform: "translateX(0%)", opacity: "1" },
+        },
+        slideDown: {
+          "0%": { transform: "translateY(0)", opacity: "1" },
+          "100%": { transform: "translateY(100%)", opacity: "0" },
+        },
         // Add more custom animations here
       },
       animation: {
         fadeIn: "fadeIn 1s ease-in-out",
+        fadeInFast: "fadeIn .2s ease-in-out",
+        slideUp: "slideUp 400ms ease-in-out",
+        slideDown: "slideDown 500ms ease-out backward",
         // Reference more custom animations here
       },
       colors: {

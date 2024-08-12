@@ -62,6 +62,32 @@ export const sortStructuresByStatus = (structures) => {
   });
 };
 
+export const getColorBasedOnStatus = (status) => {
+  switch (status.toLowerCase()) {
+    case "uploaded":
+      return "drkgreen";
+    case "inspected":
+      return "green";
+    case "not inspected":
+      return "yellow";
+    default:
+      return "red";
+  }
+};
+
+export const getInspectionColor = (status) => {
+  switch (status.toLowerCase()) {
+    case "uploaded":
+      return "text-white bg-green-800";
+    case "inspected":
+      return "text-green-800 bg-green-100";
+    case "not inspected":
+      return "text-yellow-800 bg-yellow-100";
+    default:
+      return "text-red-800 bg-red-100";
+  }
+};
+
 export const formatToReadableTime = (isoString) => {
   // Create a Date object from the ISO string
   const date = new Date(isoString);

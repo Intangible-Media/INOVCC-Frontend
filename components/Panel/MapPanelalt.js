@@ -314,7 +314,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
   };
 
   return (
-    <>
+    <div className=" absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000]">
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
         <div className="flex flex-col gap-2 w-auto shrink">
           <h6
@@ -519,7 +519,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                 </h4>
                 <StructureComments structure={updatedStructure} />
               </div>
-              <div className="flex flex-col border-b px-6 md:px-8  py-6">
+              <div className="flex flex-col border-b px-6 md:px-8 bg-white py-6">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Inspectors
                 </h4>
@@ -945,7 +945,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: true });
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function StructuresGroupProgress({ structures = [] }) {
   // Mapping of statuses to their respective colors

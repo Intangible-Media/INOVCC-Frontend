@@ -32,6 +32,13 @@ export const adminStatuses = [
   "Waiting on Client ",
 ];
 
+export const structurePinStatus = {
+  red: "/location-red.png",
+  yellow: "/location-yellow.png",
+  drkgreen: "/location-dark.png",
+  green: "/location-green.png",
+};
+
 export const structureTypes = [
   "Standard Vault",
   "Wood Pole",
