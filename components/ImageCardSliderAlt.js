@@ -4,9 +4,7 @@ import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls } from "../utils/strings";
 import { useLoading } from "../context/LoadingContext";
 import { uploadFiles } from "../utils/api/structures";
-import { FaRegCircle } from "react-icons/fa";
-import { MdFlipCameraAndroid } from "react-icons/md";
-import { IoCloseCircleOutline } from "react-icons/io5";
+import Image from "next/image";
 
 import { FaRegTrashCan } from "react-icons/fa6";
 import {
@@ -272,9 +270,13 @@ const ImageSlider = ({
         >
           <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
             {activeImage.attributes.mime.startsWith("image/") ? (
-              <img
+              <Image
                 src={ensureDomain(activeImage.attributes.url)}
-                className="w-full h-full object-cover object-center"
+                alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
+                layout="fill" // This makes the image fill the parent container
+                objectFit="cover" // Ensures the image covers the entire container
+                objectPosition="center" // Centers the image within the container
+                loading="lazy"
               />
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
@@ -340,10 +342,16 @@ const ImageSlider = ({
                 </div>
 
                 {uploadedImages[currentIndex].type.startsWith("image/") ? (
-                  <img
-                    src={uploadedImages[currentIndex].url}
-                    className="w-full h-full object-cover object-center"
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={uploadedImages[currentIndex].url}
+                      alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
+                      layout="fill" // Makes the image fill the parent container
+                      objectFit="cover" // Ensures the image covers the entire container
+                      objectPosition="center" // Centers the image within the container
+                      loading="lazy"
+                    />
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800">
                     <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-10">
@@ -499,11 +507,17 @@ const ImageSlider = ({
                     key={index}
                     onClick={() => setActiveImage(image)}
                   >
-                    <img
-                      src={ensureDomain(smallestImageResolution)}
-                      alt="travel image"
-                      className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
-                    />
+                    <div className="relative w-full h-full aspect-square z-10 rounded-md">
+                      <Image
+                        src={ensureDomain(smallestImageResolution)}
+                        alt="travel image"
+                        layout="fill" // Makes the image fill the parent container
+                        objectFit="cover" // Ensures the image covers the entire container
+                        objectPosition="center" // Centers the image within the container
+                        className="rounded-md" // Preserves the rounded corners
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                 );
               }

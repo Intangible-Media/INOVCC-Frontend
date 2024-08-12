@@ -504,7 +504,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                   </li>
                 </ul>
               </div>
-              <div className="flex flex-col border-b px-6 md:px-8  py-6">
+              <div className="flex flex-col border-b px-6 md:px-8  py-6 bg-white">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Structure Documents
                 </h4>
@@ -564,7 +564,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                 </div>
               </div>
 
-              <div className="flex flex-col px-6 md:px-8  py-6 w-full">
+              <div className="flex flex-col px-6 md:px-8  py-6 w-full bg-white">
                 <h4 className="leading-none font-medium text-sm mb-4">
                   Structure Documents
                 </h4>
@@ -582,7 +582,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
 
           {currentPanel === "details" && (
             <div id="comments-content" className="w-full">
-              <div className="flex flex-col px-6 md:px-8  pt-6 pb-8">
+              <div className="flex flex-col px-6 md:px-8  pt-6 pb-8 bg-white">
                 <h4 className="leading-none font-medium text-sm mb-6">Edit</h4>
 
                 <div className="flex justify-end gap-2">
