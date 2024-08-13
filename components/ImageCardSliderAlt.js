@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
-import { ensureDomain, getUrls } from "../utils/strings";
+import { ensureDomain, getUrls, downloadFilesAsZip } from "../utils/strings";
 import { uploadFiles } from "../utils/api/structures";
 import { useLoading } from "../context/LoadingContext";
 import Image from "next/image";
