@@ -28,6 +28,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
     <>
       {selectedStructure ? (
         <MapPanelalt
+          key={selectedStructure.id}
           structureId={selectedStructure.id}
           setSelectedStructure={setSelectedStructure}
         />

@@ -1,5 +1,5 @@
 // context/SelectedStructureContext.js
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
 
 // Create the context
 export const SelectedStructureContext = createContext();
@@ -7,6 +7,10 @@ export const SelectedStructureContext = createContext();
 // Create a provider component
 export function SelectedStructureProvider({ children }) {
   const [selectedStructure, setSelectedStructure] = useState(null);
+
+  useEffect(() => {
+    console.log("selectedStructure", selectedStructure);
+  }, [selectedStructure]);
 
   return (
     <SelectedStructureContext.Provider

@@ -956,7 +956,6 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
   const [allStructureComments, setAllStructureComments] = useState([]);
 
   const fetchComments = async () => {
-    console.log("running function comments");
     if (!session) return;
     const query = qs.stringify(
       {
@@ -997,7 +996,6 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
   };
 
   const handleSubmit = async (event) => {
-    //console.log(session);
     event.preventDefault();
     if (!newComment.trim()) return; // Prevent submitting empty comments
 
@@ -1014,8 +1012,6 @@ const StructureComments = ({ structure, comments = [], editable = false }) => {
     };
 
     const response = await createComment(apiParams);
-
-    console.log("response", response);
 
     await fetchComments();
 
@@ -1184,8 +1180,6 @@ const AddInspectorForm = ({
           (user) =>
             !currentInspectors.some((inspector) => inspector.id === user.id)
         );
-
-        console.log("fetchUsers", response);
 
         setAvailableInspectors(response.data);
       } catch (error) {

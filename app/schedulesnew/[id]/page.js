@@ -203,7 +203,6 @@ export default async function Page({ params, searchParams }) {
               </span>
             </h3>
             <div className="flex flex-col gap-0 border">
-              {/* TODO: replace with the acual dates */}
               <InspectedStructuresTable structures={structuresInspectedToday} />
             </div>
           </div>

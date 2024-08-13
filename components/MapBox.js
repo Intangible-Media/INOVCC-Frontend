@@ -169,6 +169,29 @@ const MapboxMap = ({ coordinates = [] }) => {
             "icon-size": 0.6, // Adjust icon size as needed
           },
         });
+
+        map.current.on("click", "marker-layer", (e) => {
+          // Log the event to check what it contains
+          console.log(e);
+
+          // Extract the clicked structure's id from the properties
+          const clickedStructureId = e.features[0].properties.id;
+
+          console.log("clickedStructure", clickedStructureId);
+
+          // Find the structure in the coordinates array by matching the id
+          const clickedStructure = coordinates.find(
+            (structure) => structure.id === clickedStructureId
+          );
+
+          // Log the clicked structure to verify the result
+          console.log(clickedStructure);
+
+          if (clickedStructure) {
+            // If you want to do something with the selected structure
+            setSelectedStructure(clickedStructure);
+          }
+        });
       }
     };
 

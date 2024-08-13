@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls } from "../utils/strings";
-import { useLoading } from "../context/LoadingContext";
 import { uploadFiles } from "../utils/api/structures";
+import { useLoading } from "../context/LoadingContext";
 import Image from "next/image";
 
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -206,6 +206,7 @@ const ImageSlider = ({
   const [addGeoTag, setAddGeoTag] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [useCamera, setUseCamera] = useState(null);
+  const { showLoading, showSuccess, showError, resetLoading } = useLoading();
 
   const {
     uploadedImages,
@@ -566,7 +567,37 @@ const ImageSlider = ({
 
         {editable && (
           <div className="flex justify-between mt-4">
-            <a className="text-sm leading-none font-medium" href="#">
+            <a
+              className="text-sm leading-none font-medium"
+              href="#"
+              onClick={async () => {
+                showLoading(
+                  `Downloading all documents for ${images.data.length} structures`
+                );
+
+                const formattedImageObjects = images.data.map(
+                  (image, index) => {
+                    return {
+                      url: ensureDomain(image.attributes.url),
+                      name: image.attributes.name || "something",
+                    };
+                  }
+                );
+                console.log(formattedImageObjects);
+
+                try {
+                  const response = await downloadFilesAsZip(
+                    formattedImageObjects,
+                    "structures"
+                  );
+
+                  showSuccess("Download finished successfully!");
+                } catch (error) {
+                  console.error(error);
+                  resetLoading();
+                }
+              }}
+            >
               Download All
             </a>
             <a
