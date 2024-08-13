@@ -50,7 +50,7 @@ import {
   structureTypes,
 } from "../../utils/collectionListAttributes";
 
-const InspectionDrawer = ({ btnText, showIcon = false }) => {
+const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
   const { showAlert } = useAlert();
   const { inspection, setInspection, refreshInspection } = useInspection();
   const { data: session, loading } = useSession();
@@ -264,7 +264,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
       setInspection({
         ...inspection,
         structures: {
-          data: [...inspection?.structures.data, response.data.data],
+          data: [...structures, response.data.data],
         },
       });
 
@@ -474,9 +474,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
 
   const handleSelectAllCheckboxs = (event) => {
     if (event.target.checked) {
-      setSelectedStructures(
-        inspection?.structures.data.map((structure) => structure)
-      );
+      setSelectedStructures(structures.map((structure) => structure));
     } else {
       setSelectedStructures([]);
     }
@@ -640,7 +638,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
     };
 
     const checkForDuplicates = (uploadedData) => {
-      const existingNames = inspection?.structures.data.map(
+      const existingNames = structures.map(
         (structure) => structure.attributes.mapSection
       );
       const updatedData = uploadedData.map((item) => {
@@ -1120,7 +1118,7 @@ const InspectionDrawer = ({ btnText, showIcon = false }) => {
                     )}
 
                     <div className="rounded-md w-full  overflow-auto px-0">
-                      {inspection?.structures.data.map((structure, index) => (
+                      {structures.map((structure, index) => (
                         <div
                           key={index}
                           className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 w-full hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}

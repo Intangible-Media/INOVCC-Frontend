@@ -1,21 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
-import { TextInput, Button, Dropdown, Checkbox, Badge } from "flowbite-react";
+import { TextInput, Button, Badge } from "flowbite-react";
 import qs from "qs";
-import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import StructureScheduledTag from "../../../components/StructureScheduledTag";
 import { getInspection } from "../../../utils/api/inspections";
+import { getAllStructure } from "../../../utils/api/structures";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa";
 import { useSelectedStructure } from "../../../context/SelectedStructureContext";
 import AvatarImage from "../../../components/AvatarImage";
@@ -25,6 +23,8 @@ import {
   downloadFilesAsZipWithSubfolders,
   convertInspectionsToZipArgs,
   sortStructuresByStatus,
+  getColorBasedOnStatus,
+  getInspectionColor,
   ensureDomain,
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
@@ -42,26 +42,16 @@ const Loading = () => (
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function Page(props) {
-  const router = useRouter();
-  const { params } = props;
+export default function Page({ params }) {
   const pathname = usePathname();
-  const { data: session, loading } = useSession();
+  const { data: session } = useSession();
   const { inspection, setInspection } = useInspection();
   const { showLoading, hideLoading, showSuccess } = useLoading();
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
-
-  const [lng, setLng] = useState(0);
-  const [lat, setLat] = useState(0);
   const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
-  const [inspectionDocuments, setInspectionDocuments] = useState([]);
-  // const [selectedStructure, setSelectedStructure] = useState(null);
-  const [activeMapStyle, setActiveMapStyle] = useState("3d");
-  const [activeView, setActiveView] = useState("overview");
   const [activeCompletion, setActiveCompletion] = useState(0);
   const [structureProgressType, setStructureProgressType] = useState("All");
-  const [structureAssetType, setStructureAssetType] = useState("all");
   const [options, setOptions] = useState({
     series: [70],
     chart: {
@@ -91,14 +81,8 @@ export default function Page(props) {
         },
       },
     },
-    labels: [structureAssetType],
+    labels: ["All"],
   });
-
-  const searchParams = useSearchParams();
-  const activeMapStyleTab =
-    "text-white bg-dark-blue-700 dark:bg-gray-300 dark:text-gray-900";
-  const inactiveMapStyleTab =
-    "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
 
   const iconMap = {
     red: "/location-red.png",
@@ -109,22 +93,9 @@ export default function Page(props) {
 
   const loadIcon = (color) => iconMap[color] || "/location-red.png";
 
-  const query = qs.stringify(
+  const inspectionQuery = qs.stringify(
     {
       populate: {
-        favorited_by: {
-          populate: "*",
-        },
-        structures: {
-          populate: {
-            inspectors: {
-              populate: "*",
-            },
-            images: {
-              populate: "*",
-            },
-          },
-        },
         client: {
           populate: {
             contacts: {
@@ -153,6 +124,29 @@ export default function Page(props) {
     }
   );
 
+  const structuresQuery = qs.stringify(
+    {
+      filters: {
+        inspection: {
+          id: {
+            $eq: params.id,
+          },
+        },
+      },
+      populate: {
+        inspectors: {
+          populate: "*",
+        },
+        images: {
+          populate: "*",
+        },
+      },
+    },
+    {
+      encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
+    }
+  );
+
   /**
    * This function filters structures based on a search term.
    * @param {string} searchTerm - The term to search for.
@@ -161,7 +155,7 @@ export default function Page(props) {
   const filterStructures = (searchTerm) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     const filteredStructuresList =
-      inspection?.structures.data.filter((structure) => {
+      structures.filter((structure) => {
         const attributes = structure.attributes;
         return ["status", "mapSection", "type"].some((field) =>
           attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
@@ -169,34 +163,6 @@ export default function Page(props) {
       }) || [];
 
     return filteredStructuresList;
-  };
-
-  /**
-   * This function updates the center of the map.
-   * @param {number} longitude - The longitude of the new center.
-   * @param {number} latitude - The latitude of the new center.
-   */
-  const updateCenterOnClick = (longitude, latitude) => {
-    setLng(longitude);
-    setLat(latitude);
-  };
-
-  /**
-   * This function gets the color for an inspection based on its status.
-   * @param {string} status - The status of the inspection.
-   * @returns {string} The color for the inspection.
-   */
-  const getInspectionColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "uploaded":
-        return "text-white bg-green-800";
-      case "inspected":
-        return "text-green-800 bg-green-100";
-      case "not inspected":
-        return "text-yellow-800 bg-yellow-100";
-      default:
-        return "text-red-800 bg-red-100";
-    }
   };
 
   const getAllStructureTypes = () => {
@@ -209,24 +175,6 @@ export default function Page(props) {
     filterStructures(structureSearch)
   );
 
-  /**
-   * This function returns a color based on the status.
-   * @param {string} status - The status to get the color for.
-   * @returns {string} The color for the status.
-   */
-  function getColorBasedOnStatus(status) {
-    switch (status.toLowerCase()) {
-      case "uploaded":
-        return "drkgreen";
-      case "inspected":
-        return "green";
-      case "not inspected":
-        return "yellow";
-      default:
-        return "red";
-    }
-  }
-
   useEffect(() => {
     setOptions((prevOptions) => ({
       ...prevOptions,
@@ -235,42 +183,25 @@ export default function Page(props) {
   }, [structureProgressType]);
 
   useEffect(() => {
+    if (!session) return;
+
     const fetchData = async () => {
-      if (session?.accessToken) {
-        try {
-          // Ensure getInspection is imported or defined in your component/module
-          const response = await getInspection({
-            jwt: session.accessToken,
-            id: params.id,
-            query: query,
-          });
+      try {
+        // Ensure getInspection is imported or defined in your component/module
 
-          const inspectionData = response.data.data;
-          const structuresData = inspectionData.attributes.structures.data;
+        const structuresResponse = await getAllStructure({
+          jwt: session.accessToken,
+          query: structuresQuery,
+        });
 
-          setInspection({
-            ...inspectionData.attributes,
-            id: inspectionData.id,
-          });
-          setInspectionDocuments(inspectionData.attributes.documents.data);
-          setStructures(structuresData);
-
-          if (structuresData.length > 0) {
-            setLng(
-              sortStructuresByStatus(structuresData)[0].attributes.longitude
-            );
-            setLat(
-              sortStructuresByStatus(structuresData)[0].attributes.latitude
-            );
-          }
-        } catch (error) {
-          console.error("Error fetching data", error.response || error);
-        }
+        setStructures(structuresResponse);
+      } catch (error) {
+        console.error("Error fetching data", error.response || error);
       }
     };
 
     fetchData();
-  }, [session, params.id, query]); // Assuming `query` here is a dependency that might change and is suitable for useEffect's dependency array
+  }, [session]);
 
   useEffect(() => {
     updateProgressBar(structureProgressType);
@@ -351,7 +282,7 @@ export default function Page(props) {
     .join(", ");
 
   const allStructuresImages =
-    inspection?.structures.data
+    structures
       .map((structure) => structure.attributes.images?.data)
       .flat()
       .filter(Boolean) || [];
@@ -382,13 +313,13 @@ export default function Page(props) {
               </div>
             ))}
           </div>
-          {/* <h3 className="text-xs">2504 East Roma Ave. Phoenix, AZ 85016</h3> */}
         </div>
 
         <div className="flex gap-3 align-middle">
           <ProtectedContent requiredRoles={["Admin"]}>
             <InspectionDrawer
               inspection={inspection}
+              structures={structures}
               setInspection={setInspection}
               btnText={"Edit Map"}
               showIcon={true}
@@ -436,12 +367,8 @@ export default function Page(props) {
                   onClick={(e) => {
                     e.preventDefault(); // Prevent default click behavior
                     e.stopPropagation(); // Stop propagation if necessary
-                    updateCenterOnClick(
-                      structure.attributes.longitude,
-                      structure.attributes.latitude
-                    );
+
                     setSelectedStructure(structure);
-                    setActiveView("singleView");
                   }}
                 >
                   <div className="flex">

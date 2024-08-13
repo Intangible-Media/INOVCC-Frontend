@@ -25,22 +25,6 @@ export const InspectionProvider = ({ children }) => {
     const query = qs.stringify(
       {
         populate: {
-          structures: {
-            populate: {
-              inspectors: {
-                populate: "*",
-              },
-              images: {
-                populate: "*",
-              },
-              team: {
-                populate: "*",
-              },
-              notes: {
-                populate: "*",
-              },
-            },
-          },
           client: {
             populate: {
               contacts: {
