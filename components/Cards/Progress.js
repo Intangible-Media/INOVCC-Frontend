@@ -13,7 +13,7 @@ const ProgressCard = ({ team, totalStructures, inspectedCount }) => {
   return (
     <div
       className="bg-white hover:bg-gray-50 rounded-lg p-5 aspect-video overflow-hidden border cursor-pointer flex flex-col justify-between"
-      onClick={() => router.push(`/schedulesnew/${team.id}`)}
+      onClick={() => router.push(`/schedules/${team.id}`)}
     >
       <div className="flex flex-col gap-2">
         <h4 className="leading-none font-medium text-md">
