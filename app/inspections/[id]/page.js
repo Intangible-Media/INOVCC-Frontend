@@ -10,6 +10,7 @@ import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapPanel from "../../../components/Panel/MapPanel";
+import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import StructureScheduledTag from "../../../components/StructureScheduledTag";
 import { getInspection } from "../../../utils/api/inspections";
@@ -20,6 +21,7 @@ import { getLocationDetails } from "../../../utils/api/mapbox";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa";
+import { useSelectedStructure } from "../../../context/SelectedStructureContext";
 import Camera from "../../../components/Camera";
 import AvatarImage from "../../../components/AvatarImage";
 import {
@@ -51,6 +53,7 @@ export default function Page(props) {
   const { data: session, loading } = useSession();
   const { inspection, setInspection } = useInspection();
   const { showLoading, hideLoading, showSuccess } = useLoading();
+  const { selectedStructure, setSelectedStructure } = useSelectedStructure();
 
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -59,7 +62,7 @@ export default function Page(props) {
   const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
   const [inspectionDocuments, setInspectionDocuments] = useState([]);
-  const [selectedStructure, setSelectedStructure] = useState(null);
+  // const [selectedStructure, setSelectedStructure] = useState(null);
   const [activeMapStyle, setActiveMapStyle] = useState("3d");
   const [activeView, setActiveView] = useState("overview");
   const [activeCompletion, setActiveCompletion] = useState(0);
@@ -737,8 +740,8 @@ export default function Page(props) {
           </button>
         </div>
 
-        <div className="map-structure-panel shadow-md flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-6 top-6 bottom-6 overflow-hidden">
-          {activeView === "overview" && (
+        <div className="map-structure-panel shadow-md flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-6 top-6 bottom-6 overflow-auto">
+          {!selectedStructure && (
             <div className="p-4 w-full bg-gray-100">
               <div className="relative">
                 <TextInput
@@ -754,16 +757,15 @@ export default function Page(props) {
             </div>
           )}
 
-          {activeView === "singleView" && (
-            <MapPanel
-              structure={selectedStructure}
+          {selectedStructure && (
+            <MapPanelalt
+              key={selectedStructure.id}
+              structureId={selectedStructure.id}
               setSelectedStructure={setSelectedStructure}
-              setActiveView={setActiveView}
-              setStructureSearch={setStructureSearch}
             />
           )}
 
-          {activeView === "overview" && (
+          {!selectedStructure && (
             <div className="im-snapping overflow-x-auto w-full">
               {filteredStructures.map((structure, index) => (
                 <div
