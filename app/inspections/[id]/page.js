@@ -2,14 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import mapboxgl from "mapbox-gl"; // or "const mapboxgl = require('mapbox-gl');"
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import { TextInput, Button, Dropdown, Checkbox, Badge } from "flowbite-react";
-import DirectionsComponent from "../../../components/DirectionsComponent";
 import qs from "qs";
 import "mapbox-gl/dist/mapbox-gl.css";
-import MapPanel from "../../../components/Panel/MapPanel";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import StructureScheduledTag from "../../../components/StructureScheduledTag";
@@ -17,32 +14,31 @@ import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
-import { getLocationDetails } from "../../../utils/api/mapbox";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { FaRegStar } from "react-icons/fa";
 import { useSelectedStructure } from "../../../context/SelectedStructureContext";
-import Camera from "../../../components/Camera";
 import AvatarImage from "../../../components/AvatarImage";
-import {
-  CheckMark,
-  FavoriteIcon,
-  PlusIcon,
-  StarSm,
-} from "../../../public/icons/intangible-icons";
+import { CheckMark, PlusIcon } from "../../../public/icons/intangible-icons";
 import {
   downloadFilesAsZip,
   downloadFilesAsZipWithSubfolders,
   convertInspectionsToZipArgs,
   sortStructuresByStatus,
-  isImage,
-  formatDateToMonthDay,
   ensureDomain,
 } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
-import { AddFavorite } from "../../../public/icons/intangible-icons";
 import { useLoading } from "../../../context/LoadingContext";
-import { format } from "path";
+const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
+  ssr: false, // or ssr: false, depending on your needs
+  loading: () => <Loading />, // Provide the loading component here
+});
+
+const Loading = () => (
+  <div className="flex justify-center items-center h-full">
+    <div className="loader">Loading Map...</div>
+  </div>
+);
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -55,8 +51,6 @@ export default function Page(props) {
   const { showLoading, hideLoading, showSuccess } = useLoading();
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
 
-  const mapContainer = useRef(null);
-  const map = useRef(null);
   const [lng, setLng] = useState(0);
   const [lat, setLat] = useState(0);
   const [structureSearch, setStructureSearch] = useState("");
@@ -106,9 +100,6 @@ export default function Page(props) {
   const inactiveMapStyleTab =
     "text-gray-900 hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700";
 
-  mapboxgl.accessToken =
-    "pk.eyJ1IjoiaW50YW5naWJsZS1tZWRpYSIsImEiOiJjbHA5MnBnZGcxMWVrMmpxcGRyaGRteTBqIn0.O69yMbxSUy5vG7frLyYo4Q";
-
   const iconMap = {
     red: "/location-red.png",
     yellow: "/location-yellow.png",
@@ -130,9 +121,6 @@ export default function Page(props) {
               populate: "*",
             },
             images: {
-              populate: "*",
-            },
-            notes: {
               populate: "*",
             },
           },
@@ -164,20 +152,6 @@ export default function Page(props) {
       encodeValuesOnly: true, // This option is necessary to prevent qs from encoding the comma in the fields array
     }
   );
-
-  const addToFavorite = () => {};
-
-  /**
-   * This function takes an array of files and returns an array of URLs.
-   * @param {Array} files - The files to get the URLs from.
-   * @returns {Array} The array of URLs.
-   */
-  const getArrayOfUrls = (files) => {
-    return files.map((file) => ({
-      url: `${file.attributes.url}`,
-      name: file.attributes.name,
-    }));
-  };
 
   /**
    * This function filters structures based on a search term.
@@ -253,295 +227,12 @@ export default function Page(props) {
     }
   }
 
-  /**
-   * This function adds a satellite layer to the map.
-   */
-  function addSatelliteLayer() {
-    if (!map.current.getLayer("satellite")) {
-      if (!map.current.getSource("satellite-source")) {
-        map.current.addSource("satellite-source", {
-          type: "raster",
-          url: "mapbox://mapbox.satellite",
-          tileSize: 256,
-        });
-      }
-
-      map.current.addLayer({
-        id: "satellite",
-        source: "satellite-source",
-        type: "raster",
-        layout: {
-          visibility: "none",
-        },
-      });
-    }
-  }
-
-  /**
-   * This function toggles the satellite layer on the map.
-   */
-  const toggleSatelliteLayer = () => {
-    if (map.current && map.current.getLayer("satellite")) {
-      const visibility = map.current.getLayoutProperty(
-        "satellite",
-        "visibility"
-      );
-
-      if (visibility === "visible") {
-        map.current.setLayoutProperty("satellite", "visibility", "none");
-        setActiveMapStyle("3d");
-        map.current.easeTo({ pitch: 50 });
-      } else {
-        map.current.setLayoutProperty("satellite", "visibility", "visible");
-        setActiveMapStyle("satelite");
-        map.current.easeTo({ pitch: 0 });
-      }
-    } else {
-      console.warn("Satellite layer not found on the map but just made it.");
-      addSatelliteLayer();
-      return toggleSatelliteLayer();
-    }
-  };
-
-  const createStructureSelectedParam = (structureId) => {
-    const url = new URL(window.location);
-    url.searchParams.set("structure", structureId);
-    window.history.pushState({}, "", url.toString());
-
-    // Any additional logic you need after setting the URL can go here.
-  };
-
-  // Simplified query string handling using Next.js router
-  const createQueryString = useCallback(
-    (name, value) => {
-      const params = new URLSearchParams(searchParams);
-      params.set(name, value);
-
-      return params.toString();
-    },
-    [searchParams]
-  );
-
   useEffect(() => {
     setOptions((prevOptions) => ({
       ...prevOptions,
       labels: [structureProgressType],
     }));
   }, [structureProgressType]);
-
-  useEffect(() => {
-    if (!map.current || structures.length === 0) return;
-
-    const structureId = searchParams.get("structure");
-    const structuresArray = inspection?.structures.data || [];
-
-    if (structureId) {
-      const structure = structures.find((s) => s.id === Number(structureId));
-
-      updateCenterOnClick(
-        structure.attributes.longitude,
-        structure.attributes.latitude
-      );
-      setSelectedStructure(structure);
-      setActiveView("singleView");
-    }
-
-    // Function to execute map operations
-    const executeMapOperations = () => {
-      structuresArray.forEach((structure) => {
-        const color = getColorBasedOnStatus(structure.attributes.status);
-        const iconName = `profile-icon-${color}`;
-
-        // Only load the image if it's not already on the map
-        if (!map.current.hasImage(iconName)) {
-          const url = loadIcon(color);
-          map.current.loadImage(url, (error, image) => {
-            if (error) {
-              console.error(`Error loading ${color} icon:`, error);
-              return;
-            }
-
-            // Check if the image already exists before adding it
-            if (!map.current.hasImage(iconName)) {
-              map.current.addImage(iconName, image);
-            }
-          });
-        }
-      });
-
-      const geojsonData = {
-        type: "FeatureCollection",
-        features: structuresArray.map((structure) => {
-          const color = getColorBasedOnStatus(structure.attributes.status);
-          const iconName = `profile-icon-${color}`;
-
-          return {
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [
-                structure.attributes.longitude,
-                structure.attributes.latitude,
-              ],
-            },
-            properties: {
-              id: structure.id,
-              icon: iconName,
-            },
-          };
-        }),
-      };
-
-      // Ensure the "markers" source is added or updated
-      if (!map.current.getSource("markers")) {
-        map.current.addSource("markers", {
-          type: "geojson",
-          data: geojsonData,
-        });
-      } else {
-        map.current.getSource("markers").setData(geojsonData);
-      }
-
-      // Ensure the "marker-layer" is added
-      if (!map.current.getLayer("marker-layer")) {
-        map.current.addLayer({
-          id: "marker-layer",
-          type: "symbol",
-          source: "markers",
-          layout: {
-            "icon-image": ["get", "icon"],
-            "icon-size": 0.6, // Adjust icon size as needed
-          },
-        });
-      }
-    };
-
-    // Check if the map is already loaded, if not, listen for the load event
-    if (map.current.isStyleLoaded()) {
-      addSatelliteLayer();
-      executeMapOperations();
-    } else {
-      map.current.on("load", addSatelliteLayer);
-      map.current.on("load", executeMapOperations);
-    }
-
-    // Clean up the event listener
-    return () => {
-      if (map.current) {
-        map.current.off("load", addSatelliteLayer);
-        map.current.off("load", executeMapOperations);
-      }
-    };
-  }, [inspection?.structures.data]);
-
-  useEffect(() => {
-    if (map.current) return; // Initialize map only once
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/standard-beta",
-      center: [lng, lat],
-      zoom: 18,
-      pitch: 50,
-    });
-
-    map.current.on("style.load", () => {
-      map.current.setFog({});
-      map.current.setConfigProperty("basemap", "lightPreset", "day");
-
-      const isPhone = window.matchMedia("(max-width: 550px)").matches;
-
-      // Set padding based on device type
-      const padding = isPhone ? { bottom: 525 } : { right: 400 };
-
-      map.current.easeTo({ padding: padding });
-
-      // Function to add a traffic layer
-      function addTrafficLayer() {
-        if (!map.current.getLayer("traffic")) {
-          if (!map.current.getSource("mapbox-traffic")) {
-            map.current.addSource("mapbox-traffic", {
-              type: "vector",
-              url: "mapbox://mapbox.mapbox-traffic-v1",
-            });
-          }
-
-          map.current.addLayer({
-            id: "traffic",
-            type: "line",
-            source: "mapbox-traffic",
-            "source-layer": "traffic",
-            minzoom: 0,
-            maxzoom: 22,
-            paint: {
-              "line-width": 5,
-              "line-color": [
-                "match",
-                ["get", "congestion"],
-                ["low"],
-                "hsl(138, 100%, 40%)",
-                ["moderate"],
-                "hsl(71, 100%, 64%)",
-                ["heavy"],
-                "hsl(28, 100%, 56%)",
-                ["severe"],
-                "hsl(0, 100%, 50%)",
-                "#000000", // Default color
-              ],
-            },
-            layout: {
-              visibility: "visible",
-            },
-          });
-        }
-      }
-
-      function addZoomEvent() {
-        const MIN_TRAFFIC_ZOOM_LEVEL = 17;
-        map.current.on("zoom", () => {
-          const currentZoom = map.current.getZoom();
-          if (map.current.getLayer("traffic")) {
-            map.current.setLayoutProperty(
-              "traffic",
-              "visibility",
-              currentZoom >= MIN_TRAFFIC_ZOOM_LEVEL ? "visible" : "none"
-            );
-          }
-        });
-      }
-
-      // Add the traffic layer
-      addTrafficLayer();
-
-      // Add zoom level event handling for traffic layer
-      addZoomEvent();
-    });
-  }, [lng, lat]);
-
-  useEffect(() => {
-    // Function to animate the map and get location details
-    const updateMapAndLocation = async () => {
-      // Determine if the device is a phone or not
-      const isPhone = window.matchMedia("(max-width: 550px)").matches;
-      // Set padding based on device type
-      const padding = isPhone ? { bottom: 525 } : { right: 450 };
-
-      map.current.easeTo({
-        zoom: 18,
-        padding: padding,
-        center: [lng, lat],
-        duration: 1000,
-      });
-
-      try {
-        await getLocationDetails(lng, lat);
-      } catch (error) {
-        console.error("Error getting location details:", error);
-      }
-    };
-    // Call the async function
-    updateMapAndLocation();
-  }, [lng, lat]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -667,7 +358,7 @@ export default function Page(props) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-1">
+      <section className="flex flex-col md:flex-row justify-between pt-6 pb-6 md:pb-1">
         <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
           {/* <Camera /> */}
           <h5 className="leading-tight text-sm text-gray-500 font-medium">
@@ -708,39 +399,10 @@ export default function Page(props) {
             <FaRegStar size={17} color="white" />
           </Button>
         </div>
-      </div>
+      </section>
 
-      <div
-        ref={mapContainer}
-        className="map-container col-span-3 relative overflow-hidden p-4 mb-4 border-white border-2 dark:border-gray-600 bg-white rounded-lg"
-      >
-        <div
-          className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-2 bg-white rounded-lg dark:bg-gray-600 absolute left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-8 bottom-[585px] md:bottom-4 z-10"
-          role="group"
-        >
-          <button
-            onClick={toggleSatelliteLayer}
-            type="button"
-            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
-              activeMapStyle == "satelite"
-                ? activeMapStyleTab
-                : inactiveMapStyleTab
-            }`}
-          >
-            Satellite
-          </button>
-          <button
-            onClick={toggleSatelliteLayer}
-            type="button"
-            className={`px-5 py-1.5 text-xs font-medium rounded-lg ${
-              activeMapStyle == "3d" ? activeMapStyleTab : inactiveMapStyleTab
-            }`}
-          >
-            3D
-          </button>
-        </div>
-
-        <div className="map-structure-panel shadow-md flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full z-10 h-32 rounded-lg absolute right-6 top-6 bottom-6 overflow-auto">
+      <section className="grid grid-cols-1 md:grid-cols-9 p-0 bg-white border border-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-md shadow-gray-200 mb-4">
+        <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full rounded-lg overflow-auto relative col-span-3">
           {!selectedStructure && (
             <div className="p-4 w-full bg-gray-100">
               <div className="relative">
@@ -770,11 +432,7 @@ export default function Page(props) {
               {filteredStructures.map((structure, index) => (
                 <div
                   key={`${structure.id}-${index}`}
-                  className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 ${
-                    selectedStructure &&
-                    selectedStructure.id === structure.id &&
-                    "active-structure"
-                  }`}
+                  className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100  hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
                   onClick={(e) => {
                     e.preventDefault(); // Prevent default click behavior
                     e.stopPropagation(); // Stop propagation if necessary
@@ -824,9 +482,12 @@ export default function Page(props) {
             </div>
           )}
         </div>
-      </div>
+        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-6">
+          <MapboxMap coordinates={structures} />
+        </div>
+      </section>
 
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <section className="grid grid-cols-3 gap-4 mb-4">
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <div className="flex justify-between">
             <div>
@@ -971,9 +632,9 @@ export default function Page(props) {
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <h6 className="text-lg font-semibold">Inspectors</h6>
 
@@ -1073,13 +734,13 @@ export default function Page(props) {
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4 mt-4">
+      <section className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4 mt-4">
         {inspection && (
           <ActivityLog id={inspection?.id} collection="inspections" />
         )}
-      </div>
+      </section>
     </>
   );
 }
