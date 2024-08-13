@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState(new Date());
   const [aggregation, setAggregation] = useState(null);
   const [startDate, setStartDate] = useState(
-    new Date(new Date().setDate(new Date().getDate() - 30))
+    new Date(new Date().setDate(new Date().getDate() - 10))
   );
 
   const allStructures = inspections

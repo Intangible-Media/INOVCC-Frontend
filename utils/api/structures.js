@@ -37,7 +37,7 @@ export const fetchAllStructure = async (data) => {
           Authorization: `Bearer ${data.jwt}`,
         },
         next: {
-          revalidate: 3, // Optional: Revalidate this data every 10 seconds
+          revalidate: 10, // Optional: Revalidate this data every 10 seconds
         },
       }
     );

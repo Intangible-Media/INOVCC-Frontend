@@ -68,7 +68,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                           style={{ height: 27 }}
                         />
                         <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                          <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                          <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark-blue-700 dark:text-white cursor-pointer">
                             <span className="flex shorten-text">
                               {structure.attributes.mapSection}
                               {structure.attributes.favorited && (
@@ -145,7 +145,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                             style={{ height: 27 }}
                           />
                           <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                            <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
+                            <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark0blue-700 dark:text-white cursor-pointer">
                               <span className="flex shorten-text">
                                 {structure.attributes.mapSection}
                                 {structure.attributes.favorited && (
