@@ -1,3 +1,5 @@
+"use client";
+
 // components/ProtectedContent.js
 import { useSession } from "next-auth/react";
 
@@ -14,7 +16,7 @@ const ProtectedContent = ({ requiredRoles, children }) => {
   const hasPermission = requiredRoles.some((role) => role === userRole);
 
   if (isLoading) {
-    return <p>Loading...</p>; // Or any other loading state
+    return null; // Or any other loading state
   }
 
   if (!hasPermission) {
