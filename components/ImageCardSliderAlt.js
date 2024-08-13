@@ -196,6 +196,7 @@ const ImageSlider = ({
   refreshStructure,
   structureId = null,
   limit = true,
+  limitAmount = 6,
   longitude = 0,
   latitude = 0,
   editable = true,
@@ -271,19 +272,19 @@ const ImageSlider = ({
         >
           <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
             {activeImage.attributes.mime.startsWith("image/") ? (
-              // <Image
-              //   src={ensureDomain(activeImage.attributes.url)}
-              //   alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
-              //   layout="fill" // This makes the image fill the parent container
-              //   objectFit="cover" // Ensures the image covers the entire container
-              //   objectPosition="center" // Centers the image within the container
-              //   loading="lazy"
-              // />
-              <img
+              <Image
                 src={ensureDomain(activeImage.attributes.url)}
-                className="w-full h-full object-cover object-center"
+                alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
+                layout="fill" // This makes the image fill the parent container
+                objectFit="cover" // Ensures the image covers the entire container
+                objectPosition="center" // Centers the image within the container
+                loading="lazy"
               />
             ) : (
+              // <img
+              //   src={ensureDomain(activeImage.attributes.url)}
+              //   className="w-full h-full object-cover object-center"
+              // />
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
                 <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-14">
                   <h6 className=" text-xl text-gray-400 font-medium">
@@ -347,21 +348,21 @@ const ImageSlider = ({
                 </div>
 
                 {uploadedImages[currentIndex].type.startsWith("image/") ? (
-                  // <div className="relative w-full h-full">
-                  //   <Image
-                  //     src={uploadedImages[currentIndex].url}
-                  //     alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
-                  //     layout="fill" // Makes the image fill the parent container
-                  //     objectFit="cover" // Ensures the image covers the entire container
-                  //     objectPosition="center" // Centers the image within the container
-                  //     loading="lazy"
-                  //   />
-                  // </div>
-                  <img
-                    src={uploadedImages[currentIndex].url}
-                    className="w-full h-full object-cover object-center"
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={uploadedImages[currentIndex].url}
+                      alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
+                      layout="fill" // Makes the image fill the parent container
+                      objectFit="cover" // Ensures the image covers the entire container
+                      objectPosition="center" // Centers the image within the container
+                      loading="lazy"
+                    />
+                  </div>
                 ) : (
+                  // <img
+                  //   src={uploadedImages[currentIndex].url}
+                  //   className="w-full h-full object-cover object-center"
+                  // />
                   <div className="flex flex-col gap-2 items-center justify-center w-full h-full bg-white text-gray-800">
                     <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-10">
                       <h6 className=" text-base text-gray-400 font-medium">
@@ -497,8 +498,8 @@ const ImageSlider = ({
               const smallestImageResolution = getUrls(image, "smallest")[0];
               const rawImageResolution = getUrls(image, "raw")[0];
 
-              if (limit && index >= 6) return null;
-              if (limit && index === 5)
+              if (limit && index >= limitAmount) return null;
+              if (limit && index === limitAmount - 1)
                 return (
                   <div className="flex-shrink-0 w-full" key={index}>
                     <div className="flex justify-center w-full h-full bg-gray-800 object-cover object-center aspect-square z-10 rounded-md bg-opacity-80">
@@ -511,34 +512,34 @@ const ImageSlider = ({
 
               if (image.attributes.mime.startsWith("image/")) {
                 return (
-                  // <div
-                  //   className="flex-shrink-0 w-full cursor-pointer"
-                  //   key={index}
-                  //   onClick={() => setActiveImage(image)}
-                  // >
-                  //   <div className="relative w-full h-full aspect-square z-10 rounded-md">
-                  //     <Image
-                  //       src={ensureDomain(smallestImageResolution)}
-                  //       alt="travel image"
-                  //       layout="fill" // Makes the image fill the parent container
-                  //       objectFit="cover" // Ensures the image covers the entire container
-                  //       objectPosition="center" // Centers the image within the container
-                  //       className="rounded-md" // Preserves the rounded corners
-                  //       loading="lazy"
-                  //     />
-                  //   </div>
-                  // </div>
                   <div
                     className="flex-shrink-0 w-full cursor-pointer"
                     key={index}
                     onClick={() => setActiveImage(image)}
                   >
-                    <img
-                      src={ensureDomain(smallestImageResolution)}
-                      alt="travel image"
-                      className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
-                    />
+                    <div className="relative w-full h-full aspect-square z-10 rounded-md">
+                      <Image
+                        src={ensureDomain(smallestImageResolution)}
+                        alt="travel image"
+                        layout="fill" // Makes the image fill the parent container
+                        objectFit="cover" // Ensures the image covers the entire container
+                        objectPosition="center" // Centers the image within the container
+                        className="rounded-md" // Preserves the rounded corners
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
+                  // <div
+                  //   className="flex-shrink-0 w-full cursor-pointer"
+                  //   key={index}
+                  //   onClick={() => setActiveImage(image)}
+                  // >
+                  //   <img
+                  //     src={ensureDomain(smallestImageResolution)}
+                  //     alt="travel image"
+                  //     className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
+                  //   />
+                  // </div>
                 );
               }
               return (

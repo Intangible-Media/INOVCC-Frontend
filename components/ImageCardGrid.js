@@ -19,24 +19,6 @@ export default function ImageCardGrid({
     updateFiles([...files, ...newFiles]);
   };
 
-  // const downloadImage = (file) => {
-  //   // Create a URL for the file
-  //   const url = URL.createObjectURL(file);
-
-  //   // Create a temporary anchor (`<a>`) element
-  //   const a = document.createElement("a");
-  //   a.href = url;
-  //   a.download = file.name; // Set the file name for the download
-
-  //   // Append the anchor to the body, click it, and then remove it
-  //   document.body.appendChild(a);
-  //   a.click();
-  //   document.body.removeChild(a);
-
-  //   // Clean up the URL object
-  //   URL.revokeObjectURL(url);
-  // };
-
   const downloadImage = async (fileOrUrl) => {
     let blob;
     let filename = "download"; // Default filename
@@ -81,22 +63,6 @@ export default function ImageCardGrid({
 
     // Clean up the URL object
     URL.revokeObjectURL(url);
-  };
-
-  // Utility function to format the file name
-  const formatFileName = (fileName) => {
-    const maxLength = 14; // Max length before truncating
-    const extension = fileName.slice(
-      ((fileName.lastIndexOf(".") - 1) >>> 0) + 2
-    ); // Extract file extension
-    const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, ""); // Remove extension from name
-
-    // If the name without the extension is longer than the maxLength, truncate and add "..."
-    if (nameWithoutExtension.length > maxLength) {
-      return `${nameWithoutExtension.substring(0, maxLength)}... .${extension}`;
-    }
-
-    return fileName; // Return original name if it's short enough
   };
 
   const isImage = (fileName) => {

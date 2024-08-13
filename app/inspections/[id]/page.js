@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
+import ImageCardSliderAlt from "../../../components/ImageCardSliderAlt";
 import { TextInput, Button, Badge } from "flowbite-react";
 import qs from "qs";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
@@ -525,12 +526,18 @@ export default function Page({ params }) {
             </div>
           </div>
           <div className="overflow-auto">
-            <ImageCardGrid
+            {/* <ImageCardGrid
               files={allStructuresImages}
               background={"bg-white"}
               editMode={false}
               columns={2}
               padded={false}
+            /> */}
+
+            <ImageCardSliderAlt
+              images={{ data: allStructuresImages }}
+              limit={false}
+              editable={false}
             />
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
