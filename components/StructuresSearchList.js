@@ -46,10 +46,7 @@ export default function StructureSearchList({
     return filteredStructuresList;
   };
 
-  const filteredStructures = sortStructuresByStatus(
-    filterStructures(structureSearch)
-  );
-
+  const filteredStructures = filterStructures(structureSearch);
   return (
     <>
       {!selectedStructure && (
