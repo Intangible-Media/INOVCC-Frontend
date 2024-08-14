@@ -5,31 +5,24 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import ImageCardSliderAlt from "../../../components/ImageCardSliderAlt";
-import { TextInput, Button, Badge } from "flowbite-react";
+import { Button, Badge } from "flowbite-react";
 import qs from "qs";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
-import StructureScheduledTag from "../../../components/StructureScheduledTag";
-import { getInspection } from "../../../utils/api/inspections";
 import { getAllStructure } from "../../../utils/api/structures";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
+import StructureSearchList from "../../../components/StructuresSearchList";
+import DownloadFilesAsSubFolderZipButton from "../../../components/DownloadFilesAsSubFolderZipButton";
+import DownloadFilesAsZipButton from "../../../components/DownloadFilesAsZipButton";
 import { FaRegStar } from "react-icons/fa";
 import { useSelectedStructure } from "../../../context/SelectedStructureContext";
 import AvatarImage from "../../../components/AvatarImage";
-import { CheckMark, PlusIcon } from "../../../public/icons/intangible-icons";
-import {
-  downloadFilesAsZip,
-  downloadFilesAsZipWithSubfolders,
-  convertInspectionsToZipArgs,
-  sortStructuresByStatus,
-  getColorBasedOnStatus,
-  getInspectionColor,
-  ensureDomain,
-} from "../../../utils/strings";
+import StructureStatusCircleChart from "../../../components/Charts/StructureStatusCircleChart";
+import { PlusIcon } from "../../../public/icons/intangible-icons";
+import { ensureDomain } from "../../../utils/strings";
 import { useInspection } from "../../../context/InspectionContext";
-import { useLoading } from "../../../context/LoadingContext";
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
   ssr: false, // or ssr: false, depending on your needs
   loading: () => <Loading />, // Provide the loading component here
@@ -41,58 +34,12 @@ const Loading = () => (
   </div>
 );
 
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
-export default function Page({ params }) {
+export default async function Page({ params }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { inspection, setInspection } = useInspection();
-  const { showLoading, hideLoading, showSuccess } = useLoading();
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
-  const [structureSearch, setStructureSearch] = useState("");
   const [structures, setStructures] = useState([]);
-  const [activeCompletion, setActiveCompletion] = useState(0);
-  const [structureProgressType, setStructureProgressType] = useState("All");
-  const [options, setOptions] = useState({
-    series: [70],
-    chart: {
-      type: "radialBar",
-      offsetY: 0,
-    },
-    colors: ["#FDF6B2"],
-    plotOptions: {
-      radialBar: {
-        hollow: {
-          size: "72%",
-        },
-        dataLabels: {
-          show: true,
-          name: {
-            offsetY: 30,
-            show: true,
-            color: "#111928",
-            fontSize: "17px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#111928",
-            fontSize: "48px",
-            show: true,
-          },
-        },
-      },
-    },
-    labels: ["All"],
-  });
-
-  const iconMap = {
-    red: "/location-red.png",
-    yellow: "/location-yellow.png",
-    drkgreen: "/location-dark.png",
-    green: "/location-green.png",
-  };
-
-  const loadIcon = (color) => iconMap[color] || "/location-red.png";
 
   const inspectionQuery = qs.stringify(
     {
@@ -148,40 +95,16 @@ export default function Page({ params }) {
     }
   );
 
-  /**
-   * This function filters structures based on a search term.
-   * @param {string} searchTerm - The term to search for.
-   * @returns {Array} The filtered structures.
-   */
-  const filterStructures = (searchTerm) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const filteredStructuresList =
-      structures.filter((structure) => {
-        const attributes = structure.attributes;
-        return ["status", "mapSection", "type"].some((field) =>
-          attributes[field].toLowerCase().includes(lowerCaseSearchTerm)
-        );
-      }) || [];
-
-    return filteredStructuresList;
-  };
+  // const structures = await getAllStructure({
+  //   jwt: session.accessToken,
+  //   query: structuresQuery,
+  // });
 
   const getAllStructureTypes = () => {
     const types = structures.map((structure) => structure.attributes.type);
     const uniqueTypes = [...new Set(types)]; // Removes duplicates
     return uniqueTypes;
   };
-
-  const filteredStructures = sortStructuresByStatus(
-    filterStructures(structureSearch)
-  );
-
-  useEffect(() => {
-    setOptions((prevOptions) => ({
-      ...prevOptions,
-      labels: [structureProgressType],
-    }));
-  }, [structureProgressType]);
 
   useEffect(() => {
     if (!session) return;
@@ -203,37 +126,6 @@ export default function Page({ params }) {
 
     fetchData();
   }, [session]);
-
-  useEffect(() => {
-    updateProgressBar(structureProgressType);
-  }, [structureProgressType, structures]); // Depend on structures as well
-
-  /**
-   * Updates the progress bar based on the percentage of inspected structures.
-   *
-   * @param {string} type - The type of structures to consider. Defaults to "all".
-   */
-  const updateProgressBar = (type = "all") => {
-    type = type.trim().toLowerCase();
-
-    const filteredStructuresByType = structures.filter(
-      (structure) =>
-        type === "all" || structure.attributes.type.toLowerCase() === type
-    );
-
-    const inspectedStructures = filteredStructuresByType.filter(
-      (structure) => structure.attributes.status.toLowerCase() === "inspected"
-    );
-
-    const percentOfCompletion =
-      filteredStructuresByType.length > 0
-        ? Math.round(
-            (inspectedStructures.length / filteredStructuresByType.length) * 100
-          )
-        : 0;
-
-    setActiveCompletion(percentOfCompletion);
-  };
 
   /**
    * Returns a list of unique inspectors based on their email.
@@ -335,21 +227,11 @@ export default function Page({ params }) {
 
       <section className="grid grid-cols-1 md:grid-cols-9 p-0 bg-white border border-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-md shadow-gray-200 mb-4">
         <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full rounded-lg overflow-auto relative col-span-3">
-          {!selectedStructure && (
-            <div className="p-4 w-full bg-gray-100">
-              <div className="relative">
-                <TextInput
-                  id="small"
-                  type="text"
-                  placeholder="Search Structures"
-                  sizing="md"
-                  className="w-full relative"
-                  value={structureSearch}
-                  onChange={(e) => setStructureSearch(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
+          <StructureSearchList
+            structures={structures}
+            selectedStructure={selectedStructure}
+            setSelectedStructure={setSelectedStructure}
+          />
 
           {selectedStructure && (
             <MapPanelalt
@@ -358,57 +240,6 @@ export default function Page({ params }) {
               setSelectedStructure={setSelectedStructure}
             />
           )}
-
-          {!selectedStructure && (
-            <div className="im-snapping overflow-x-auto w-full">
-              {filteredStructures.map((structure, index) => (
-                <div
-                  key={`${structure.id}-${index}`}
-                  className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100  hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
-                  onClick={(e) => {
-                    e.preventDefault(); // Prevent default click behavior
-                    e.stopPropagation(); // Stop propagation if necessary
-
-                    setSelectedStructure(structure);
-                  }}
-                >
-                  <div className="flex">
-                    <img
-                      src={loadIcon(
-                        getColorBasedOnStatus(structure.attributes.status)
-                      )}
-                      style={{ height: 27 }}
-                    />
-
-                    <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal gap-1">
-                      <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                        {structure.attributes.mapSection}
-                        <span className="flex items-center font-light ml-1">
-                          {` / ${structure.attributes.type}`}
-                        </span>
-                      </h5>
-                      <StructureScheduledTag structure={structure} />
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                      <span
-                        className={`${getInspectionColor(
-                          structure.attributes.status
-                        )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                      >
-                        {structure.attributes.status}
-                        {structure.attributes.status === "Uploaded" && (
-                          <CheckMark />
-                        )}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
         <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-6">
           <MapboxMap coordinates={structures} />
@@ -416,52 +247,7 @@ export default function Page({ params }) {
       </section>
 
       <section className="grid grid-cols-3 gap-4 mb-4">
-        <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
-          <div className="flex justify-between">
-            <div>
-              <h6 className="text-lg font-semibold">Structure Status</h6>
-              <select
-                className="block pb-2.5 pt-0 px-0 w-36 text-sm font-medium text-dark-blue-700 bg-transparent border-0 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                value={structureProgressType}
-                onChange={(e) => {
-                  setStructureProgressType(e.target.value);
-                }}
-              >
-                <option value="All">All</option>
-                {getAllStructureTypes().map((structureType, index) => (
-                  <option key={index} value={structureType}>
-                    {structureType}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              {selectedStructure && (
-                <span
-                  className={`${getInspectionColor(
-                    "uploaded"
-                  )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full`}
-                >
-                  Uploaded
-                  <CheckMark />
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="w-full mt-auto md:mt-0">
-            <ProtectedContent requiredRoles={["Admin"]}>
-              <div className=" h-[400px] md:h-[400px] -mb-12 -mt-8">
-                <ApexChart
-                  type="radialBar"
-                  options={options}
-                  series={[activeCompletion]}
-                  height={"100%"}
-                  width={"100%"}
-                />
-              </div>
-            </ProtectedContent>
-          </div>
-        </div>
+        <StructureStatusCircleChart structures={structures} />
 
         <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <div className="flex flex-col gap-0.5">
@@ -485,28 +271,7 @@ export default function Page({ params }) {
             )}
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <button
-              className="text-sm text-dark-blue-700 font-medium"
-              onClick={async (e) => {
-                showLoading("Downloading all documents for this map");
-                try {
-                  const imagesWithAttributes = inspection?.documents.data.map(
-                    (image) => image.attributes
-                  );
-                  const response = await downloadFilesAsZip(
-                    imagesWithAttributes,
-                    `${inspection?.name} Documents.zip`
-                  );
-
-                  showSuccess("Successfully downloaded all map documents!");
-                } catch (error) {
-                  console.error(error);
-                  hideLoading();
-                }
-              }}
-            >
-              Download All
-            </button>
+            <DownloadFilesAsZipButton images={inspection?.documents.data} />
           </div>
         </div>
 
@@ -541,29 +306,7 @@ export default function Page({ params }) {
             />
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <button
-              className="text-sm text-dark-blue-700 font-medium"
-              onClick={async (e) => {
-                showLoading(
-                  `Downloading all documents for ${structures.length} structures`
-                );
-                const formattedStructures =
-                  convertInspectionsToZipArgs(structures);
-
-                try {
-                  const response = await downloadFilesAsZipWithSubfolders(
-                    formattedStructures
-                  );
-
-                  showSuccess("Download finished successfully!");
-                } catch (error) {
-                  console.error(error);
-                  hideLoading();
-                }
-              }}
-            >
-              Download All
-            </button>
+            <DownloadFilesAsSubFolderZipButton structures={structures} />
           </div>
         </div>
       </section>
