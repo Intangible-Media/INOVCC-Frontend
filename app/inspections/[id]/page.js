@@ -118,6 +118,11 @@ export default async function Page({ params }) {
           query: structuresQuery,
         });
 
+        console.log("structuresResponse", structuresResponse);
+        console.log("structuresResponse Length", structuresResponse.length);
+
+        structuresResponse.forEach((structure) => console.log(structure.id));
+
         setStructures(structuresResponse);
       } catch (error) {
         console.error("Error fetching data", error.response || error);
