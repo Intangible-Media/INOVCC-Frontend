@@ -9,7 +9,7 @@ import { Button, Badge } from "flowbite-react";
 import qs from "qs";
 import MapPanelalt from "../../../components/Panel/MapPanelalt";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
-import { getAllStructure } from "../../../utils/api/structures";
+import { getAllStructuresNew } from "../../../utils/api/structures";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
@@ -113,7 +113,7 @@ export default async function Page({ params }) {
       try {
         // Ensure getInspection is imported or defined in your component/module
 
-        const structuresResponse = await getAllStructure({
+        const structuresResponse = await getAllStructuresNew({
           jwt: session.accessToken,
           query: structuresQuery,
         });

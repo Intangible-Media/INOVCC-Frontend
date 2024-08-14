@@ -105,6 +105,27 @@ export const getAllStructure = async (data) => {
 };
 
 /**
+ * Retrieves all structures concurrently.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {string} data.query - The pre-processed query string for the request.
+ * @returns {Promise<Array>} - A promise that resolves to an array of all structures.
+ */
+export const getAllStructuresNew = async (data) => {
+  // Fetch the first page to get pagination info
+  const structures = axios.get(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
+    {
+      headers: {
+        Authorization: `Bearer ${data.jwt}`,
+      },
+    }
+  );
+
+  return structures;
+};
+
+/**
  * Creates a new structure.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.

@@ -46,7 +46,10 @@ export default function StructureSearchList({
     return filteredStructuresList;
   };
 
-  const filteredStructures = filterStructures(structureSearch);
+  const filteredStructures = sortStructuresByStatus(
+    filterStructures(structureSearch)
+  );
+
   return (
     <>
       {!selectedStructure && (
@@ -67,7 +70,7 @@ export default function StructureSearchList({
 
       {!selectedStructure && (
         <div className="im-snapping overflow-x-auto w-full">
-          {structures.map((structure, index) => (
+          {filteredStructures.map((structure, index) => (
             <div
               key={`${structure.id}-${index}`}
               className={`flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100  hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0`}
