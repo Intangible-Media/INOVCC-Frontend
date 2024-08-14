@@ -113,7 +113,7 @@ export const getAllStructure = async (data) => {
  */
 export const getAllStructuresNew = async (data) => {
   // Fetch the first page to get pagination info
-  const structures = axios.get(
+  const structures = await axios.get(
     `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
     {
       headers: {
@@ -122,7 +122,7 @@ export const getAllStructuresNew = async (data) => {
     }
   );
 
-  return structures;
+  return structures.data.data;
 };
 
 /**
