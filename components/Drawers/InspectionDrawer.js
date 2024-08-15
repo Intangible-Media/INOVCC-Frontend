@@ -105,8 +105,8 @@ const InspectionDrawer = ({
   useEffect(() => {
     if (inspection) {
       setNewInspection({
-        name: inspection.name || "",
-        projectId: inspection.projectId || "",
+        name: inspection.attributes.name || "",
+        projectId: inspection.attributes.projectId || "",
         structures: structures || [],
         documents: inspection.attributes.documents || [],
         client: inspection.attributes.client || 1,
@@ -183,6 +183,7 @@ const InspectionDrawer = ({
   };
 
   const submitInspection = async () => {
+    console.log("You have updated");
     showLoading("Updating Inspection Map..."); // Assume you have a state to manage loading
 
     const payload = {
@@ -209,6 +210,8 @@ const InspectionDrawer = ({
           ...response.data.data.attributes,
           client: newInspection.client,
         };
+
+        await refreshInspectionData(inspection.id);
 
         //setInspection(updatedInspection);
       } else {
@@ -284,7 +287,7 @@ const InspectionDrawer = ({
         images: [],
       });
 
-      await refreshInspectionData();
+      await refreshInspectionData(inspection.id);
       showSuccess("Successfully updated!");
 
       return response;
@@ -505,7 +508,7 @@ const InspectionDrawer = ({
     try {
       const allStructureRequest = await axios.all(requests);
       // runs and updates the page with all the structures
-      await refreshInspectionData();
+      await refreshInspectionData(inspection.id);
     } catch (error) {
       console.error(error);
     }
@@ -545,7 +548,7 @@ const InspectionDrawer = ({
         })
       );
 
-      await refreshInspectionData();
+      await refreshInspectionData(inspection.id);
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -577,7 +580,7 @@ const InspectionDrawer = ({
         })
       );
 
-      await refreshInspectionData();
+      await refreshInspectionData(inspection.id);
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -611,7 +614,7 @@ const InspectionDrawer = ({
         })
       );
 
-      await refreshInspectionData();
+      await refreshInspectionData(inspection.id);
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {

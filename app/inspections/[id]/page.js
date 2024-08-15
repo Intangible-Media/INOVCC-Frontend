@@ -101,8 +101,8 @@ export default async function Page({ params }) {
   const inspectionData = inspection.data.data;
   const inspectionClient = inspectionData.attributes.client;
   const inspectionDocuments = inspectionData.attributes.documents;
-  const inspectionName = inspectionData.name;
-  const projectId = inspectionData.projectId;
+  const inspectionName = inspectionData.attributes.name;
+  const projectId = inspectionData.attributes.projectId;
 
   const structures = await getAllStructuresNew({
     jwt: session.accessToken,
@@ -174,13 +174,10 @@ export default async function Page({ params }) {
         <div className="flex flex-col gap-0.5 md:gap-2 mb-4">
           {/* <Camera /> */}
           <h5 className="leading-tight text-sm text-gray-500 font-medium">
-            Project ID:{" "}
-            {inspection?.data.data.projectId
-              ? inspection.projectId
-              : "Project ID"}
+            {projectId}
           </h5>
           <h1 className="leading-tight text-2xl font-medium">
-            {inspection?.data.data.name ? inspection.name : "Map Name Here"}
+            {inspectionName}
           </h1>
           <div className="flex gap-3 text-base text-gray-500">
             {getAllStructureTypes().map((type, index) => (

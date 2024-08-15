@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Badge } from "flowbite-react";
-import { structurePinStatus } from "../utils/collectionListAttributes";
 import { FaRegStar } from "react-icons/fa6";
 import StructureGroupProgress from "./Charts/StructuresGroupProgress";
 import { CheckMark } from "../public/icons/intangible-icons";
 import DirectionsComponent from "./DirectionsComponent";
 import StructureScheduledTag from "./StructureScheduledTag";
+import StructureNameTypeTag from "./StructureNameTypeTag";
+import StructureStatusBadge from "./StructureStatusBadge";
 import { getColorBasedOnStatus, getInspectionColor } from "../utils/strings";
 import { useSelectedStructure } from "../context/SelectedStructureContext";
 import MapPanelalt from "./Panel/MapPanelalt";
@@ -15,10 +16,7 @@ import MapPanelalt from "./Panel/MapPanelalt";
 const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [expandRescheduled, setExpandRescheduled] = useState(false);
-  // const [selectedStructure, setSelectedStructure] = useState(null);
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
-
-  const loadIcon = (color) => structurePinStatus[color] || "/location-red.png";
 
   const toggleGroup = (index) => {
     setExpandedGroup(expandedGroup === index ? null : index);
@@ -61,42 +59,12 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                         setSelectedStructure(structure);
                       }}
                     >
-                      <div className="flex">
-                        <img
-                          src={loadIcon(
-                            getColorBasedOnStatus(structure.attributes.status)
-                          )}
-                          style={{ height: 27 }}
-                        />
-                        <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                          <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark-blue-700 dark:text-white cursor-pointer">
-                            <span className="flex shorten-text">
-                              {structure.attributes.mapSection}
-                              {structure.attributes.favorited && (
-                                <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
-                              )}
-                            </span>
-                            <span className="flex items-center font-light ml-1">
-                              {`${structure.attributes.type}`}
-                            </span>
-                          </h5>
-                          <StructureScheduledTag structure={structure} />
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                          <span
-                            className={`${getInspectionColor(
-                              structure.attributes.status
-                            )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                          >
-                            {structure.attributes.status}
-                            {structure.attributes.status === "Uploaded" && (
-                              <CheckMark />
-                            )}
-                          </span>
-                        </p>
-                      </div>
+                      <StructureNameTypeTag structure={structure} />
+
+                      <StructureStatusBadge
+                        status={structure.attributes.status}
+                        adminStatus={structure.attributes.adminStatus}
+                      />
                     </div>
                   ))}
                 </div>
@@ -138,42 +106,12 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                           setSelectedStructure(structure);
                         }}
                       >
-                        <div className="flex">
-                          <img
-                            src={loadIcon(
-                              getColorBasedOnStatus(structure.attributes.status)
-                            )}
-                            style={{ height: 27 }}
-                          />
-                          <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-                            <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark0blue-700 dark:text-white cursor-pointer">
-                              <span className="flex shorten-text">
-                                {structure.attributes.mapSection}
-                                {structure.attributes.favorited && (
-                                  <FaRegStar className="text-dark-blue-700 w-5 ml-1 mt-0.5" />
-                                )}
-                              </span>
-                              <span className="flex items-center font-light ml-1">
-                                {`${structure.attributes.type}`}
-                              </span>
-                            </h5>
-                            <StructureScheduledTag structure={structure} />
-                          </div>
-                        </div>
-                        <div className="flex gap-3">
-                          <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                            <span
-                              className={`${getInspectionColor(
-                                structure.attributes.status
-                              )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                            >
-                              {structure.attributes.status}
-                              {structure.attributes.status === "Uploaded" && (
-                                <CheckMark />
-                              )}
-                            </span>
-                          </p>
-                        </div>
+                        <StructureNameTypeTag structure={structure} />
+
+                        <StructureStatusBadge
+                          status={structure.attributes.status}
+                          adminStatus={structure.attributes.adminStatus}
+                        />
                       </div>
                     ))}
                   </div>

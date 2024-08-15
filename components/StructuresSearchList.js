@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { TextInput } from "flowbite-react";
 import StructureScheduledTag from "./StructureScheduledTag";
-import { CheckMark, PlusIcon } from "../public/icons/intangible-icons";
+import StructureNameTypeTag from "./StructureNameTypeTag";
 import StructureStatusBadge from "./StructureStatusBadge";
+import { CheckMark, PlusIcon } from "../public/icons/intangible-icons";
 import {
   sortStructuresByStatus,
   getColorBasedOnStatus,
@@ -80,31 +81,12 @@ export default function StructureSearchList({ structures }) {
                 setSelectedStructure(structure);
               }}
             >
-              <div className="flex">
-                <img
-                  src={loadIcon(
-                    getColorBasedOnStatus(structure.attributes.status)
-                  )}
-                  style={{ height: 27 }}
-                />
+              <StructureNameTypeTag structure={structure} />
 
-                <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal gap-1">
-                  <h5 className="flex flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-                    {structure.attributes.mapSection}
-                    <span className="flex items-center font-light ml-1">
-                      {` / ${structure.attributes.type}`}
-                    </span>
-                  </h5>
-                  <StructureScheduledTag structure={structure} />
-                </div>
-              </div>
-
-              <div className="flex">
-                <StructureStatusBadge
-                  status={structure.attributes.status}
-                  adminStatus={structure.attributes.adminStatus}
-                />
-              </div>
+              <StructureStatusBadge
+                status={structure.attributes.status}
+                adminStatus={structure.attributes.adminStatus}
+              />
             </div>
           ))}
         </div>
