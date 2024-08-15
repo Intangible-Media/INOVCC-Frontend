@@ -98,16 +98,18 @@ export default async function Page({ params }) {
     query: inspectionQuery,
   });
 
+  // const structures = await getAllStructuresNew({
+  //   jwt: session.accessToken,
+  //   query: structuresQuery,
+  // });
+
+  const structures = [];
+
   const inspectionData = inspection.data.data;
   const inspectionClient = inspectionData.attributes.client;
   const inspectionDocuments = inspectionData.attributes.documents;
   const inspectionName = inspectionData.attributes.name;
   const projectId = inspectionData.attributes.projectId;
-
-  const structures = await getAllStructuresNew({
-    jwt: session.accessToken,
-    query: structuresQuery,
-  });
 
   const getAllStructureTypes = () => {
     const types = structures.map((structure) => structure.attributes.type);
