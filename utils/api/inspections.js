@@ -20,6 +20,35 @@ export const getInspection = (data) => {
 };
 
 /**
+ * Retrieves a specific inspection based on provided criteria.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {string} data.id - The ID of the inspection to retrieve.
+ * @param {Object} data.query - The query parameters for the request.
+ * @returns {Promise<Object>} - A promise that resolves to the inspection data.
+ */
+export const fetchInspection = async (data) => {
+  const fetchOptions = {
+    headers: {
+      Authorization: `Bearer ${data.jwt}`,
+    },
+    next: { revalidate: 60 }, // Cache the response for 60 seconds
+  };
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections/${data.id}?${data.query}`,
+    fetchOptions
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch inspection with ID ${data.id}`);
+  }
+
+  const inspectionData = await response.json();
+  return inspectionData;
+};
+
+/**
  * Retrieves all inspections concurrently.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
@@ -66,6 +95,70 @@ export const getAllInspections = async (data) => {
   // Combine all data into one array
   const allInspections = responses.flatMap((response) => response.data.data);
 
+  return allInspections;
+};
+
+/**
+ * Retrieves all inspections with batching and caching in Next.js.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {string} data.query - The pre-processed query string for the request.
+ * @returns {Promise<Array>} - A promise that resolves to an array of all inspections.
+ */
+export const fetchAllInspections = async (data) => {
+  const BATCH_SIZE = 5; // Number of pages to fetch in each batch
+  const fetchOptions = {
+    headers: {
+      Authorization: `Bearer ${data.jwt}`,
+    },
+    next: { revalidate: 60 }, // Cache the response for 60 seconds
+  };
+
+  // Step 1: Fetch the first page to get pagination info
+  const initialResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}&pagination[page]=1&pagination[pageSize]=25`,
+    fetchOptions
+  );
+
+  if (!initialResponse.ok) {
+    throw new Error("Failed to fetch the first page of inspections");
+  }
+
+  const initialData = await initialResponse.json();
+  const totalPages = initialData.meta.pagination.pageCount;
+
+  console.log(`Total pages of inspections: ${totalPages}`);
+
+  // Step 2: Fetch all pages in batches
+  let allInspections = [];
+
+  for (let i = 1; i <= totalPages; i += BATCH_SIZE) {
+    const batchPromises = [];
+
+    for (let j = i; j < i + BATCH_SIZE && j <= totalPages; j++) {
+      console.log(`Fetching page ${j}...`);
+
+      const pagePromise = fetch(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/inspections?${data.query}&pagination[page]=${j}&pagination[pageSize]=25`,
+        fetchOptions
+      ).then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch page ${j}`);
+        }
+        return response.json();
+      });
+
+      batchPromises.push(pagePromise);
+    }
+
+    const batchResponses = await Promise.all(batchPromises);
+    const batchInspections = batchResponses.flatMap(
+      (response) => response.data
+    );
+    allInspections = allInspections.concat(batchInspections);
+  }
+
+  // Step 3: Return all inspections
   return allInspections;
 };
 

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../app/api/auth/[...nextauth]/auth";
 import dynamic from "next/dynamic";
 import axios from "axios";
-import { getAllInspections } from "../../utils/api/inspections";
+import { fetchAllInspections } from "../../utils/api/inspections";
 import InspectionTable from "../../components/InspectionTable";
 import InspectionCreateDrawer from "../../components/Drawers/InspectionCreateDrawer";
 import FavoriteInspectionCard from "../../components/Cards/FavoriteInspectionCard";
@@ -72,6 +72,7 @@ export default async function Page() {
 
   const inspectionQuery = qs.stringify({
     populate: {
+      fields: ["name"],
       structures: {
         fields: ["status", "inspectionDate", "type"],
       },
@@ -98,12 +99,12 @@ export default async function Page() {
     },
   });
 
-  const inspections = await getAllInspections({
+  const inspections = await fetchAllInspections({
     jwt: session.accessToken,
     query: inspectionQuery,
   });
 
-  const favoriteInspections = await getAllInspections({
+  const favoriteInspections = await fetchAllInspections({
     jwt: session.accessToken,
     query: favoriteInspectionsQuery,
   });
@@ -114,9 +115,7 @@ export default async function Page() {
         <InspectionCreateDrawer />
       </div>
 
-      <ProtectedContent requiredRoles={["Admin"]}>
-        <StructuresInspectedBarChart />
-      </ProtectedContent>
+      <StructuresInspectedBarChart />
 
       {favoriteInspections.length > 0 && (
         <div className="flex flex-col gap-3 p-6 mb-4 bg-gray-50 border border-gray-200 rounded-md">

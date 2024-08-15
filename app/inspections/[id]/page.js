@@ -9,8 +9,8 @@ import qs from "qs";
 import { authOptions } from "../../../app/api/auth/[...nextauth]/auth";
 import MapPanelContainer from "../../../components/MapPanelContainer";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
-import { getAllStructuresNew } from "../../../utils/api/structures";
-import { getInspection } from "../../../utils/api/inspections";
+import { fetchAllStructures } from "../../../utils/api/structures";
+import { fetchInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 //import InspectionMapImages from "../../../components/InspectionMapImages";
@@ -44,7 +44,18 @@ const Loading = () => (
 );
 
 const LoadingInspectionMapImages = () => (
-  <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg"></div>
+  <div className="inspection-map-box flex col-span-4 md:col-span-1 flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg animate-pulse">
+    <h6 className="text-lg font-semibold">All Structure Documents</h6>
+
+    <div className="grid grid-cols-3 gap-2">
+      {[0, 0, 0, 0, 0, 0, 0, 0, 0].map((image, key) => (
+        <div
+          key={`image-${key}`}
+          className="relative w-full h-full aspect-square z-10 rounded-md bg-slate-200"
+        ></div>
+      ))}
+    </div>
+  </div>
 );
 
 export default async function Page({ params }) {
@@ -97,18 +108,18 @@ export default async function Page({ params }) {
     }
   );
 
-  const inspection = await getInspection({
+  const inspection = await fetchInspection({
     jwt: session.accessToken,
     id: params.id,
     query: inspectionQuery,
   });
 
-  const structures = await getAllStructuresNew({
+  const structures = await fetchAllStructures({
     jwt: session.accessToken,
     query: structuresQuery,
   });
 
-  const inspectionData = inspection.data.data;
+  const inspectionData = inspection.data;
   const inspectionClient = inspectionData.attributes.client;
   const inspectionDocuments = inspectionData.attributes.documents;
   const inspectionName = inspectionData.attributes.name;
@@ -184,11 +195,11 @@ export default async function Page({ params }) {
             <h6 className="text-lg font-semibold">
               Map Documents{" "}
               <Badge color="gray" className="rounded-full inline-block">
-                {inspection?.data.data.attributes.documents.data?.length || 0}
+                {inspection?.data.attributes.documents.data?.length || 0}
               </Badge>
             </h6>
             <p className="text-base text-gray-500">
-              {inspection?.data.data.name || ""}
+              {inspection?.data.name || ""}
             </p>
           </div>
           <div className="overflow-auto">
@@ -200,14 +211,14 @@ export default async function Page({ params }) {
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
             <DownloadFilesAsZipButton
-              images={inspection?.data.data.attributes.documents.data}
+              images={inspection?.data.attributes.documents.data}
             />
           </div>
         </div>
 
         {inspection && (
           <InspectionMapImages
-            inspectionId={inspection.data.data.id}
+            inspectionId={inspection.data.id}
             inspectionName={inspectionName}
           />
         )}
@@ -219,7 +230,7 @@ export default async function Page({ params }) {
 
           {inspection && (
             <ActivityLog
-              id={inspection?.data.data.id}
+              id={inspection?.data.id}
               collection="inspections"
               defaultExpanded={true}
             />
@@ -232,7 +243,7 @@ export default async function Page({ params }) {
           </h6>
 
           <div className="h-full">
-            {inspection?.data.data.attributes.client.data.attributes.contacts?.data.map(
+            {inspection?.data.attributes.client.data.attributes.contacts?.data.map(
               (clientContact, index) => (
                 <div
                   key={index}

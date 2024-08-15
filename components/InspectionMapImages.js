@@ -4,7 +4,7 @@ import qs from "qs";
 import { Badge } from "flowbite-react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { getInspection } from "../utils/api/inspections";
+import { getInspection, fetchInspection } from "../utils/api/inspections";
 import ImageCardSliderAlt from "./ImageCardSliderAlt";
 import DownloadFilesAsSubFolderZipButton from "./DownloadFilesAsSubFolderZipButton";
 
@@ -46,7 +46,7 @@ export default function InspectionMapImages({ inspectionId, inspectionName }) {
         fields: ["name"],
         populate: {
           structures: {
-            fields: ["mapSection"], // Exclude unnecessary structure fields
+            fields: ["mapSection", "wpPassFail"], // Exclude unnecessary structure fields
             populate: {
               images: {
                 populate: "*",
@@ -61,20 +61,17 @@ export default function InspectionMapImages({ inspectionId, inspectionName }) {
     );
 
     const fetchData = async () => {
-      const fetchedInspection = await getInspection({
+      const fetchedInspection = await fetchInspection({
         jwt: session.accessToken,
         id: inspectionId,
         query: imagesQuery,
       });
 
-      console.log("fetchedInspection", fetchedInspection);
-
       try {
         const allImages = extractImagesFromStructures(
-          fetchedInspection.data.data.attributes
+          fetchedInspection.data.attributes
         );
 
-        console.log(allImages);
         setImages(allImages);
       } catch (error) {
         console.error(error);
@@ -94,8 +91,6 @@ export default function InspectionMapImages({ inspectionId, inspectionName }) {
               {images.length}
             </Badge>
           </h6>
-
-          <p className="text-base text-gray-500">{inspectionName || ""}</p>
         </div>
       </div>
       <div className="overflow-auto">

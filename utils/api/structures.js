@@ -126,6 +126,34 @@ export const getAllStructuresNew = async (data) => {
 };
 
 /**
+ * Retrieves all structures concurrently.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {string} data.query - The pre-processed query string for the request.
+ * @returns {Promise<Array>} - A promise that resolves to an array of all structures.
+ */
+export const fetchAllStructures = async (data) => {
+  const fetchOptions = {
+    headers: {
+      Authorization: `Bearer ${data.jwt}`,
+    },
+    next: { revalidate: 60 }, // Cache the response for 60 seconds
+  };
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${data.query}`,
+    fetchOptions
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch structures");
+  }
+
+  const structuresData = await response.json();
+  return structuresData.data;
+};
+
+/**
  * Creates a new structure.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.
