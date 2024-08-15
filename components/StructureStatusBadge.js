@@ -2,6 +2,7 @@ import { Badge } from "flowbite-react";
 import { CheckMark } from "../public/icons/intangible-icons";
 
 export default function StructureStatusBadge({ status, adminStatus }) {
+  console.log("status", status);
   return (
     <>
       {status === "Inspected" && adminStatus === "Uploaded" && (
