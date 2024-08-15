@@ -1,15 +1,16 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+// import React, { useState, useEffect } from "react";
+// import { usePathname } from "next/navigation";
+// import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import ImageCardSliderAlt from "../../../components/ImageCardSliderAlt";
 import { Button, Badge } from "flowbite-react";
+import { getServerSession } from "next-auth";
 import qs from "qs";
-import MapPanelalt from "../../../components/Panel/MapPanelalt";
+import { authOptions } from "../../../app/api/auth/[...nextauth]/auth";
+import MapPanelContainer from "../../../components/MapPanelContainer";
 import InspectionDrawer from "../../../components/Drawers/InspectionDrawer";
 import { getAllStructuresNew } from "../../../utils/api/structures";
+import { getInspection } from "../../../utils/api/inspections";
 import ImageCardGrid from "../../../components/ImageCardGrid";
 import ActivityLog from "../../../components/ActivityLog";
 import ProtectedContent from "../../../components/ProtectedContent";
@@ -17,14 +18,13 @@ import StructureSearchList from "../../../components/StructuresSearchList";
 import DownloadFilesAsSubFolderZipButton from "../../../components/DownloadFilesAsSubFolderZipButton";
 import DownloadFilesAsZipButton from "../../../components/DownloadFilesAsZipButton";
 import { FaRegStar } from "react-icons/fa";
-import { useSelectedStructure } from "../../../context/SelectedStructureContext";
 import AvatarImage from "../../../components/AvatarImage";
 import StructureStatusCircleChart from "../../../components/Charts/StructureStatusCircleChart";
 import { PlusIcon } from "../../../public/icons/intangible-icons";
 import { ensureDomain } from "../../../utils/strings";
-import { useInspection } from "../../../context/InspectionContext";
+//import { useInspection } from "../../../context/InspectionContext";
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
-  ssr: false, // or ssr: false, depending on your needs
+  ssr: true, // or ssr: false, depending on your needs
   loading: () => <Loading />, // Provide the loading component here
 });
 
@@ -35,11 +35,9 @@ const Loading = () => (
 );
 
 export default async function Page({ params }) {
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const { inspection, setInspection } = useInspection();
-  const { selectedStructure, setSelectedStructure } = useSelectedStructure();
-  const [structures, setStructures] = useState([]);
+  const session = await getServerSession(authOptions);
+
+  if (!session) return <p>You must be logged in to view this page.</p>;
 
   const inspectionQuery = qs.stringify(
     {
@@ -51,7 +49,6 @@ export default async function Page({ params }) {
                 picture: "*", // Populate the 'picture' relation
               },
               fields: [
-                // Specify fields you want from 'contacts'
                 "firstName",
                 "lastName",
                 "email",
@@ -95,42 +92,28 @@ export default async function Page({ params }) {
     }
   );
 
-  // const structures = await getAllStructure({
-  //   jwt: session.accessToken,
-  //   query: structuresQuery,
-  // });
+  const inspection = await getInspection({
+    jwt: session.accessToken,
+    id: params.id,
+    query: inspectionQuery,
+  });
+
+  const inspectionData = inspection.data.data;
+  const inspectionClient = inspectionData.attributes.client;
+  const inspectionDocuments = inspectionData.attributes.documents;
+  const inspectionName = inspectionData.name;
+  const projectId = inspectionData.projectId;
+
+  const structures = await getAllStructuresNew({
+    jwt: session.accessToken,
+    query: structuresQuery,
+  });
 
   const getAllStructureTypes = () => {
     const types = structures.map((structure) => structure.attributes.type);
     const uniqueTypes = [...new Set(types)]; // Removes duplicates
     return uniqueTypes;
   };
-
-  useEffect(() => {
-    if (!session) return;
-
-    const fetchData = async () => {
-      try {
-        // Ensure getInspection is imported or defined in your component/module
-
-        const structuresResponse = await getAllStructuresNew({
-          jwt: session.accessToken,
-          query: structuresQuery,
-        });
-
-        console.log("structuresResponse", structuresResponse);
-        console.log("structuresResponse Length", structuresResponse.length);
-
-        structuresResponse.forEach((structure) => console.log(structure.id));
-
-        setStructures(structuresResponse);
-      } catch (error) {
-        console.error("Error fetching data", error.response || error);
-      }
-    };
-
-    fetchData();
-  }, [session]);
 
   /**
    * Returns a list of unique inspectors based on their email.
@@ -192,10 +175,12 @@ export default async function Page({ params }) {
           {/* <Camera /> */}
           <h5 className="leading-tight text-sm text-gray-500 font-medium">
             Project ID:{" "}
-            {inspection?.projectId ? inspection.projectId : "Project ID"}
+            {inspection?.data.data.projectId
+              ? inspection.projectId
+              : "Project ID"}
           </h5>
           <h1 className="leading-tight text-2xl font-medium">
-            {inspection?.name ? inspection.name : "Map Name Here"}
+            {inspection?.data.data.name ? inspection.name : "Map Name Here"}
           </h1>
           <div className="flex gap-3 text-base text-gray-500">
             {getAllStructureTypes().map((type, index) => (
@@ -215,13 +200,14 @@ export default async function Page({ params }) {
 
         <div className="flex gap-3 align-middle">
           <ProtectedContent requiredRoles={["Admin"]}>
-            <InspectionDrawer
-              inspection={inspection}
-              structures={structures}
-              setInspection={setInspection}
-              btnText={"Edit Map"}
-              showIcon={true}
-            />
+            {inspection && (
+              <InspectionDrawer
+                inspection={inspectionData}
+                structures={structures}
+                btnText={"Edit Map"}
+                showIcon={true}
+              />
+            )}
           </ProtectedContent>
           <Button className="bg-dark-blue-700 text-white shrink-0 self-start flex gap-3">
             <p className="mr-4">Add to Favorites</p>{" "}
@@ -232,19 +218,9 @@ export default async function Page({ params }) {
 
       <section className="grid grid-cols-1 md:grid-cols-9 p-0 bg-white border border-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-md shadow-gray-200 mb-4">
         <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full rounded-lg overflow-auto relative col-span-3">
-          <StructureSearchList
-            structures={structures}
-            selectedStructure={selectedStructure}
-            setSelectedStructure={setSelectedStructure}
-          />
+          <StructureSearchList structures={structures} />
 
-          {selectedStructure && (
-            <MapPanelalt
-              key={selectedStructure.id}
-              structureId={selectedStructure.id}
-              setSelectedStructure={setSelectedStructure}
-            />
-          )}
+          <MapPanelContainer />
         </div>
         <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-6">
           <MapboxMap coordinates={structures} />
@@ -259,24 +235,24 @@ export default async function Page({ params }) {
             <h6 className="text-lg font-semibold">
               Map Documents{" "}
               <Badge color="gray" className="rounded-full inline-block">
-                {inspection?.documents.data?.length || 0}
+                {inspection?.data.data.attributes.documents.data?.length || 0}
               </Badge>
             </h6>
-            <p className="text-base text-gray-500">{inspection?.name || ""}</p>
+            <p className="text-base text-gray-500">
+              {inspection?.data.data.name || ""}
+            </p>
           </div>
           <div className="overflow-auto">
-            {inspection && (
-              <ImageCardGrid
-                files={inspection?.documents.data}
-                background={"bg-white"}
-                editMode={false}
-                columns={2}
-                padded={false}
-              />
-            )}
+            <ImageCardSliderAlt
+              images={{ data: inspectionDocuments.data }}
+              limit={false}
+              editable={false}
+            />
           </div>
           <div className="flex justify-between pt-5 border-t mt-auto">
-            <DownloadFilesAsZipButton images={inspection?.documents.data} />
+            <DownloadFilesAsZipButton
+              images={inspection?.data.data.attributes.documents.data}
+            />
           </div>
         </div>
 
@@ -291,19 +267,11 @@ export default async function Page({ params }) {
               </h6>
 
               <p className="text-base text-gray-500">
-                {inspection?.name || ""}
+                {inspection?.data.data.name || ""}
               </p>
             </div>
           </div>
           <div className="overflow-auto">
-            {/* <ImageCardGrid
-              files={allStructuresImages}
-              background={"bg-white"}
-              editMode={false}
-              columns={2}
-              padded={false}
-            /> */}
-
             <ImageCardSliderAlt
               images={{ data: allStructuresImages }}
               limit={false}
@@ -356,7 +324,7 @@ export default async function Page({ params }) {
             {/* <button className="text-sm text-gray-500 font-medium">Edit</button> */}
             <a
               target="_blank"
-              href={`mailto:${inspectorsEmails}?subject=Inspection | ${inspection?.name}&body=${process.env.NEXT_PUBLIC_STRAPI_URL}${pathname}, this is a message from the site!`}
+              href={`mailto:${inspectorsEmails}?subject=Inspection | ${inspection?.data.data.name}&body=${process.env.NEXT_PUBLIC_STRAPI_URL}, this is a message from the site!`}
               className="flex align-middle text-sm font-semibold"
             >
               Email Team <PlusIcon />
@@ -366,11 +334,11 @@ export default async function Page({ params }) {
 
         <div className="inspection-map-box-sm flex flex-col border-gray-300 bg-white gap-4 p-6 md:p-8 rounded-lg">
           <h6 className="text-lg font-semibold">
-            {inspection?.client.data.attributes.name}
+            {inspectionClient.data.attributes.name}
           </h6>
 
           <div className="h-full">
-            {inspection?.client.data.attributes.contacts?.data.map(
+            {inspection?.data.data.attributes.client.data.attributes.contacts?.data.map(
               (clientContact, index) => (
                 <div
                   key={index}
@@ -420,7 +388,7 @@ export default async function Page({ params }) {
 
       <section className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-4 mt-4">
         {inspection && (
-          <ActivityLog id={inspection?.id} collection="inspections" />
+          <ActivityLog id={inspection?.data.data.id} collection="inspections" />
         )}
       </section>
     </>

@@ -2,6 +2,7 @@
 
 import { formatToReadableTime } from "../../utils/strings";
 import { useSelectedStructure } from "../../context/SelectedStructureContext";
+import StructureStatusBadge from "../StructureStatusBadge";
 import {
   Table,
   TableBody,
@@ -41,30 +42,10 @@ const InspectedStructuresTable = ({ structures }) => {
               </TableCell>
               <TableCell> {structure.attributes.type}</TableCell>
               <TableCell>
-                {structure.attributes.status === "Inspected" &&
-                  structure.attributes.adminStatus === "Uploaded" && (
-                    <div className="inline-block">
-                      <Badge
-                        icon={CheckMark}
-                        className="bg-dark-green text-xs h-fit text-white rounded-md px-2 py-0.5 flex-row-reverse "
-                      >
-                        {structure.attributes.adminStatus}
-                      </Badge>
-                    </div>
-                  )}
-
-                {structure.attributes.status === "Inspected" &&
-                  structure.attributes.adminStatus !== "Uploaded" && (
-                    <Badge className=" inline-block" color="green">
-                      {structure.attributes.status}
-                    </Badge>
-                  )}
-
-                {structure.attributes.status !== "Inspected" && (
-                  <Badge className=" inline-block" color="red">
-                    {structure.attributes.status}
-                  </Badge>
-                )}
+                <StructureStatusBadge
+                  status={structure.attributes.status}
+                  adminStatus={structure.attributes.adminStatus}
+                />
               </TableCell>
               <TableCell>
                 {" "}

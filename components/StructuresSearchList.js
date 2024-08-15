@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TextInput } from "flowbite-react";
 import StructureScheduledTag from "./StructureScheduledTag";
 import { CheckMark, PlusIcon } from "../public/icons/intangible-icons";
+import StructureStatusBadge from "./StructureStatusBadge";
 import {
   sortStructuresByStatus,
   getColorBasedOnStatus,
@@ -11,13 +12,11 @@ import {
   ensureDomain,
   loadIcon,
 } from "../utils/strings";
+import { useSelectedStructure } from "../context/SelectedStructureContext";
 
-export default function StructureSearchList({
-  structures,
-  selectedStructure,
-  setSelectedStructure,
-}) {
+export default function StructureSearchList({ structures }) {
   const [structureSearch, setStructureSearch] = useState("");
+  const { selectedStructure, setSelectedStructure } = useSelectedStructure();
 
   const iconMap = {
     red: "/location-red.png",
@@ -101,18 +100,10 @@ export default function StructureSearchList({
               </div>
 
               <div className="flex">
-                <p className="flex text-sm text-gray-700 dark:text-gray-400">
-                  <span
-                    className={`${getInspectionColor(
-                      structure.attributes.status
-                    )} flex align-middle text-xs font-medium me-2 px-2.5 py-0.5 gap-2 rounded-full`}
-                  >
-                    {structure.attributes.status}
-                    {structure.attributes.status === "Uploaded" && (
-                      <CheckMark />
-                    )}
-                  </span>
-                </p>
+                <StructureStatusBadge
+                  status={structure.attributes.status}
+                  adminStatus={structure.attributes.adminStatus}
+                />
               </div>
             </div>
           ))}

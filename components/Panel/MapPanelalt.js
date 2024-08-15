@@ -1,3 +1,5 @@
+"use client";
+
 import ImageCardSliderAlt from "../ImageCardSliderAlt";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -18,6 +20,7 @@ import {
 import { getAllTeams } from "../../utils/api/teams";
 import { useInspection } from "../../context/InspectionContext";
 import { useSession } from "next-auth/react";
+import StructureStatusBadge from "../StructureStatusBadge";
 import { useLoading } from "../../context/LoadingContext";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo, getUrls } from "../../utils/strings";
@@ -339,28 +342,10 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
           </div>
         </div>
         {updatedStructure && (
-          <span
-            className={`${getInspectionColor(
-              updatedStructure.attributes.status
-            )} flex self-center align-middle text-xs font-medium px-2.5 py-0.5 gap-2 rounded-full `}
-          >
-            {updatedStructure.attributes.status}
-            {updatedStructure.attributes.status === "Uploaded" && (
-              <svg
-                className="m-auto"
-                xmlns="http://www.w3.org/2000/svg"
-                width="10"
-                height="7"
-                viewBox="0 0 10 7"
-                fill="none"
-              >
-                <path
-                  d="M3.6722 6.99999C3.51987 7.00065 3.37336 6.93626 3.26399 6.82059L0.509147 3.90423C0.454238 3.84574 0.410425 3.77604 0.38021 3.69908C0.349996 3.62212 0.33397 3.53943 0.33305 3.45572C0.331191 3.28665 0.390968 3.12371 0.499233 3.00273C0.607497 2.88175 0.755379 2.81264 0.910347 2.81061C1.06532 2.80858 1.21467 2.8738 1.32557 2.99191L3.67453 5.47756L8.67336 0.181164C8.78441 0.0630521 8.93392 -0.00209614 9.089 5.14605e-05C9.24407 0.00219906 9.39202 0.0714667 9.50028 0.192616C9.60855 0.313765 9.66826 0.476873 9.6663 0.646056C9.66433 0.815239 9.60083 0.976641 9.48979 1.09475L4.08041 6.82059C3.97104 6.93626 3.82452 7.00065 3.6722 6.99999Z"
-                  fill="white"
-                />
-              </svg>
-            )}
-          </span>
+          <StructureStatusBadge
+            status={updatedStructure.attributes.status}
+            adminStatus={updatedStructure.attributes.adminStatus}
+          />
         )}
       </div>
 

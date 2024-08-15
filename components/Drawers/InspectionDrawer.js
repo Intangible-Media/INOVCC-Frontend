@@ -49,10 +49,17 @@ import {
   structureStatuses,
   structureTypes,
 } from "../../utils/collectionListAttributes";
+import { refreshInspectionData } from "../../app/actions";
 
-const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
+const InspectionDrawer = ({
+  btnText,
+  showIcon = false,
+  structures = [],
+  inspection,
+}) => {
+  console.log("inspection", inspection.client);
   const { showAlert } = useAlert();
-  const { inspection, setInspection, refreshInspection } = useInspection();
+  // const { inspection, setInspection, } = useInspection();
   const { data: session, loading } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -100,9 +107,9 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
       setNewInspection({
         name: inspection.name || "",
         projectId: inspection.projectId || "",
-        structures: inspection.structures || [],
-        documents: inspection.documents || [],
-        client: inspection.client || 1,
+        structures: structures || [],
+        documents: inspection.attributes.documents || [],
+        client: inspection.attributes.client || 1,
       });
     }
   }, [inspection]);
@@ -203,7 +210,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
           client: newInspection.client,
         };
 
-        setInspection(updatedInspection);
+        //setInspection(updatedInspection);
       } else {
         // Creation logic here
         const response = await createInspection(apiParams);
@@ -261,12 +268,12 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         await uploadDocumentsAndImages(response.data.data.id);
       }
 
-      setInspection({
-        ...inspection,
-        structures: {
-          data: [...structures, response.data.data],
-        },
-      });
+      // setInspection({
+      //   ...inspection,
+      //   structures: {
+      //     data: [...structures, response.data.data],
+      //   },
+      // });
 
       setStructure({
         name: "",
@@ -277,7 +284,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         images: [],
       });
 
-      await refreshInspection();
+      await refreshInspectionData();
       showSuccess("Successfully updated!");
 
       return response;
@@ -404,7 +411,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         apiParams.inspectionId,
         apiParams.fieldName
       );
-      setInspection({ ...inspection, documents: { data: files } });
+      //setInspection({ ...inspection, documents: { data: files } });
     } catch (error) {
       console.error(error);
     }
@@ -498,7 +505,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
     try {
       const allStructureRequest = await axios.all(requests);
       // runs and updates the page with all the structures
-      await refreshInspection();
+      await refreshInspectionData();
     } catch (error) {
       console.error(error);
     }
@@ -538,7 +545,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         })
       );
 
-      await refreshInspection();
+      await refreshInspectionData();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -570,7 +577,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         })
       );
 
-      await refreshInspection();
+      await refreshInspectionData();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -604,7 +611,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
         })
       );
 
-      await refreshInspection();
+      await refreshInspectionData();
       showSuccess("Finished All Structures");
       return allResponses;
     } catch (error) {
@@ -905,7 +912,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
                 <Select
                   id="client"
                   required
-                  defaultValue={inspection?.client.data.id || ""}
+                  defaultValue={inspection.attributes.client.data.id || ""}
                   onChange={(e) => {
                     setNewInspection({
                       ...newInspection,
@@ -1181,7 +1188,7 @@ const InspectionDrawer = ({ btnText, showIcon = false, structures = [] }) => {
               )}
 
               <ImageCardGrid
-                files={inspection?.documents.data || []}
+                files={inspection.attributes.documents.data || []}
                 updateFiles={updateInspectionDocuments}
                 labelText={"Inspection Documents"}
                 identifier={"inspection-documents"}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
@@ -276,7 +278,6 @@ const ImageSlider = ({
                 src={ensureDomain(activeImage.attributes.url)}
                 alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
                 layout="fill" // This makes the image fill the parent container
-                objectFit="cover" // Ensures the image covers the entire container
                 objectPosition="center" // Centers the image within the container
                 loading="lazy"
               />
@@ -353,7 +354,6 @@ const ImageSlider = ({
                       src={uploadedImages[currentIndex].url}
                       alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
                       layout="fill" // Makes the image fill the parent container
-                      objectFit="cover" // Ensures the image covers the entire container
                       objectPosition="center" // Centers the image within the container
                       loading="lazy"
                     />
@@ -522,7 +522,6 @@ const ImageSlider = ({
                         src={ensureDomain(smallestImageResolution)}
                         alt="travel image"
                         layout="fill" // Makes the image fill the parent container
-                        objectFit="cover" // Ensures the image covers the entire container
                         objectPosition="center" // Centers the image within the container
                         className="rounded-md" // Preserves the rounded corners
                         loading="lazy"

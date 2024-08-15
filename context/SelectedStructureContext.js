@@ -1,3 +1,5 @@
+"use client";
+
 // context/SelectedStructureContext.js
 import { createContext, useState, useContext, useEffect } from "react";
 
