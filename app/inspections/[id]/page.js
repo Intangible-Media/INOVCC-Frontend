@@ -176,13 +176,13 @@ export default async function Page({ params }) {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-9 p-0 bg-white border border-white rounded-md gap-0 mx-h-[800px] md:h-[550px] shadow-md shadow-gray-200 mb-4">
-        <div className="map-structure-panel flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full rounded-lg overflow-auto relative col-span-3">
+      <section className="grid grid-cols-1 md:grid-cols-9 p-0 bg-white border border-white rounded-md gap-0 max-h-[800px] md:h-[550px] shadow-md shadow-gray-200 mb-4">
+        <div className=" flex flex-col items-center border-gray-300 dark:border-gray-600 bg-white w-full rounded-lg overflow-auto relative col-span-3 max-h-[525px] order-2 md:order-1">
           <StructureSearchList structures={structures} />
 
           <MapPanelContainer />
         </div>
-        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-6">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-6 order-1 md:order-2">
           <MapboxMap coordinates={structures} />
         </div>
       </section>

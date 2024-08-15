@@ -269,10 +269,10 @@ const ImageSlider = ({
       {activeImage && (
         <div
           id="active-image-modal"
-          className="image-modal flex flex-col align-middle justify-center absolute top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10"
+          className="image-modal flex flex-col align-middle justify-center fixed top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10 animate-fadeInFast"
           onClick={exitModal}
         >
-          <div className="aspect-square flex flex-col bg-white rounded-lg overflow-hidden relative">
+          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative aspect-square w-full md:w-[600px] md:h-[600px] m-auto">
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
                 src={ensureDomain(activeImage.attributes.url)}
@@ -282,12 +282,8 @@ const ImageSlider = ({
                 loading="lazy"
               />
             ) : (
-              // <img
-              //   src={ensureDomain(activeImage.attributes.url)}
-              //   className="w-full h-full object-cover object-center"
-              // />
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
-                <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-[1/1.294] p-14">
+                <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-square p-14">
                   <h6 className=" text-xl text-gray-400 font-medium">
                     {activeImage.attributes.ext}
                   </h6>

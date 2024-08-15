@@ -317,7 +317,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
   };
 
   return (
-    <div className=" absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000]">
+    <div className="fixed md:absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000] md:z-[10] max-h-screen overflow-auto">
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
         <div className="flex flex-col gap-2 w-auto shrink">
           <h6

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { notFound } from "next/navigation";
 
 /**
  * Retrieves a specific inspection based on provided criteria.
@@ -40,8 +41,15 @@ export const fetchInspection = async (data) => {
     fetchOptions
   );
 
+  if (response.status === 404) {
+    // Use Next.js's notFound() utility to indicate a 404 error
+    notFound();
+  }
+
   if (!response.ok) {
-    throw new Error(`Failed to fetch inspection with ID ${data.id}`);
+    throw new Error(
+      `Failed to fetch inspection with ID ${data.id}: ${response.statusText}`
+    );
   }
 
   const inspectionData = await response.json();
