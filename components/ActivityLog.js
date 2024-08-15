@@ -26,6 +26,8 @@ export default function ActivityLog({
   const [hasMore, setHasMore] = useState(true); // State to track if there are more activities to load
 
   useEffect(() => {
+    if (!session) return;
+
     const fetchActivities = async () => {
       if (loading || !hasMore) return; // Prevent fetching if already loading or no more activities
       setLoading(true);
@@ -58,7 +60,7 @@ export default function ActivityLog({
           `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/activities?${query}`,
           {
             headers: {
-              Authorization: `Bearer ${session?.accessToken}`,
+              Authorization: `Bearer ${session.accessToken}`,
             },
           }
         );
@@ -79,7 +81,7 @@ export default function ActivityLog({
     if (isExpanded) {
       fetchActivities();
     }
-  }, [session?.accessToken, id, collection, page, isExpanded]); // Add `page` and `isExpanded` to the dependency array
+  }, [session, id, collection, page, isExpanded]); // Add `page` and `isExpanded` to the dependency array
 
   // Define the function for the "Load More" button click
   const handleLoadMore = () => {
