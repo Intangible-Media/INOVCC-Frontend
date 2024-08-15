@@ -864,7 +864,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                         defaultDate={
                           new Date(
                             updatedStructure.attributes.scheduleStart ||
-                              new Date.now()
+                              Date.now()
                           )
                         }
                         title="Schedule Start Datepicker"
@@ -882,7 +882,7 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
                         defaultDate={
                           new Date(
                             updatedStructure.attributes.scheduleEnd ||
-                              new Date.now()
+                              Date.now()
                           )
                         }
                         title="Schedule End Datepicker"
