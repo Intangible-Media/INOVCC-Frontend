@@ -2,41 +2,71 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { statusColors } from "../../utils/collectionListAttributes";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function StructureStatusCircleChart({ structures = [] }) {
-  const [activeCompletion, setActiveCompletion] = useState(0);
+  const [activeCompletion, setActiveCompletion] = useState([0, 0]); // Updated to hold two values
   const [structureProgressType, setStructureProgressType] = useState("All");
   const [options, setOptions] = useState({
-    series: [70],
+    series: [],
     chart: {
-      type: "radialBar",
-      offsetY: 0,
+      type: "donut",
+      offsetY: 20,
     },
-    colors: ["#FDF6B2"],
+    colors: [], // Will be dynamically set based on status colors
     plotOptions: {
-      radialBar: {
-        hollow: {
-          size: "72%",
-        },
-        dataLabels: {
-          show: true,
-          name: {
-            offsetY: 30,
+      pie: {
+        donut: {
+          size: "85%", // Make the donut more hollow
+          labels: {
             show: true,
-            color: "#111928",
-            fontSize: "17px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#111928",
-            fontSize: "48px",
-            show: true,
+            name: {
+              offsetY: 30,
+              show: true,
+              color: "#111928",
+              fontSize: "17px",
+            },
+            value: {
+              offsetY: -15,
+              color: "#111928",
+              fontSize: "38px",
+              show: true,
+            },
+            total: {
+              showAlways: true,
+              show: true,
+              label: "Total",
+              formatter: function (w) {
+                return structures.length;
+              },
+              name: {
+                offsetY: 30,
+                show: true,
+                color: "#111928",
+                fontSize: "17px",
+              },
+              value: {
+                offsetY: -15,
+                color: "#111928",
+                fontSize: "38px",
+                show: true,
+              },
+            },
           },
         },
       },
     },
-    labels: ["All"],
+    dataLabels: {
+      enabled: false,
+    },
+    labels: [],
+    legend: {
+      show: true,
+      position: "bottom",
+      horizontalAlign: "center",
+      offsetY: 0,
+    },
   });
 
   const getAllStructureTypes = () => {
@@ -46,7 +76,7 @@ export default function StructureStatusCircleChart({ structures = [] }) {
   };
 
   /**
-   * Updates the progress bar based on the percentage of inspected structures.
+   * Updates the progress bars based on the percentage of structures by their statuses.
    *
    * @param {string} type - The type of structures to consider. Defaults to "all".
    */
@@ -58,26 +88,44 @@ export default function StructureStatusCircleChart({ structures = [] }) {
         type === "all" || structure.attributes.type.toLowerCase() === type
     );
 
-    const inspectedStructures = filteredStructuresByType.filter(
-      (structure) => structure.attributes.status.toLowerCase() === "inspected"
-    );
+    // Get all unique statuses
+    const statuses = [
+      ...new Set(
+        filteredStructuresByType.map((structure) => structure.attributes.status)
+      ),
+    ];
 
-    const percentOfCompletion =
-      filteredStructuresByType.length > 0
-        ? Math.round(
-            (inspectedStructures.length / filteredStructuresByType.length) * 100
-          )
-        : 0;
+    // Calculate the percentage of each status
+    const statusPercentages = statuses.map((status) => {
+      const structuresWithStatus = filteredStructuresByType.filter(
+        (structure) => structure.attributes.status === status
+      );
+      return {
+        status,
+        percentage: Math.round(
+          (structuresWithStatus.length / filteredStructuresByType.length) * 100
+        ),
+      };
+    });
 
-    setActiveCompletion(percentOfCompletion);
-  };
+    // Sort status percentages by percentage in descending order
+    statusPercentages.sort((a, b) => b.percentage - a.percentage);
 
-  useEffect(() => {
+    // Update series, labels, and colors
+    const percentages = statusPercentages.map((item) => item.percentage);
+    const labels = statusPercentages.map((item) => item.status);
+    const colors = statusPercentages.map(
+      (item) => statusColors[item.status] || "#cccccc"
+    ); // Default to gray if color not found
+
+    setActiveCompletion(percentages);
     setOptions((prevOptions) => ({
       ...prevOptions,
-      labels: [structureProgressType],
+      labels,
+      series: percentages,
+      colors, // Set the colors dynamically based on the statuses
     }));
-  }, [structureProgressType]);
+  };
 
   useEffect(() => {
     updateProgressBar(structureProgressType);
@@ -106,11 +154,11 @@ export default function StructureStatusCircleChart({ structures = [] }) {
         <div></div>
       </div>
       <div className="w-full mt-auto md:mt-0">
-        <div className=" h-[400px] md:h-[400px] -mb-12 -mt-8">
+        <div className="h-[400px] md:h-[400px] -mb-12 -mt-8">
           <ApexChart
-            type="radialBar"
+            type="donut"
             options={options}
-            series={[activeCompletion]}
+            series={activeCompletion}
             height={"100%"}
             width={"100%"}
           />
