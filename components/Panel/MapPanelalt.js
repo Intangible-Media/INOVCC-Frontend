@@ -31,6 +31,8 @@ import qs from "qs";
 import axios from "axios";
 import DirectionsComponent from "../DirectionsComponent";
 import { createComment } from "../../utils/api/comment";
+import { useParams } from "next/navigation";
+import { refreshInspectionData, refreshSchedulenData } from "../../app/actions";
 import {
   IoShareSocialOutline,
   IoArrowRedoSharp,
@@ -44,8 +46,9 @@ import {
 } from "../../utils/collectionListAttributes";
 import { CheckMark } from "../../public/icons/intangible-icons";
 
-export default function MapPanel({ structureId, setSelectedStructure }) {
+export default function MapPanel({ structureId, setSelectedStructure, page }) {
   const { data: session, loading } = useSession();
+  const params = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentPanel, setCurrentPanel] = useState("overview");
   const [updatedStructure, setUpdatedStructure] = useState(null);
@@ -189,6 +192,14 @@ export default function MapPanel({ structureId, setSelectedStructure }) {
       };
 
       const response = await updateStructure(apiParams);
+
+      if (page === "schedule") {
+        refreshSchedulenData(params.id);
+      }
+
+      if (page === "inspection") {
+        refreshInspectionData(params.id);
+      }
 
       showSuccess("Updated structure successfully!");
     } catch (error) {

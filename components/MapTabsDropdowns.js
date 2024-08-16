@@ -12,11 +12,13 @@ import StructureStatusBadge from "./StructureStatusBadge";
 import { getColorBasedOnStatus, getInspectionColor } from "../utils/strings";
 import { useSelectedStructure } from "../context/SelectedStructureContext";
 import MapPanelalt from "./Panel/MapPanelalt";
+import { useParams } from "next/navigation";
+import { refreshSchedulenData } from "../app/actions";
 
 const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
-  const [expandedGroup, setExpandedGroup] = useState(null);
-  const [expandRescheduled, setExpandRescheduled] = useState(false);
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
+  const [expandRescheduled, setExpandRescheduled] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState(null);
 
   const toggleGroup = (index) => {
     setExpandedGroup(expandedGroup === index ? null : index);
@@ -29,6 +31,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
           key={selectedStructure.id}
           structureId={selectedStructure.id}
           setSelectedStructure={setSelectedStructure}
+          page="schedule"
         />
       ) : (
         <div className="flex flex-col gap-2">

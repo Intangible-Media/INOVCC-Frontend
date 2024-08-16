@@ -12,6 +12,7 @@ export default function MapPanelContainer() {
         <MapPanelalt
           structureId={selectedStructure.id}
           setSelectedStructure={setSelectedStructure}
+          page="inspection"
         />
       ) : null}
     </>

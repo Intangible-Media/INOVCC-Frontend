@@ -196,15 +196,10 @@ export default async function Page({ params, searchParams }) {
           </div>
 
           <div className="flex flex-col gap-4 mt-8">
-            <h3 className="text-md font-bold dark:text-white">
-              Inspected Structures{" - "}
-              <span className=" font-light text-gray-500">
-                {date.toLocaleDateString()}
-              </span>
-            </h3>
-            <div className="flex flex-col gap-0 border">
-              <InspectedStructuresTable structures={structuresInspectedToday} />
-            </div>
+            <InspectedStructuresTable
+              date={date}
+              structures={structuresInspectedToday}
+            />
           </div>
         </div>
         <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2">
