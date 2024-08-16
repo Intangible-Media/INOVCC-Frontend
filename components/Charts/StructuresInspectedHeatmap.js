@@ -9,8 +9,8 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
   const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
-    // Create an array with 24 elements for each hour of the day.
-    const hourlyCounts = Array(24).fill(0);
+    // Create an array with 48 elements for each 30-minute interval of the day (24 hours * 2).
+    const intervalCounts = Array(48).fill(0);
 
     structures.forEach((structure) => {
       const inspectionDate = structure.attributes.inspectionDate;
@@ -28,8 +28,10 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
           return; // Skip if the date is invalid
         }
 
-        const hour = date.getHours(); // Get the hour from the inspectionDate
-        hourlyCounts[hour] += 1;
+        const hour = date.getHours();
+        const minutes = date.getMinutes();
+        const intervalIndex = hour * 2 + (minutes >= 30 ? 1 : 0); // Determine the index for the 30-minute interval
+        intervalCounts[intervalIndex] += 1;
       } catch (error) {
         console.error(
           "Error processing date:",
@@ -44,10 +46,15 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
     const heatmapSeries = [
       {
         name: "",
-        data: hourlyCounts.map((count, hour) => ({
-          x: new Date(1970, 0, 1, hour).getTime(), // Using a base date to plot hours on a datetime scale
-          y: count,
-        })),
+        data: intervalCounts.map((count, index) => {
+          const hour = Math.floor(index / 2);
+          const minutes = index % 2 === 0 ? "00" : "30";
+          const time = new Date(1970, 0, 1, hour, minutes).getTime(); // Using a base date to plot hours on a datetime scale
+          return {
+            x: time,
+            y: count,
+          };
+        }),
       },
     ];
 
@@ -58,13 +65,13 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
     chart: {
       type: "heatmap",
       height: 350,
-      legend: {
+      toolbar: {
         show: false,
       },
     },
     plotOptions: {
       heatmap: {
-        shadeIntensity: 0.5,
+        shadeIntensity: 0.75,
         colorScale: {
           ranges: [
             {
@@ -75,18 +82,18 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
             },
             {
               from: 1,
-              to: 10,
+              to: 5,
               color: "#A5D6A7",
               name: "1-10 Inspections",
             },
             {
-              from: 11,
-              to: 20,
+              from: 6,
+              to: 10,
               color: "#66BB6A",
               name: "11-20 Inspections",
             },
             {
-              from: 21,
+              from: 11,
               to: 50,
               color: "#43A047",
               name: "21-50 Inspections",
@@ -113,7 +120,7 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
     xaxis: {
       type: "datetime",
       labels: {
-        show: true,
+        show: false,
         formatter: function (value) {
           const date = new Date(value);
           let hours = date.getHours();
@@ -122,7 +129,12 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
           hours = hours % 12;
           hours = hours ? hours : 12; // the hour '0' should be '12'
           const minutesStr = minutes < 10 ? "0" + minutes : minutes;
-          return `${hours}:${minutesStr} ${ampm}`;
+
+          // Only show the label for times at the start of each hour
+          if (minutesStr === "00") {
+            return `${hours} ${ampm}`;
+          }
+          return "";
         },
       },
       axisBorder: {
@@ -132,6 +144,7 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
         show: false,
       },
     },
+
     yaxis: {
       labels: {
         show: true,
@@ -142,7 +155,7 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
       align: "center",
     },
     legend: {
-      show: false,
+      show: true,
     },
   };
 
@@ -151,7 +164,7 @@ export default function StructuresInspectedHeatmap({ structures = [] }) {
       options={options}
       series={heatmapData}
       type="heatmap"
-      height={100}
+      height={80}
       width={"100%"}
     />
   );

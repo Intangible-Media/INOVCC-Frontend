@@ -217,7 +217,7 @@ export default async function Page({ params, searchParams }) {
         </div>
       </section>
 
-      <section className="bg-white p-3 md:p-6 rounded-md shadow-md">
+      <section className="bg-white p-0 md:p-0 rounded-md shadow-md">
         <StructuresInspectedHeatmap structures={structuresInspectedToday} />
       </section>
     </div>

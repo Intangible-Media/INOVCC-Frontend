@@ -18,6 +18,7 @@ import LoadingScreen from "../components/LoadingScreen";
 import SearchBar from "../components/SearchBar";
 import { getAllTasks } from "../utils/api/tasks";
 import useWakeLock from "../hooks/useWakeLock";
+import { FaRegChartBar } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import "./globals.css";
 import path from "path";
@@ -617,6 +618,18 @@ export default function RootLayout({ children }) {
                   />
                 </svg>
                 {!isCollapsed && <span className="ml-3">Clients</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/reports"
+                className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                  "/reports"
+                )}`}
+              >
+                <FaRegChartBar color="#4B5563" size={22} />
+
+                {!isCollapsed && <span className="ml-3">Reports</span>}
               </Link>
             </li>
           </ProtectedContent>
