@@ -23,6 +23,7 @@ import {
 const CheckMark = () => <FaCheck size={11} color="white" />;
 
 const InspectedStructuresTable = ({ date, structures }) => {
+  console.log(structures);
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
   const { showLoading, hideLoading, showSuccess } = useLoading();
 
@@ -79,7 +80,7 @@ const InspectedStructuresTable = ({ date, structures }) => {
         </Button>
       </div>
       <div className="flex flex-col gap-0 border">
-        <div className="h-[400px] overflow-auto overflow-x-auto w-full">
+        <div className="max-h-[400px] overflow-auto overflow-x-auto w-full">
           <Table striped className="">
             <TableHead className="sticky">
               <TableHeadCell>Name</TableHeadCell>
@@ -99,7 +100,9 @@ const InspectedStructuresTable = ({ date, structures }) => {
                   >
                     {structure.attributes.mapSection}
                   </TableCell>
-                  <TableCell> {structure.attributes.type}</TableCell>
+                  <TableCell>
+                    <p className="w-24">{structure.attributes.type}</p>
+                  </TableCell>
                   <TableCell>
                     <StructureStatusBadge
                       status={structure.attributes.status}
@@ -107,8 +110,11 @@ const InspectedStructuresTable = ({ date, structures }) => {
                     />
                   </TableCell>
                   <TableCell>
-                    {" "}
-                    {formatToReadableTime(structure.attributes.inspectionDate)}
+                    <p className="w-24">
+                      {formatToReadableTime(
+                        structure.attributes.inspectionDate
+                      )}
+                    </p>
                   </TableCell>
                 </TableRow>
               ))}
