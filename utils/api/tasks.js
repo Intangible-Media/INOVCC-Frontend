@@ -109,6 +109,7 @@ export const uploadFiles = async (jwt, files, taskId, fieldName) => {
   const formData = new FormData();
 
   // Add each file to the FormData object
+  console.log(files);
   files.forEach((file) => {
     formData.append("files", file);
   });

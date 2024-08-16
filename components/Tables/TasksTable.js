@@ -13,7 +13,10 @@ import {
 import ActivityLog from "../../components/ActivityLog";
 import ImageCardGrid from "../../components/ImageCardGrid";
 import { useSession } from "next-auth/react";
+import { updateTask } from "../../utils/api/tasks";
 import { createActivity } from "../../utils/api/activities";
+import { refreshTaskData } from "../../app/actions"; // Import revalidatePath
+
 import { useState } from "react";
 
 const UrgencyBadge = ({ urgency }) => {
@@ -45,6 +48,40 @@ export default function TasksTable({ tasks }) {
     setSelectedTask(task);
     setOpenModal(true);
     createActivityLog(task.id);
+  };
+
+  const markTaskAsComplete = async (task) => {
+    const apiParams = {
+      jwt: session.accessToken,
+      id: task.id,
+      payload: {
+        data: {
+          isComplete: true,
+        },
+      },
+    };
+
+    const updatedTask = await updateTask(apiParams);
+    setSelectedTask(updatedTask.data.data);
+
+    refreshTaskData();
+  };
+
+  const markTaskAsIncomplete = async (task) => {
+    const apiParams = {
+      jwt: session.accessToken,
+      id: task.id,
+      payload: {
+        data: {
+          isComplete: false,
+        },
+      },
+    };
+
+    const updatedTask = await updateTask(apiParams);
+    setSelectedTask(updatedTask.data.data);
+
+    refreshTaskData();
   };
 
   const formatDate = (dateString) => {
@@ -119,6 +156,18 @@ export default function TasksTable({ tasks }) {
     await createActivity(apiParams);
   };
 
+  const statusBackground = (task) => {
+    if (task.attributes.isComplete) {
+      return "bg-green-200 text-green-800 font-medium text-center leading-none";
+    }
+
+    if (isLate(task.attributes.dueDate)) {
+      return "bg-red-200 text-red-800 font-medium text-center leading-none";
+    } else {
+      return "bg-yellow-100 text-yellow-800 font-medium text-center leading-none";
+    }
+  };
+
   return (
     <>
       {selectedTask && (
@@ -130,21 +179,22 @@ export default function TasksTable({ tasks }) {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 capitalize">
                   {selectedTask.attributes.title}
                 </h2>
-                <div className="max-h-24 h-24 overflow-auto mb-5">
+                <div className="max-h-24 h-24 overflow-auto mb-5 border rounded-md p-3">
                   <p className="text-gray-600 dark:text-gray-300">
                     {selectedTask.attributes.description}
                   </p>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 flex justify-start">
-                  Urgency:{" "}
+                  Urgency:{"  "}
                   <UrgencyBadge urgency={selectedTask.attributes.urgency} />
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Due Date: {selectedTask.attributes.dueDate}
+                  Due Date: {`${formatDate(selectedTask.attributes.dueDate)}`}
+                  <span className="font-normal text-gray-400 capitalize">
+                    {`  (${daysUntilDue(selectedTask.attributes.dueDate)})`}
+                  </span>
                 </p>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Assigned By: {selectedTask.attributes.assignedBy}
-                </p>
+
                 <div className="mt-8">
                   <ImageCardGrid
                     files={selectedTask.attributes.documents?.data || []}
@@ -165,7 +215,21 @@ export default function TasksTable({ tasks }) {
             </section>
           </Modal.Body>
           <Modal.Footer>
-            <Button>Mark Complete</Button>
+            {selectedTask.attributes.isComplete ? (
+              <Button
+                className="bg-red-800 text-white"
+                onClick={() => markTaskAsIncomplete(selectedTask)}
+              >
+                Mark Incomplete
+              </Button>
+            ) : (
+              <Button
+                className="bg-dark-blue-700 text-white"
+                onClick={() => markTaskAsComplete(selectedTask)}
+              >
+                Mark Complete
+              </Button>
+            )}
           </Modal.Footer>
         </Modal>
       )}
@@ -207,15 +271,7 @@ export default function TasksTable({ tasks }) {
               <TableCell className="font-medium text-gray-800">
                 {`${daysAgo(task.attributes.createdAt)}`}
               </TableCell>
-              <TableCell
-                className={
-                  task.attributes.isComplete
-                    ? "bg-green-200 text-green-800 font-medium text-center leading-none"
-                    : isLate(task.attributes.dueDate)
-                    ? "bg-red-200 text-red-800 font-medium text-center leading-none"
-                    : "bg-yellow-100 text-yellow-800 font-medium text-center leading-none"
-                }
-              >
+              <TableCell className={statusBackground(task)}>
                 {task.attributes.isComplete
                   ? "Completed"
                   : isLate(task.attributes.dueDate)

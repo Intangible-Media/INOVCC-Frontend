@@ -11,10 +11,18 @@ export default async function Page() {
   if (!session) return <p>You must be logged in to view this page.</p>;
 
   const query = qs.stringify({
+    filters: {
+      assigned: {
+        id: {
+          $eq: session.user.id,
+        },
+      },
+    },
     populate: {
       documents: { populate: "*" },
       assigned: { populate: "*" },
     },
+    sort: ["createdAt:desc"], // Sort by createdAt in descending order
   });
 
   const tasks = await getAllTasks({
