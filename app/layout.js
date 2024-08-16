@@ -1,10 +1,11 @@
 "use client";
 
-import { ThemeModeScript } from "flowbite-react";
+import { ThemeModeScript, Badge } from "flowbite-react";
 import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import qs from "qs";
 import DynamicBreadcrumb from "../components/DynamicBreadcrumb";
 import { useEffect, useState } from "react";
 import { AlertProvider } from "../context/AlertContext";
@@ -15,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { LoadingProvider } from "../context/LoadingContext";
 import LoadingScreen from "../components/LoadingScreen";
 import SearchBar from "../components/SearchBar";
+import { getAllTasks } from "../utils/api/tasks";
 import useWakeLock from "../hooks/useWakeLock";
 import { useSession } from "next-auth/react";
 import "./globals.css";
@@ -34,7 +36,6 @@ export const useBackgroundClass = (searchString) => {
   const [backgroundClass, setBackgroundClass] = useState("");
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     const url = `${pathname}?${searchParams}`;
@@ -58,29 +59,11 @@ export const useBackgroundClass = (searchString) => {
   return backgroundClass;
 };
 export default function RootLayout({ children }) {
-  //useWakeLock();
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
-
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-
-  // Minimum distance (in pixels) that a swipe must travel to be considered a swipe
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e) => {
-    // Get the initial touch position
-    const touchDown = e.touches[0].clientX;
-    setTouchStart(touchDown);
-  };
-
-  const onTouchEnd = (e) => {
-    // Get the final touch position
-    const touchDown = e.changedTouches[0].clientX;
-    setTouchEnd(touchDown);
-  };
 
   useEffect(() => {
     const tollerance = 250;
@@ -106,7 +89,34 @@ export default function RootLayout({ children }) {
   };
 
   const MobileNavbar = () => {
+    const { data: session } = useSession();
     const [isCollapsed, setIsCollapsed] = useState(true);
+    const [pendingTasks, setPendingTasks] = useState(0);
+
+    useEffect(() => {
+      if (!session) return;
+
+      const getData = async () => {
+        const taskQuery = qs.stringify({
+          filters: {
+            assigned: {
+              id: {
+                $eq: session.user.id,
+              },
+            },
+          },
+        });
+
+        const tasks = await getAllTasks({
+          jwt: session.accessToken,
+          query: taskQuery,
+        });
+
+        setPendingTasks(tasks.data.data.length);
+      };
+
+      getData();
+    }, [session]);
 
     const toggleCollapse = () => {
       setIsCollapsed(!isCollapsed);
@@ -284,7 +294,16 @@ export default function RootLayout({ children }) {
                       fill="#ffffff"
                     />
                   </svg>
-                  {!isCollapsed && <span className="ml-3">Tasks</span>}
+                  {!isCollapsed && (
+                    <span className="flex justify-between w-full ml-3">
+                      Tasks{" "}
+                      {pendingTasks > 0 && (
+                        <Badge color="failure" className="my-auto">
+                          {pendingTasks}
+                        </Badge>
+                      )}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li onClick={toggleCollapse}>
@@ -351,8 +370,34 @@ export default function RootLayout({ children }) {
   };
 
   const DesktopNavbar = () => {
-    const { data: session, loading } = useSession();
+    const { data: session } = useSession();
 
+    const [pendingTasks, setPendingTasks] = useState(0);
+
+    useEffect(() => {
+      if (!session) return;
+
+      const getData = async () => {
+        const taskQuery = qs.stringify({
+          filters: {
+            assigned: {
+              id: {
+                $eq: session.user.id,
+              },
+            },
+          },
+        });
+
+        const tasks = await getAllTasks({
+          jwt: session.accessToken,
+          query: taskQuery,
+        });
+
+        setPendingTasks(tasks.data.data.length);
+      };
+
+      getData();
+    }, [session]);
     return (
       <div
         className={`main-navigation fixed top-[61px] left-0 z-10 h-screen transition-all duration-300 px-4 py-4 transform" ${
@@ -460,55 +505,63 @@ export default function RootLayout({ children }) {
               {!isCollapsed && <span className="ml-3">Schedules</span>}
             </Link>
           </li>
-          <ProtectedContent requiredRoles={["Admin"]}>
-            <li>
-              <Link
-                href="/tasks"
-                className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
-                  "tasks"
-                )}`}
+          <li>
+            <Link
+              href="/tasks"
+              className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${useBackgroundClass(
+                "tasks"
+              )}`}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M20 4H4C2.897 4 2 4.897 2 6V18C2 19.103 2.897 20 4 20H20C21.103 20 22 19.103 22 18V6C22 4.897 21.103 4 20 4ZM4 18V6H20L20.001 18H4Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M17 8H11C10.447 8 10 8.448 10 9C10 9.552 10.447 10 11 10H17C17.553 10 18 9.552 18 9C18 8.448 17.553 8 17 8Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M17 11H11C10.447 11 10 11.448 10 12C10 12.552 10.447 13 11 13H17C17.553 13 18 12.552 18 12C18 11.448 17.553 11 17 11Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M17 14H11C10.447 14 10 14.448 10 15C10 15.552 10.447 16 11 16H17C17.553 16 18 15.552 18 15C18 14.448 17.553 14 17 14Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M7 10C7.55228 10 8 9.55228 8 9C8 8.44772 7.55228 8 7 8C6.44772 8 6 8.44772 6 9C6 9.55228 6.44772 10 7 10Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M7 13C7.55228 13 8 12.5523 8 12C8 11.4477 7.55228 11 7 11C6.44772 11 6 11.4477 6 12C6 12.5523 6.44772 13 7 13Z"
-                    fill="#4B5563"
-                  />
-                  <path
-                    d="M7 16C7.55228 16 8 15.5523 8 15C8 14.4477 7.55228 14 7 14C6.44772 14 6 14.4477 6 15C6 15.5523 6.44772 16 7 16Z"
-                    fill="#4B5563"
-                  />
-                </svg>
+                <path
+                  d="M20 4H4C2.897 4 2 4.897 2 6V18C2 19.103 2.897 20 4 20H20C21.103 20 22 19.103 22 18V6C22 4.897 21.103 4 20 4ZM4 18V6H20L20.001 18H4Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M17 8H11C10.447 8 10 8.448 10 9C10 9.552 10.447 10 11 10H17C17.553 10 18 9.552 18 9C18 8.448 17.553 8 17 8Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M17 11H11C10.447 11 10 11.448 10 12C10 12.552 10.447 13 11 13H17C17.553 13 18 12.552 18 12C18 11.448 17.553 11 17 11Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M17 14H11C10.447 14 10 14.448 10 15C10 15.552 10.447 16 11 16H17C17.553 16 18 15.552 18 15C18 14.448 17.553 14 17 14Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M7 10C7.55228 10 8 9.55228 8 9C8 8.44772 7.55228 8 7 8C6.44772 8 6 8.44772 6 9C6 9.55228 6.44772 10 7 10Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M7 13C7.55228 13 8 12.5523 8 12C8 11.4477 7.55228 11 7 11C6.44772 11 6 11.4477 6 12C6 12.5523 6.44772 13 7 13Z"
+                  fill="#4B5563"
+                />
+                <path
+                  d="M7 16C7.55228 16 8 15.5523 8 15C8 14.4477 7.55228 14 7 14C6.44772 14 6 14.4477 6 15C6 15.5523 6.44772 16 7 16Z"
+                  fill="#4B5563"
+                />
+              </svg>
 
-                {!isCollapsed && <span className="ml-3">Tasks</span>}
-              </Link>
-            </li>
-
+              {!isCollapsed && (
+                <span className="flex justify-between w-full ml-3">
+                  Tasks{" "}
+                  {pendingTasks > 0 && (
+                    <Badge color="failure" className="my-auto">
+                      {pendingTasks}
+                    </Badge>
+                  )}
+                </span>
+              )}
+            </Link>
+          </li>
+          <ProtectedContent requiredRoles={["Admin"]}>
             <li>
               <Link
                 href="/billing"
