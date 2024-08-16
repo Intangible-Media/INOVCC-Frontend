@@ -12,7 +12,7 @@ export default function ScheduleDate({ date, teamId }) {
       selectedDate instanceof Date ? selectedDate.toISOString() : selectedDate;
     const encodedDate = encodeURIComponent(dateStr);
 
-    router.push(`/schedulesnew/${teamId}?date=${encodedDate}`);
+    router.push(`/schedules/${teamId}?date=${encodedDate}`);
   };
 
   return (
