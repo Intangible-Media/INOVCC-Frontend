@@ -250,6 +250,61 @@ export const convertInspectionsToZipArgs = (structures) => {
   });
 };
 
+export const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = { month: "short", day: "numeric", year: "numeric" };
+  return date.toLocaleDateString("en-US", options).replace(",", "");
+};
+
+export const daysUntilDue = (dueDateString) => {
+  const dueDate = new Date(dueDateString);
+  const currentDate = new Date();
+
+  // Calculate the difference in time (milliseconds)
+  const timeDifference = dueDate.getTime() - currentDate.getTime();
+
+  // Convert time difference from milliseconds to days
+  const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+  // Handle cases where the due date is today, in the past, or in the future
+  if (daysDifference > 0) {
+    return `${daysDifference} day${daysDifference > 1 ? "s" : ""} left`;
+  } else if (daysDifference === 0) {
+    return "Due today";
+  } else {
+    return `Overdue by ${Math.abs(daysDifference)} day${
+      Math.abs(daysDifference) > 1 ? "s" : ""
+    }`;
+  }
+};
+
+export const daysAgo = (dateString) => {
+  const givenDate = new Date(dateString);
+  const currentDate = new Date();
+
+  // Calculate the difference in time (milliseconds)
+  const timeDifference = currentDate.getTime() - givenDate.getTime();
+
+  // Convert time difference from milliseconds to days
+  const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
+
+  // Handle cases where the date is today or in the past
+  if (daysDifference === 0) {
+    return "Today";
+  } else if (daysDifference > 0) {
+    return `${daysDifference} day${daysDifference > 1 ? "s" : ""} ago`;
+  } else {
+    return "Invalid date"; // This case handles future dates, if any, are mistakenly passed in
+  }
+};
+
+export const isLate = (dueDateString) => {
+  const dueDate = new Date(dueDateString);
+  const currentDate = new Date();
+
+  return dueDate < currentDate;
+};
+
 /**
  * Downloads multiple sets of files as a single ZIP file. Each set of files is placed in its own subfolder within the ZIP.
  *

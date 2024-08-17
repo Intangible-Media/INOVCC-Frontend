@@ -38,6 +38,7 @@ export default async function Page() {
         },
         fields: ["isComplete", "title", "description", "dueDate", "urgency"], // Populate relevant fields
       },
+      picture: { populate: "*" },
     },
   });
 
@@ -58,7 +59,9 @@ export default async function Page() {
   const allTasksQuery = qs.stringify({
     populate: {
       documents: { populate: "*" },
-      assigned: { populate: "*" },
+      assigned: {
+        populate: "picture",
+      },
     },
     sort: ["createdAt:desc"], // Sort by createdAt in descending order
   });
@@ -72,6 +75,8 @@ export default async function Page() {
     jwt: session.accessToken,
     query: allTasksQuery,
   });
+
+  console.log(allTasks.data);
 
   const allUsersWithLateTasks = await getAllUsers({
     jwt: session.accessToken,

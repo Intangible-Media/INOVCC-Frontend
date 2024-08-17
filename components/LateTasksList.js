@@ -1,4 +1,6 @@
-import Image from "next/image";
+import AvatarImage from "./AvatarImage";
+import { Badge } from "flowbite-react";
+import { useTaskContext } from "../context/TaskContext";
 
 export default async function LateTasksList({ users }) {
   return (
@@ -8,12 +10,9 @@ export default async function LateTasksList({ users }) {
           <li key={index} className="py-3 sm:py-4">
             <div className="flex items-center space-x-4">
               <div className="shrink-0">
-                <Image
-                  alt="Neil image"
-                  height="32"
-                  src="https://flowbite-react.com/images/people/profile-picture-5.jpg"
-                  width="32"
-                  className="rounded-full"
+                <AvatarImage
+                  customName={user.firstName}
+                  customImage={user.picture?.url || null}
                 />
               </div>
               <div className="min-w-0 flex-1">
@@ -24,8 +23,8 @@ export default async function LateTasksList({ users }) {
                   {user.email}
                 </p>
               </div>
-              <div className="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
-                {user.tasks.length}
+              <div className="inline-flex items-center text-base ">
+                <Badge color="failure">{user.tasks.length}</Badge>
               </div>
             </div>
           </li>

@@ -12,6 +12,7 @@ import {
 } from "flowbite-react";
 import ActivityLog from "../../components/ActivityLog";
 import ImageCardGrid from "../../components/ImageCardGrid";
+import { useTaskContext } from "../../context/TaskContext";
 import { useSession } from "next-auth/react";
 import { updateTask } from "../../utils/api/tasks";
 import { createActivity } from "../../utils/api/activities";
@@ -41,8 +42,7 @@ const UrgencyBadge = ({ urgency }) => {
 
 export default function TasksTable({ tasks }) {
   const { data: session } = useSession();
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  const { setSelectedTask, setOpenModal } = useTaskContext();
 
   const handleSelectedTask = (task) => {
     setSelectedTask(task);
@@ -169,122 +169,59 @@ export default function TasksTable({ tasks }) {
   };
 
   return (
-    <>
-      {selectedTask && (
-        <Modal show={openModal} onClose={() => setOpenModal(false)} size="7xl">
-          <Modal.Header>Task Details</Modal.Header>
-          <Modal.Body className="p-0">
-            <section className="flex">
-              <div className="w-full p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 capitalize">
-                  {selectedTask.attributes.title}
-                </h2>
-                <div className="max-h-24 h-24 overflow-auto mb-5 border rounded-md p-3">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    {selectedTask.attributes.description}
-                  </p>
-                </div>
-                <div className="text-gray-600 dark:text-gray-300 flex justify-start">
-                  Urgency:{"  "}
-                  <UrgencyBadge urgency={selectedTask.attributes.urgency} />
-                </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Due Date: {`${formatDate(selectedTask.attributes.dueDate)}`}
-                  <span className="font-normal text-gray-400 capitalize">
-                    {`  (${daysUntilDue(selectedTask.attributes.dueDate)})`}
-                  </span>
-                </p>
+    <Table hoverable>
+      <TableHead>
+        <TableHeadCell>Task</TableHeadCell>
+        <TableHeadCell>Urgency</TableHeadCell>
+        <TableHeadCell>Due Date</TableHeadCell>
+        <TableHeadCell>Assigned</TableHeadCell>
+        <TableHeadCell>Status</TableHeadCell>
+      </TableHead>
+      <TableBody className="divide-y">
+        {tasks.map((task, index) => (
+          <TableRow
+            key={index}
+            className={`bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer ${
+              !task.attributes.isComplete && isLate(task.attributes.dueDate)
+                ? "bg-red-50"
+                : ""
+            }`}
+            onClick={() => handleSelectedTask(task)}
+          >
+            <TableCell className=" font-medium  dark:text-white shorten-text w-20 text-dark-blue-700 capitalize">
+              <p className="w-24">{task.attributes.title}</p>
+            </TableCell>
 
-                <div className="mt-8">
-                  <ImageCardGrid
-                    files={selectedTask.attributes.documents?.data || []}
-                    background={"bg-white"}
-                    editMode={false}
-                    columns={3}
-                    padded={false}
-                  />
-                </div>
-              </div>
-              <div className="w-full p-6 bg-gray-100">
-                <ActivityLog
-                  id={selectedTask.id}
-                  collection="tasks"
-                  defaultExpanded={true}
-                />
-              </div>
-            </section>
-          </Modal.Body>
-          <Modal.Footer>
-            {selectedTask.attributes.isComplete ? (
-              <Button
-                className="bg-red-800 text-white"
-                onClick={() => markTaskAsIncomplete(selectedTask)}
-              >
-                Mark Incomplete
-              </Button>
-            ) : (
-              <Button
-                className="bg-dark-blue-700 text-white"
-                onClick={() => markTaskAsComplete(selectedTask)}
-              >
-                Mark Complete
-              </Button>
-            )}
-          </Modal.Footer>
-        </Modal>
-      )}
-      <Table hoverable>
-        <TableHead>
-          <TableHeadCell>Task</TableHeadCell>
-          <TableHeadCell>Urgency</TableHeadCell>
-          <TableHeadCell>Due Date</TableHeadCell>
-          <TableHeadCell>Assigned</TableHeadCell>
-          <TableHeadCell>Status</TableHeadCell>
-        </TableHead>
-        <TableBody className="divide-y">
-          {tasks.map((task, index) => (
-            <TableRow
-              key={index}
-              className={`bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer ${
-                !task.attributes.isComplete && isLate(task.attributes.dueDate)
-                  ? "bg-red-50"
-                  : ""
-              }`}
-              onClick={() => handleSelectedTask(task)}
-            >
-              <TableCell className=" font-medium  dark:text-white shorten-text w-20 text-dark-blue-700 capitalize">
-                <p className="w-24">{task.attributes.title}</p>
-              </TableCell>
-
-              <TableCell className="w-32">
-                <UrgencyBadge urgency={task.attributes.urgency} />
-              </TableCell>
-              <TableCell className="font-medium text-gray-800">
-                <p className="w-42">
-                  {`${formatDate(task.attributes.dueDate)}`}
-                  <span className="font-normal text-gray-400 capitalize">
-                    {`  (${daysUntilDue(task.attributes.dueDate)})`}
-                  </span>
-                </p>
-              </TableCell>
-              <TableCell className="font-medium text-gray-800">
-                <AvatarImage
-                  customName={
-                    task.attributes.assigned.data.attributes.firstNmae
-                  }
-                />
-              </TableCell>
-              <TableCell className={statusBackground(task)}>
-                {task.attributes.isComplete
-                  ? "Completed"
-                  : isLate(task.attributes.dueDate)
-                  ? "Late"
-                  : "Open"}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </>
+            <TableCell className="w-32">
+              <UrgencyBadge urgency={task.attributes.urgency} />
+            </TableCell>
+            <TableCell className="font-medium text-gray-800">
+              <p className="w-42">
+                {`${formatDate(task.attributes.dueDate)}`}
+                <span className="font-normal text-gray-400 capitalize">
+                  {`  (${daysUntilDue(task.attributes.dueDate)})`}
+                </span>
+              </p>
+            </TableCell>
+            <TableCell className="font-medium text-gray-800">
+              <AvatarImage
+                customName={task.attributes.assigned.data.attributes.firstName}
+                customImage={
+                  task.attributes.assigned.data.attributes.picture.data
+                    ?.attributes.url
+                }
+              />
+            </TableCell>
+            <TableCell className={statusBackground(task)}>
+              {task.attributes.isComplete
+                ? "Completed"
+                : isLate(task.attributes.dueDate)
+                ? "Late"
+                : "Open"}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

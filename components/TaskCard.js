@@ -1,7 +1,15 @@
+"use client";
+
 import { Card, Badge, Button } from "flowbite-react";
+import { useTaskContext } from "../context/TaskContext";
 
 export default function TaskCard({ task }) {
   const { title, description, urgency, dueDate, isComplete } = task.attributes;
+  const { setSelectedTask, setOpenModal } = useTaskContext();
+  const handleSelectedTask = (task) => {
+    setSelectedTask(task);
+    setOpenModal(true);
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -69,7 +77,10 @@ export default function TaskCard({ task }) {
   };
 
   return (
-    <div className="hover:bg-gray-50 cursor-pointer border rounded-md p-3">
+    <div
+      className="hover:bg-gray-50 cursor-pointer border rounded-md p-3"
+      onClick={() => handleSelectedTask(task)}
+    >
       <UrgencyBadge urgency={urgency} />
       <h5 className="text-lg font-bold tracking-tight text-dark-blue-700 dark:text-white capitalize shorten-text mt-1.5 mb-1">
         {title}

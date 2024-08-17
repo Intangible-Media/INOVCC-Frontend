@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar } from "flowbite-react";
+import { Avatar, Tooltip } from "flowbite-react";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { ensureDomain } from "../utils/strings";
@@ -28,16 +28,21 @@ export default function AvatarImage({ customImage, customName }) {
 
   return (
     <>
-      {imageUrl ? (
-        <Avatar
-          alt="User settings"
-          img={imageUrl}
-          rounded
-          className="avatar-image"
-        />
-      ) : (
-        <Avatar placeholderInitials={name ? name.charAt(0) : "U"} rounded />
-      )}
+      <Tooltip content={customName} className="capitalize">
+        {imageUrl ? (
+          <Avatar
+            alt="User settings"
+            img={imageUrl}
+            rounded
+            className="avatar-image"
+          />
+        ) : (
+          <Avatar
+            placeholderInitials={name ? name.toUpperCase().charAt(0) : "U"}
+            rounded
+          />
+        )}{" "}
+      </Tooltip>
     </>
   );
 }
