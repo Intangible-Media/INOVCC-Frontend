@@ -6,6 +6,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https", // Use 'https' for production
+        hostname: "flowbite-react.com", // Specify the production API hostname
+        pathname: "/**", // Allows all paths on this domain
+      },
+      {
+        protocol: "https", // Use 'https' for production
         hostname: "api.inovcc.com", // Specify the production API hostname
         pathname: "/**", // Allows all paths on this domain
       },

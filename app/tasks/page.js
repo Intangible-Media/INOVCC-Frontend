@@ -1,8 +1,13 @@
-import { getAllTasks, createTask, uploadFiles } from "../../utils/api/tasks";
+import { fetchAllTasks, createTask, uploadFiles } from "../../utils/api/tasks";
+import { getAllUsers } from "../../utils/api/users";
 import { getServerSession } from "next-auth";
 import NewTaskModal from "../../components/Modals/NewTaskModal";
 import TasksTable from "../../components/Tables/TasksTable";
 import { authOptions } from "../../app/api/auth/[...nextauth]/auth";
+import { Card } from "flowbite-react";
+import TaskCard from "../../components/TaskCard";
+import { Badge } from "flowbite-react";
+import LateTasksList from "../../components/LateTasksList";
 import qs from "qs";
 
 export default async function Page() {
@@ -10,7 +15,33 @@ export default async function Page() {
 
   if (!session) return <p>You must be logged in to view this page.</p>;
 
-  const query = qs.stringify({
+  const usersWithOverdueTasksQuery = qs.stringify({
+    filters: {
+      tasks: {
+        isComplete: {
+          $ni: true, // Checks for tasks that are not complete
+        },
+        dueDate: {
+          $lt: new Date().toISOString(), // Fetch tasks where dueDate is less than the current date
+        },
+      },
+    },
+    populate: {
+      tasks: {
+        filters: {
+          isComplete: {
+            $ni: true, // Include only tasks that are not complete
+          },
+          dueDate: {
+            $lt: new Date().toISOString(), // Include only tasks that are overdue
+          },
+        },
+        fields: ["isComplete", "title", "description", "dueDate", "urgency"], // Populate relevant fields
+      },
+    },
+  });
+
+  const usersTasksQuery = qs.stringify({
     filters: {
       assigned: {
         id: {
@@ -20,15 +51,34 @@ export default async function Page() {
     },
     populate: {
       documents: { populate: "*" },
+    },
+    sort: ["createdAt:desc"], // Sort by createdAt in descending order
+  });
+
+  const allTasksQuery = qs.stringify({
+    populate: {
+      documents: { populate: "*" },
       assigned: { populate: "*" },
     },
     sort: ["createdAt:desc"], // Sort by createdAt in descending order
   });
 
-  const tasks = await getAllTasks({
+  const userTasks = await fetchAllTasks({
     jwt: session.accessToken,
-    query: query,
+    query: usersTasksQuery,
   });
+
+  const allTasks = await fetchAllTasks({
+    jwt: session.accessToken,
+    query: allTasksQuery,
+  });
+
+  const allUsersWithLateTasks = await getAllUsers({
+    jwt: session.accessToken,
+    query: usersWithOverdueTasksQuery,
+  });
+
+  allUsersWithLateTasks.data.map((user) => console.log(user.tasks));
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
@@ -36,9 +86,50 @@ export default async function Page() {
         <NewTaskModal />
       </section>
 
-      <section className="overflow-x-auto bg-white p-6 rounded-lg">
-        <h5 className="text-xl font-bold dark:text-white mb-3">My Tasks</h5>
-        <TasksTable tasks={tasks.data.data} />
+      <section className="grid grid-cols-3 gap-3">
+        <div className="col-span-2 bg-white rounded-md p-3 md:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h5 className="text-xl font-bold leading-none text-gray-900 dark:text-white">
+              All Tasks
+              <Badge className="inline-block">{allTasks.data.length}</Badge>
+            </h5>
+            <a
+              href="#"
+              className="text-sm font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+            >
+              View all
+            </a>
+          </div>
+          <div className="h-72 overflow-auto">
+            <TasksTable tasks={allTasks.data} />
+          </div>
+        </div>
+        <div className="col-span-1 rounded-md bg-white p-3 md:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h5 className="text-xl font-bold leading-none text-gray-900 dark:text-white">
+              Late Tasks
+            </h5>
+            <a
+              href="#"
+              className="text-sm font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+            >
+              View all
+            </a>
+          </div>
+          <LateTasksList users={allUsersWithLateTasks.data} />
+        </div>
+      </section>
+
+      <section className="bg-white p-6 rounded-lg">
+        <h5 className="text-xl font-bold dark:text-white mb-3">
+          My Tasks{" "}
+          <Badge className="inline-block">{userTasks.data.length}</Badge>
+        </h5>
+        <div className="grid grid-cols-5 gap-3">
+          {userTasks.data.map((task, index) => (
+            <TaskCard task={task} key={index} />
+          ))}
+        </div>
       </section>
     </div>
   );

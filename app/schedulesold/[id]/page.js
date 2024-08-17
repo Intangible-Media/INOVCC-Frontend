@@ -218,7 +218,6 @@ export default function Page({ params }) {
     const latitude = selectedStructure?.attributes.latitude;
 
     if ((longitude, latitude)) {
-      console.log("There is something ehre");
       setActiveCoordinate([
         selectedStructure.attributes.longitude,
         selectedStructure.attributes.latitude,

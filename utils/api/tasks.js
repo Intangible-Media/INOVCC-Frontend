@@ -38,6 +38,32 @@ export const getAllTasks = (data) => {
 };
 
 /**
+ * Retrieves all tasks.
+ * @param {Object} data - The data for the request.
+ * @param {string} data.jwt - The JWT for authentication.
+ * @param {Object} data.query - The query parameters for the request.
+ * @returns {Promise<Object>} - The response from the API.
+ */
+export const fetchAllTasks = async (data) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/tasks?${data.query}`,
+    {
+      headers: {
+        Authorization: `Bearer ${data.jwt}`,
+      },
+      next: { revalidate: 60 }, // Optional: Use Next.js caching with revalidation every 60 seconds
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+  }
+
+  const tasks = await response.json();
+  return tasks;
+};
+
+/**
  * Creates a new task.
  * @param {Object} data - The data for the request.
  * @param {string} data.jwt - The JWT for authentication.

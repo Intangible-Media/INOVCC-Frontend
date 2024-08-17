@@ -16,7 +16,7 @@ import { useSession } from "next-auth/react";
 import { updateTask } from "../../utils/api/tasks";
 import { createActivity } from "../../utils/api/activities";
 import { refreshTaskData } from "../../app/actions"; // Import revalidatePath
-
+import AvatarImage from "../AvatarImage";
 import { useState } from "react";
 
 const UrgencyBadge = ({ urgency }) => {
@@ -31,11 +31,11 @@ const UrgencyBadge = ({ urgency }) => {
     urgencyMap[urgency.toLowerCase()] || urgencyMap.default;
 
   return (
-    <span className="flex justify-start">
-      <Badge color={color} className="text-center" size="sm">
+    <div className=" justify-start w-14">
+      <Badge color={color} className="text-center inline-block" size="sm">
         {text}
       </Badge>
-    </span>
+    </div>
   );
 };
 
@@ -184,10 +184,10 @@ export default function TasksTable({ tasks }) {
                     {selectedTask.attributes.description}
                   </p>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 flex justify-start">
+                <div className="text-gray-600 dark:text-gray-300 flex justify-start">
                   Urgency:{"  "}
                   <UrgencyBadge urgency={selectedTask.attributes.urgency} />
-                </p>
+                </div>
                 <p className="text-gray-600 dark:text-gray-300">
                   Due Date: {`${formatDate(selectedTask.attributes.dueDate)}`}
                   <span className="font-normal text-gray-400 capitalize">
@@ -235,11 +235,10 @@ export default function TasksTable({ tasks }) {
       )}
       <Table hoverable>
         <TableHead>
-          <TableHeadCell>Task Name</TableHeadCell>
-          <TableHeadCell>Task Description</TableHeadCell>
+          <TableHeadCell>Task</TableHeadCell>
           <TableHeadCell>Urgency</TableHeadCell>
           <TableHeadCell>Due Date</TableHeadCell>
-          <TableHeadCell>Created</TableHeadCell>
+          <TableHeadCell>Assigned</TableHeadCell>
           <TableHeadCell>Status</TableHeadCell>
         </TableHead>
         <TableBody className="divide-y">
@@ -254,22 +253,26 @@ export default function TasksTable({ tasks }) {
               onClick={() => handleSelectedTask(task)}
             >
               <TableCell className=" font-medium  dark:text-white shorten-text w-20 text-dark-blue-700 capitalize">
-                {task.attributes.title}
+                <p className="w-24">{task.attributes.title}</p>
               </TableCell>
-              <TableCell className=" font-normal text-gray-900 dark:text-white shorten-text min-w-48 max-w-48">
-                {task.attributes.description}
-              </TableCell>
-              <TableCell className=" w-36">
+
+              <TableCell className="w-32">
                 <UrgencyBadge urgency={task.attributes.urgency} />
               </TableCell>
               <TableCell className="font-medium text-gray-800">
-                {`${formatDate(task.attributes.dueDate)}`}
-                <span className="font-normal text-gray-400 capitalize">
-                  {`  (${daysUntilDue(task.attributes.dueDate)})`}
-                </span>
+                <p className="w-42">
+                  {`${formatDate(task.attributes.dueDate)}`}
+                  <span className="font-normal text-gray-400 capitalize">
+                    {`  (${daysUntilDue(task.attributes.dueDate)})`}
+                  </span>
+                </p>
               </TableCell>
               <TableCell className="font-medium text-gray-800">
-                {`${daysAgo(task.attributes.createdAt)}`}
+                <AvatarImage
+                  customName={
+                    task.attributes.assigned.data.attributes.firstNmae
+                  }
+                />
               </TableCell>
               <TableCell className={statusBackground(task)}>
                 {task.attributes.isComplete
