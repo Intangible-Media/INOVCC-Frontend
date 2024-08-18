@@ -82,14 +82,14 @@ export default function TaskCard({ task }) {
       onClick={() => handleSelectedTask(task)}
     >
       <UrgencyBadge urgency={urgency} />
-      <h5 className="text-lg font-bold tracking-tight text-dark-blue-700 dark:text-white capitalize shorten-text mt-1.5 mb-1">
+      <h5 className="text-lg font-semibold tracking-tight text-dark-blue-700 dark:text-white capitalize shorten-text mt-1.5 mb-1">
         {title}
       </h5>
-      <p className="font-normal text-gray-500 dark:text-gray-400 h-6 shorten-text mb-2">
+      <p className="font-normal text-sm text-gray-500 dark:text-gray-400 h-6 shorten-text mb-2">
         {description}
       </p>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-800">
+        <span className="text-xxs font-medium text-gray-800">
           Due: {`${formatDate(task.attributes.dueDate)}`}
           <span className="font-normal text-gray-400 capitalize">
             {`  (${daysUntilDue(task.attributes.dueDate)})`}

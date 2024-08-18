@@ -33,7 +33,7 @@ const UrgencyBadge = ({ urgency }) => {
 
   return (
     <div className=" justify-start w-14">
-      <Badge color={color} className="text-center inline-block" size="sm">
+      <Badge color={color} className="text-center inline-block" size="xs">
         {text}
       </Badge>
     </div>
@@ -175,7 +175,7 @@ export default function TasksTable({ tasks }) {
         <TableHeadCell>Urgency</TableHeadCell>
         <TableHeadCell>Due Date</TableHeadCell>
         <TableHeadCell>Assigned</TableHeadCell>
-        <TableHeadCell>Status</TableHeadCell>
+        <TableHeadCell className="text-center">Status</TableHeadCell>
       </TableHead>
       <TableBody className="divide-y">
         {tasks.map((task, index) => (

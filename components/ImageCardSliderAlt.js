@@ -119,15 +119,12 @@ export const useImageUpload = (
         )
       );
 
-      const response = await uploadFilesNew(
+      const response = await uploadFiles(
         session.accessToken,
         processedFiles,
         structureId,
         "images"
       );
-
-      console.log(response.type);
-      console.log(response.message);
 
       if (response.type === "Success") {
         showSuccess(response.message);
