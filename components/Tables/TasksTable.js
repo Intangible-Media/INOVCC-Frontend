@@ -203,7 +203,7 @@ export default function TasksTable({ tasks }) {
                 </span>
               </p>
             </TableCell>
-            <TableCell className="font-medium text-gray-800">
+            <TableCell className="font-medium text-gray-800 py-1.5">
               <AvatarImage
                 customName={task.attributes.assigned.data.attributes.firstName}
                 customImage={

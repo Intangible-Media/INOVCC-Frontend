@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Label, TextInput } from "flowbite-react";
 import { useSession } from "next-auth/react";
+import AvatarImage from "./AvatarImage";
 
 import axios from "axios";
 import qs from "qs";
@@ -232,18 +233,15 @@ export default function ActivityLog({
                   {activityGroup.map((activity, index) => (
                     <div key={index} className="flex bg-white px-5 py-6 gap-5">
                       <div className="relative w-10 h-10 flex-shrink-0">
-                        {activity.attributes.user.data.attributes.picture
-                          .data && (
-                          <img
-                            className="w-10 h-10 rounded-full object-cover"
-                            src={ensureDomain(
-                              activity.attributes.user.data.attributes.picture
-                                .data.attributes.formats.thumbnail.url
-                            )}
-                            alt="something"
-                          />
-                        )}
-                        <span className="top-0 left-7 absolute  w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
+                        <AvatarImage
+                          customImage={
+                            activity.attributes.user.data.attributes.picture
+                              .data?.attributes.url
+                          }
+                          customName={
+                            activity.attributes.user.data.attributes.firstName
+                          }
+                        />
                       </div>
                       <div className="flex flex-col justify-center gap-2">
                         <p className="text-sm leading-4 font-medium text-gray-900 text-he">

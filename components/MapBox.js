@@ -166,12 +166,13 @@ const MapboxMap = ({ coordinates = [] }) => {
           source: "markers",
           layout: {
             "icon-image": ["get", "icon"],
-            "icon-size": 0.6, // Adjust icon size as needed
+            "icon-size": 0.85, // Adjust icon size as needed
           },
         });
 
         map.current.on("click", "marker-layer", (e) => {
           // Log the event to check what it contains
+          setSelectedStructure(null);
           console.log(e);
 
           // Extract the clicked structure's id from the properties
@@ -184,13 +185,11 @@ const MapboxMap = ({ coordinates = [] }) => {
             (structure) => structure.id === clickedStructureId
           );
 
+          alert("clicked");
+
           // Log the clicked structure to verify the result
           console.log(clickedStructure);
-
-          if (clickedStructure) {
-            // If you want to do something with the selected structure
-            setSelectedStructure(clickedStructure);
-          }
+          setSelectedStructure(clickedStructure);
         });
       }
     };

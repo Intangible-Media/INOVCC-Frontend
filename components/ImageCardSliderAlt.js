@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls, downloadFilesAsZip } from "../utils/strings";
-import { uploadFiles } from "../utils/api/structures";
+import { uploadFiles, uploadFilesNew } from "../utils/api/structures";
 import { useLoading } from "../context/LoadingContext";
 import Image from "next/image";
 
@@ -119,7 +119,7 @@ export const useImageUpload = (
         )
       );
 
-      const response = await uploadFiles(
+      const response = await uploadFilesNew(
         session.accessToken,
         processedFiles,
         structureId,
@@ -275,11 +275,11 @@ const ImageSlider = ({
           <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative aspect-square w-full md:w-[600px] md:h-[600px] m-auto">
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
+                fill
                 src={ensureDomain(activeImage.attributes.url)}
                 alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
-                layout="fill" // This makes the image fill the parent container
-                objectPosition="center" // Centers the image within the container
                 loading="lazy"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
@@ -347,11 +347,11 @@ const ImageSlider = ({
                 {uploadedImages[currentIndex].type.startsWith("image/") ? (
                   <div className="relative w-full h-full">
                     <Image
+                      fill
                       src={uploadedImages[currentIndex].url}
                       alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
-                      layout="fill" // Makes the image fill the parent container
-                      objectPosition="center" // Centers the image within the container
                       loading="lazy"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                 ) : (
@@ -515,12 +515,12 @@ const ImageSlider = ({
                   >
                     <div className="relative w-full h-full aspect-square z-10 rounded-md">
                       <Image
+                        fill
                         src={ensureDomain(smallestImageResolution)}
                         alt="travel image"
-                        layout="fill" // Makes the image fill the parent container
-                        objectPosition="center" // Centers the image within the container
                         className="rounded-md" // Preserves the rounded corners
                         loading="lazy"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
                   </div>

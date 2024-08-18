@@ -57,7 +57,6 @@ const InspectionDrawer = ({
   structures = [],
   inspection,
 }) => {
-  console.log("inspection", inspection.client);
   const { showAlert } = useAlert();
   // const { inspection, setInspection, } = useInspection();
   const { data: session, loading } = useSession();
@@ -108,8 +107,8 @@ const InspectionDrawer = ({
         name: inspection.attributes.name || "",
         projectId: inspection.attributes.projectId || "",
         structures: structures || [],
-        documents: inspection.attributes.documents || [],
-        client: inspection.attributes.client || 1,
+        documents: inspection.attributes.documents.data || [],
+        client: inspection.attributes.client.data || 1,
       });
     }
   }, [inspection]);
@@ -835,7 +834,9 @@ const InspectionDrawer = ({
             </Breadcrumb.Item>
             <Breadcrumb.Item href="/">Inspection</Breadcrumb.Item>
             <Breadcrumb.Item href="/">
-              {inspection?.name ? inspection?.name : "Map Name Here"}
+              {inspection?.attributes.name
+                ? inspection?.attributes.name
+                : "Map Name Here"}
             </Breadcrumb.Item>
           </Breadcrumb>
 
@@ -858,10 +859,10 @@ const InspectionDrawer = ({
               <div className="flex flex-col gap-2">
                 <h3 className="leading-tight text-2xl font-medium">
                   Edit{" "}
-                  {inspection?.name === "" ? (
+                  {inspection?.attributes.name === "" ? (
                     <span>&quot;Map Name Here&quot;</span>
                   ) : (
-                    <span>&quot;{inspection?.name}&quot;</span>
+                    <span>&quot;{inspection?.attributes.name}&quot;</span>
                   )}
                 </h3>
                 <p className="text-xs">
@@ -1199,7 +1200,7 @@ const InspectionDrawer = ({
               />
 
               <div className="flex flex-col gap-4">
-                <Label className="text-xs" htmlFor="inspectionName">
+                {/* <Label className="text-xs" htmlFor="inspectionName">
                   Map Structures
                 </Label>
                 <div className="flex align-middle justify-between rounded-md border border-gray-200 p-6">
@@ -1231,7 +1232,7 @@ const InspectionDrawer = ({
                   <div className="flex max-w-md flex-col gap-4">
                     <ToggleSwitch checked={switch1} onChange={setSwitch1} />
                   </div>
-                </div>
+                </div> */}
                 <div className="flex bg-100 justify-end">
                   {isLoadingInspection && <Spinner />}
                   <Button
@@ -1277,10 +1278,10 @@ const InspectionDrawer = ({
                   </h6>
                   <h3 className="leading-tight text-2xl font-medium">
                     Edit{" "}
-                    {inspection?.name === "" ? (
+                    {inspection?.attributes.name === "" ? (
                       <span>&quot;Structure Name Here&quot;</span>
                     ) : (
-                      <span>&quot;{inspection?.name}&quot;</span>
+                      <span>&quot;{inspection?.attributes.name}&quot;</span>
                     )}
                   </h3>
                   <p className="text-xs">

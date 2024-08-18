@@ -10,10 +10,6 @@ export const SelectedStructureContext = createContext();
 export function SelectedStructureProvider({ children }) {
   const [selectedStructure, setSelectedStructure] = useState(null);
 
-  useEffect(() => {
-    console.log("selectedStructure", selectedStructure);
-  }, [selectedStructure]);
-
   return (
     <SelectedStructureContext.Provider
       value={{ selectedStructure, setSelectedStructure }}

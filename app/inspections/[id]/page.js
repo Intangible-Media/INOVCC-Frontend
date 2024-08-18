@@ -249,16 +249,12 @@ export default async function Page({ params }) {
                   key={index}
                   className="alternate-bg flex gap-4 align-middle py-2"
                 >
-                  {clientContact.attributes.picture.data && (
-                    <img
-                      className="border-2 border-white rounded-full dark:border-gray-800 h-12 w-12 object-cover" // Use className for styles except width and height
-                      src={`${ensureDomain(
-                        clientContact.attributes.picture.data.attributes.formats
-                          .thumbnail.url
-                      )}`}
-                      alt="fdsfdsfds"
-                    />
-                  )}
+                  <AvatarImage
+                    customImage={
+                      clientContact.attributes.picture.data?.attributes.url
+                    }
+                    customName={clientContact.attributes.firstName}
+                  />
                   <div className="flex flex-col gap-1 align-middle justify-center">
                     <p className="leading-none text-sm font-medium">
                       {`${clientContact.attributes.firstName} ${clientContact.attributes.lastName}`}
