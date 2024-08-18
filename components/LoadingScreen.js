@@ -17,6 +17,7 @@ const LoadingScreen = () => {
       className={`fixed inset-0 z-50 flex items-center justify-center bg-gray-900 ${
         error && "bg-red-50"
       } bg-opacity-80`}
+      style={{ zIndex: 9999 }} // Explicitly set a very high z-index if needed
     >
       <div className="flex flex-col gap-4 text-center">
         {loading && (
