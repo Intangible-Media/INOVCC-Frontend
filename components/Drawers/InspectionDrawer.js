@@ -25,6 +25,7 @@ import {
   FaRegCalendarCheck,
   FaRegTrashCan,
   FaRegBuilding,
+  FaListUl,
   FaListCheck,
 } from "react-icons/fa6";
 import axios from "axios";
@@ -41,6 +42,7 @@ import {
   Label,
   Breadcrumb,
   ToggleSwitch,
+  Tooltip,
   Datepicker,
   Checkbox,
   Select,
@@ -52,6 +54,7 @@ import {
 } from "../../context/InspectionContext";
 import {
   structureStatuses,
+  adminStatuses,
   structureTypes,
 } from "../../utils/collectionListAttributes";
 import { refreshInspectionData } from "../../app/actions";
@@ -80,6 +83,8 @@ const InspectionDrawer = ({
   const [bulkUpdateView, setBulkUpdateView] = useState("");
   const [bulkStructuresType, setBulkStructuresType] = useState("");
   const [bulkStructuresStatus, setBulkStructuresStatus] = useState("");
+  const [bulkStructuresAdminStatus, setBulkStructuresAdminStatus] =
+    useState("");
   const [bulkStructuresTeam, setBulkStructuresTeam] = useState("Select a Team");
   const [bulkStructuresStartSchedule, setBulkStructuresStartSchedule] =
     useState(Date.now());
@@ -560,6 +565,48 @@ const InspectionDrawer = ({
     }
   };
 
+  const bulkUpdateStructuresAdminStatus = async () => {
+    if (!session) return;
+
+    showLoading(`Updating ${selectedStructures.length} Structures`);
+
+    try {
+      const allResponses = await Promise.all(
+        selectedStructures.map(async (structure) => {
+          const apiParams = {
+            jwt: session.accessToken,
+            id: structure.id,
+            query: "",
+            payload: {
+              data: {
+                adminStatus: bulkStructuresAdminStatus,
+              },
+            },
+          };
+
+          const currentDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+
+          if (bulkStructuresAdminStatus === "Inspected") {
+            apiParams.payload.data.inspectionDate = currentDate;
+          }
+
+          if (bulkStructuresAdminStatus === "Uploaded") {
+            apiParams.payload.data.uploadDate = currentDate;
+          }
+
+          const response = await updateStructure(apiParams);
+          return response;
+        })
+      );
+
+      await refreshInspectionData(inspection.id);
+      showSuccess("Finished All Structures");
+      return allResponses;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const bulkUpdateStructuresType = async () => {
     if (!session) return;
 
@@ -1005,30 +1052,46 @@ const InspectionDrawer = ({
                           </Badge>
                         </div>
                         <div className="flex gap-3">
-                          <div
-                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
-                            onClick={() => setBulkUpdateView("status")}
-                          >
-                            <FaListCheck className="my-auto h-3" />
-                          </div>
-                          <div
-                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
-                            onClick={() => setBulkUpdateView("delete")}
-                          >
-                            <FaRegTrashCan className="my-auto h-3" />
-                          </div>
-                          <div
-                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
-                            onClick={() => setBulkUpdateView("type")}
-                          >
-                            <FaRegBuilding className="my-auto h-3" />
-                          </div>
-                          <div
-                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
-                            onClick={() => setBulkUpdateView("schedule")}
-                          >
-                            <FaRegCalendarCheck className="my-auto h-3" />
-                          </div>
+                          <Tooltip content="Status">
+                            <div
+                              className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                              onClick={() => setBulkUpdateView("status")}
+                            >
+                              <FaListCheck className="my-auto h-3" />
+                            </div>
+                          </Tooltip>
+                          <Tooltip content="Admin Status">
+                            <div
+                              className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                              onClick={() => setBulkUpdateView("adminStatus")}
+                            >
+                              <FaListUl className="my-auto h-3" />
+                            </div>
+                          </Tooltip>
+                          <Tooltip content="Delete">
+                            <div
+                              className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                              onClick={() => setBulkUpdateView("delete")}
+                            >
+                              <FaRegTrashCan className="my-auto h-3" />
+                            </div>
+                          </Tooltip>
+                          <Tooltip content="Type">
+                            <div
+                              className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                              onClick={() => setBulkUpdateView("type")}
+                            >
+                              <FaRegBuilding className="my-auto h-3" />
+                            </div>
+                          </Tooltip>
+                          <Tooltip content="Schedule">
+                            <div
+                              className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                              onClick={() => setBulkUpdateView("schedule")}
+                            >
+                              <FaRegCalendarCheck className="my-auto h-3" />
+                            </div>
+                          </Tooltip>
                         </div>
                       </div>
                     </div>
@@ -1076,6 +1139,37 @@ const InspectionDrawer = ({
                         <Button
                           className="bg-dark-blue-700"
                           onClick={() => bulkUpdateStructuresType()}
+                        >
+                          Save Structures
+                        </Button>
+                      </div>
+                    )}
+
+                  {bulkUpdateView === "adminStatus" &&
+                    selectedStructures.length > 0 && (
+                      <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs" htmlFor="structureStatus">
+                            Structure Admin Status
+                          </Label>
+                          <select
+                            id="structureStatus"
+                            className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
+                            defaultValue={bulkStructuresAdminStatus}
+                            onChange={(e) =>
+                              setBulkStructuresAdminStatus(e.target.value)
+                            }
+                          >
+                            {adminStatuses.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <Button
+                          className="bg-dark-blue-700"
+                          onClick={() => bulkUpdateStructuresAdminStatus()}
                         >
                           Save Structures
                         </Button>
