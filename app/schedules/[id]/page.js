@@ -4,19 +4,23 @@ import qs from "qs";
 import { statusColors } from "../../../utils/collectionListAttributes";
 import { fetchAllStructure } from "../../../utils/api/structures";
 import { getTeam } from "../../../utils/api/teams";
-import { redirect } from "next/navigation";
 import {
   sortStructuresByStatus,
   formatToReadableTime,
 } from "../../../utils/strings";
 import dynamic from "next/dynamic";
+import { CiSearch } from "react-icons/ci";
+import SearchStructureSchedule from "../../../components/SearchStructuresSchedule";
 import InspectedStructuresTable from "../../../components/Tables/InspectedStructuresTable";
 import MapTabsDropdowns from "../../../components/MapTabsDropdowns";
 import StructuresInspectedHeatmap from "../../../components/Charts/StructuresInspectedHeatmap";
 import ScheduleDate from "../../../components/ScheduleDate";
+import { refreshSchedulenQueryData } from "../../actions";
+import { TextInput } from "flowbite-react";
+
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
-  ssr: false, // or ssr: false, depending on your needs
-  loading: () => <Loading />, // Provide the loading component here
+  ssr: false,
+  loading: () => <Loading />,
 });
 
 const Loading = () => (
@@ -28,18 +32,18 @@ const Loading = () => (
 export default async function Page({ params, searchParams }) {
   const session = await getServerSession(authOptions);
   let date;
+  const searchQuery = searchParams?.searchQuery || ""; // Get search query from searchParams
 
   if (searchParams?.date) {
     const parsedDate = new Date(decodeURI(searchParams.date));
 
-    // Check if the parsed date is valid
     if (!isNaN(parsedDate.getTime())) {
       date = parsedDate;
     } else {
-      date = new Date(); // Fallback to today's date if the date is invalid
+      date = new Date();
     }
   } else {
-    date = new Date(); // Fallback to today's date if no date is provided
+    date = new Date();
   }
 
   if (!session) return <p>You must be logged in to view this page.</p>;
@@ -102,11 +106,26 @@ export default async function Page({ params, searchParams }) {
     return acc;
   }, {});
 
-  const groupedArray = Object.keys(groupedByInspectionId).map((key) => ({
-    inspectionId: key,
-    mapName: groupedByInspectionId[key].mapName,
-    structures: sortStructuresByStatus(groupedByInspectionId[key].structures),
-  }));
+  // Filter the grouped structures based on the search query
+  const filteredGroupedArray = Object.keys(groupedByInspectionId)
+    .map((key) => ({
+      inspectionId: key,
+      mapName: groupedByInspectionId[key].mapName,
+      structures: sortStructuresByStatus(
+        groupedByInspectionId[key].structures.filter((structure) => {
+          // Assuming you want to search by some structure attribute, e.g., name, status
+          return (
+            structure.attributes.mapSection
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            structure.attributes.status
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          );
+        })
+      ),
+    }))
+    .filter((group) => group.structures.length > 0); // Only include groups with matching structures
 
   const structuresInspectedToday = structures.data.filter((structure) => {
     const { status, inspectionDate } = structure.attributes;
@@ -114,7 +133,6 @@ export default async function Page({ params, searchParams }) {
     if (status === "Inspected" && inspectionDate) {
       const inspectionDateObj = new Date(inspectionDate);
 
-      // Check if inspectionDate is today
       return (
         inspectionDateObj.getFullYear() === date.getFullYear() &&
         inspectionDateObj.getMonth() === date.getMonth() &&
@@ -129,13 +147,11 @@ export default async function Page({ params, searchParams }) {
     return structures.data.reduce((acc, structure) => {
       const { status, adminStatus } = structure.attributes;
 
-      // Group by status
       if (!acc[status]) {
         acc[status] = [];
       }
       acc[status].push(structure);
 
-      // Check if adminStatus is "Uploaded" and add to the "Uploaded" group
       if (adminStatus === "Uploaded") {
         if (!acc["Uploaded"]) {
           acc["Uploaded"] = [];
@@ -150,17 +166,21 @@ export default async function Page({ params, searchParams }) {
   const groupedStructuresByType = groupStructuresByType(structures);
 
   const allStructureTypes = Object.keys(groupedStructuresByType).map(
-    (status) => {
-      return {
-        name: status,
-        count: groupedStructuresByType[status].length,
-      };
-    }
+    (status) => ({
+      name: status,
+      count: groupedStructuresByType[status].length,
+    })
   );
 
   const structuresRescheduled = structures.data.filter(
     (structure) => structure.attributes.status === "Reschedule"
   );
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const query = e.target.searchQuery.value;
+  //   refreshSchedulenQueryData(params.id, query);
+  // };
 
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
@@ -168,7 +188,7 @@ export default async function Page({ params, searchParams }) {
         <h1 className="leading-tight text-2xl font-medium">
           {team?.data.data.attributes.name || "Team Name"}
           {" - "}
-          <span className=" font-light text-gray-500">
+          <span className="font-light text-gray-500">
             {date.toLocaleDateString()}
           </span>
         </h1>
@@ -176,7 +196,7 @@ export default async function Page({ params, searchParams }) {
         <ScheduleDate date={date} teamId={params.id} />
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm ">
+      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm">
         <div className="p-3 md:p-6 gap-3 col-span-2 h-[700px] md:h-[650px] order-2 md:order-1 overflow-y-auto relative">
           <div className="flex flex-col gap-4">
             <StructureStatusStats
@@ -188,13 +208,24 @@ export default async function Page({ params, searchParams }) {
           <div className="flex flex-col gap-4 mt-8">
             <h3 className="text-md font-bold dark:text-white">
               Maps Scheduled{" - "}
-              <span className=" font-light text-gray-500">
+              <span className="font-light text-gray-500">
                 {date.toLocaleDateString()}
               </span>
             </h3>
 
+            {/* <form onSubmit={handleSubmit}>
+              <TextInput
+                name="searchQuery"
+                placeholder="Search in Maps"
+                icon={CiSearch}
+                defaultValue={searchQuery}
+              />
+            </form> */}
+
+            {/* <SearchStructureSchedule params={params} /> */}
+
             <MapTabsDropdowns
-              groupedStructures={groupedArray}
+              groupedStructures={filteredGroupedArray}
               structuresRescheduled={structuresRescheduled}
             />
           </div>

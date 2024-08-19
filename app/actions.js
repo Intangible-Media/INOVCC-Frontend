@@ -7,7 +7,11 @@ export async function refreshInspectionData(slug) {
 }
 
 export async function refreshSchedulenData(slug) {
-  revalidatePath(`/schedulesnew/${slug}`, "page");
+  revalidatePath(`/schedules/${slug}`, "page");
+}
+
+export async function refreshSchedulenQueryData(slug, searchQuery) {
+  revalidatePath(`/schedules/${slug}?searchQuery=${searchQuery}`, "page");
 }
 
 export async function refreshTaskData() {
