@@ -439,3 +439,119 @@ export const uploadFilesNew = async (
         : "All files uploaded successfully.",
   };
 };
+
+export const uploadFilesAlt = async (
+  jwt,
+  files,
+  structureId,
+  fieldName,
+  maxRetries = 3
+) => {
+  const retryDelays = [1000, 3000, 5000]; // Delays between retries in milliseconds
+  const successCount = 0;
+  const errorMessages = [];
+
+  const compressImage = async (file) => {
+    try {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Image could not be decoded"));
+      });
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const scaleFactor = Math.min(1, 800 / img.width); // Target width of 800px or less
+      canvas.width = img.width * scaleFactor;
+      canvas.height = img.height * scaleFactor;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      return new Promise((resolve) => {
+        canvas.toBlob(
+          (blob) => {
+            resolve(
+              new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              })
+            );
+          },
+          "image/jpeg",
+          0.7 // Slightly higher quality to balance size and quality
+        );
+      });
+    } catch (error) {
+      console.warn("Image compression failed. Uploading original file.", error);
+      return file; // Fallback to original file if compression fails
+    }
+  };
+
+  const uploadFile = async (file) => {
+    let compressedFile = file;
+    if (file.type.startsWith("image/")) {
+      compressedFile = await compressImage(file);
+    }
+
+    const formData = new FormData();
+    formData.append("files", compressedFile);
+    formData.append("ref", "api::structure.structure");
+    formData.append("refId", structureId);
+    formData.append("field", fieldName);
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const uploadResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/upload`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          throw new Error(`HTTP error! status: ${uploadResponse.status}`);
+        }
+
+        console.log(`${file.name} uploaded successfully to ${fieldName}`);
+        return true;
+      } catch (error) {
+        console.error(
+          `Attempt ${attempt + 1}: Error uploading ${file.name}`,
+          error
+        );
+        if (attempt === maxRetries - 1) {
+          errorMessages.push(
+            `Failed to upload ${file.name} after ${maxRetries} attempts. Error: ${error.message}`
+          );
+        } else {
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryDelays[attempt])
+          );
+        }
+      }
+    }
+    return false;
+  };
+
+  const uploadPromises = files.map((file) => uploadFile(file));
+  await Promise.all(uploadPromises);
+
+  let resultType = "Success";
+  if (errorMessages.length > 0) {
+    resultType = successCount === 0 ? "Error" : "Mixed";
+  }
+
+  return {
+    type: resultType,
+    message:
+      errorMessages.length > 0
+        ? `Some files failed to upload: ${errorMessages.join(" | ")}`
+        : "All files uploaded successfully.",
+  };
+};

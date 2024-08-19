@@ -4,7 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls, downloadFilesAsZip } from "../utils/strings";
-import { uploadFiles, uploadFilesNew } from "../utils/api/structures";
+import {
+  uploadFiles,
+  uploadFilesNew,
+  uploadFilesAlt,
+} from "../utils/api/structures";
 import { useLoading } from "../context/LoadingContext";
 import Image from "next/image";
 
@@ -119,7 +123,7 @@ export const useImageUpload = (
         )
       );
 
-      const response = await uploadFiles(
+      const response = await uploadFilesAlt(
         session.accessToken,
         processedFiles,
         structureId,
