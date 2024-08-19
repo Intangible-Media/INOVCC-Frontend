@@ -48,7 +48,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
             </div>
             <div
               className={`overflow-scroll transition-max-height duration-200 ease-in-out ${
-                expandRescheduled ? "max-h-[350px]" : "max-h-0"
+                expandRescheduled ? "max-h-[450px]" : "max-h-0"
               }`}
             >
               {expandRescheduled && (
@@ -95,7 +95,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
               </div>
               <div
                 className={`overflow-scroll transition-max-height duration-200 ease-in-out ${
-                  expandedGroup === index ? "max-h-[350px]" : "max-h-0"
+                  expandedGroup === index ? "max-h-[450px]" : "max-h-0"
                 }`}
               >
                 {expandedGroup === index && (
