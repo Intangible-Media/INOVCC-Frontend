@@ -142,7 +142,9 @@ export default function Page({ params }) {
   const [selectedClientId, setSelectedClientId] = useState(); // State to store the selected client ID
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
+  const [status, setStatus] = useState();
   const [clients, setClients] = useState([]);
+  const [showButton, setShowButton] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showPublishButton, setShowPublishButton] = useState(false);
   const [invoicePricing, setInvoicePricing] = useState({});
@@ -229,28 +231,14 @@ export default function Page({ params }) {
         },
         {
           status: {
-            $eq: "Uploaded", // Filter structures by "inspected" status
+            $eq: status, // Filter structures by "inspected" status
           },
         },
         {
-          uploadDate: {
+          statusUpdated: {
             $gte: startDate.toISOString(), // Filter structures with uploadDate greater than or equal to startDate
             $lte: endDate.toISOString(), // Filter structures with uploadDate less than or equal to endDate
           },
-        },
-        {
-          $or: [
-            {
-              billed: {
-                $eq: false, // Ensure billed is false
-              },
-            },
-            {
-              billed: {
-                $null: true, // Ensure billed is null (not true)
-              },
-            },
-          ],
         },
       ],
     },
@@ -265,6 +253,18 @@ export default function Page({ params }) {
 
     encodeValuesOnly: true,
   });
+
+  useEffect(() => {
+    if (
+      selectedClientId !== null &&
+      status !== null &&
+      startDate !== null &&
+      endDate !== null
+    ) {
+      setShowButton(true);
+    }
+    setShowButton(false);
+  }, [selectedClientId, status, startDate, endDate]);
 
   const getInvoicehData = async () => {
     if (session?.accessToken) {
@@ -349,33 +349,6 @@ export default function Page({ params }) {
           },
         }
       );
-
-      const updateAllStructuresToBilled = async () => {
-        try {
-          const promises = structures.map((structure) => {
-            const payload = {
-              data: {
-                billed: true,
-              },
-            };
-            const apiParams = {
-              jwt: session.accessToken,
-              id: structure.id,
-              payload: payload,
-              query: "",
-            };
-
-            return updateStructure(apiParams); // Ensure this function returns a promise
-          });
-
-          await axios.all(promises);
-          console.log("All structures updated to billed successfully.");
-        } catch (error) {
-          console.error("Error updating structures:", error);
-        }
-      };
-
-      const updatedStructuresResponse = await updateAllStructuresToBilled();
 
       setShowSuccessAlert(true);
       return invoiceResponse;
@@ -788,6 +761,25 @@ export default function Page({ params }) {
                 ))}
               </select>
             </div>
+
+            <div className="flex flex-col mb-4">
+              <p className="pl-0 border-x-0 border-t-0 border-b-gray-200 text-xs text-gray-800 font-regular mb-1">
+                Status
+              </p>
+              <select
+                id="clients"
+                className="w-full pl-0 border-x-0 border-t-0 border-gray-200 text-gray-400 font-normal"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)} // Update the state when an option is selected
+                required
+              >
+                <option value={"Uploaded"}>Uploaded</option>
+                <option value={"Inspected"}>Inspected</option>
+                <option value={"Urgent"}>Urgent</option>
+                <option value={"New Pole"}>New Pole</option>
+                <option value={"Reschedule"}>Reschedule</option>
+              </select>
+            </div>
             <div className="flex flex-row gap-4 mb-2">
               <div className="w-full flex flex-col gap-2">
                 <p className="pl-0 border-x-0 border-t-0 text-xs text-gray-800 font-regular">
@@ -892,7 +884,6 @@ export default function Page({ params }) {
               <Button
                 className="w-full border-2 border-dark-blue-700 text-white bg-dark-blue-700"
                 onClick={(e) => createInvoice()}
-                disabled={!allValuesGreaterThanZero}
               >
                 Publish
               </Button>

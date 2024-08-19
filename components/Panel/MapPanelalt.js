@@ -51,6 +51,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   const params = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [currentPanel, setCurrentPanel] = useState("overview");
+  const [originalStructure, setOriginalStructure] = useState(null);
   const [updatedStructure, setUpdatedStructure] = useState(null);
   const [structureAddress, setStructureAddress] = useState("");
   const [teams, setTeams] = useState([]);
@@ -123,6 +124,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
       console.log(response.data.data);
       // setStructure(response.data.data);
       setUpdatedStructure(response.data.data);
+      setOriginalStructure(response.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -181,6 +183,10 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
           updatedStructure.attributes.inspectionDate;
       } else if (status === "Inspected") {
         newAttributes.inspectionDate = new Date(); // Format as YYYY-MM-DD
+      }
+
+      if (status !== originalStructure.attributes.status) {
+        newAttributes.statusUpdated = new Date();
       }
 
       const payload = { data: newAttributes };

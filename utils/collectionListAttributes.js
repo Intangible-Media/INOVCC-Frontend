@@ -29,7 +29,7 @@ export const adminStatuses = [
   "Uploaded",
   "Nonbillable",
   "Field Hold",
-  "Waiting on Client ",
+  "Waiting on Client",
 ];
 
 export const structurePinStatus = {
