@@ -8,6 +8,8 @@ export const structureStatuses = [
   "Not at Home",
   "Reschedule",
   "Access Issue",
+  "Staking",
+  "Fielding",
 ];
 
 export const statusColors = {
@@ -21,6 +23,8 @@ export const statusColors = {
   "Not at Home": "#F97316",
   Reschedule: "#F472B6",
   "Access Issue": "#EF4444",
+  Staking: "#EF4444",
+  Fielding: "D946EF",
   Uninspectable: "#000000",
   Total: "#312E8E",
 };

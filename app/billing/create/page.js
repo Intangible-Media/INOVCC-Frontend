@@ -24,6 +24,7 @@ import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
 import Link from "next/link";
 import { FaCalendarDays } from "react-icons/fa6";
 import InvoiceHeading from "../../../components/Invoice/Heading";
+import { structureStatuses } from "../../../utils/collectionListAttributes";
 import { updateStructure } from "../../../utils/api/structures";
 import {
   camelCaseToTitleCase,
@@ -556,7 +557,7 @@ export default function Page({ params }) {
     0
   );
 
-  const discount = 100;
+  const discount = 0;
 
   const totalAmount = subTotalAmount - Number(discount);
 
@@ -690,7 +691,7 @@ export default function Page({ params }) {
                             Type
                           </Table.HeadCell>
                           <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                            Inspection Date
+                            Date
                           </Table.HeadCell>
                         </Table.Head>
                         <Table.Body className="divide-y">
@@ -716,7 +717,7 @@ export default function Page({ params }) {
                                 </Table.Cell>
                                 <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
                                   {formatDateToString(
-                                    structure.attributes.inspectionDate
+                                    structure.attributes.statusUpdated
                                   )}
                                 </Table.Cell>
                               </Table.Row>
@@ -773,11 +774,11 @@ export default function Page({ params }) {
                 onChange={(e) => setStatus(e.target.value)} // Update the state when an option is selected
                 required
               >
-                <option value={"Uploaded"}>Uploaded</option>
-                <option value={"Inspected"}>Inspected</option>
-                <option value={"Urgent"}>Urgent</option>
-                <option value={"New Pole"}>New Pole</option>
-                <option value={"Reschedule"}>Reschedule</option>
+                {structureStatuses.map((statusOption, index) => (
+                  <option key={`${statusOption}-${index}`} value={statusOption}>
+                    {statusOption}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-row gap-4 mb-2">
