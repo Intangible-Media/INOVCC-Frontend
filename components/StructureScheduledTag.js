@@ -6,6 +6,9 @@ export default function StructureScheduledTag({ structure }) {
   const options = { month: "short", day: "numeric" };
 
   const formatLocalDate = (dateString) => {
+    if (!dateString) {
+      return null; // Return an empty string or a placeholder if dateString is null or undefined
+    }
     const [year, month, day] = dateString.split("-");
     const date = new Date(year, month - 1, day); // Months are 0-based in JS
     return date.toLocaleDateString("en-US", options);
@@ -19,7 +22,7 @@ export default function StructureScheduledTag({ structure }) {
       <h5 className="font-medium text-xs leading-none text-gray-800">
         Scheduled
       </h5>
-      {scheduleStart && scheduleEnd ? (
+      {formattedStartDate && formattedEndDate ? (
         <p className="font-medium text-xs leading-none text-gray-500">
           {`${formattedStartDate} - ${formattedEndDate}`}
         </p>
