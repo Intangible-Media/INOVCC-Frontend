@@ -214,8 +214,10 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
     }
   };
 
-  const removeStructure = async (structure) => {
+  const removeStructure = async () => {
     if (!session) return;
+
+    showLoading("Deleting Structure");
 
     const apiParams = {
       jwt: session?.accessToken,
@@ -223,10 +225,18 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
       query: "",
     };
 
+    setSelectedStructure(null);
+
     try {
       const response = await deleteStructure(apiParams);
+      await refreshInspectionData(
+        updatedStructure?.attributes.inspection.data?.id
+      );
+
+      showSuccess("Finished Deleting");
     } catch (error) {
       console.error(error);
+      showError("Error Deleting");
     }
   };
 
@@ -931,7 +941,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
                 <div className="flex flex-col justify-end gap-2">
                   <Button
                     className=" bg-red-800 text-white mt-5 w-full"
-                    onClick={() => removeStructure(structure)}
+                    onClick={() => removeStructure()}
                   >
                     Delete
                   </Button>

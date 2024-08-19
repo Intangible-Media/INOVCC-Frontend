@@ -1,6 +1,10 @@
 "use client";
 
-import { createStructure, updateStructure } from "../../utils/api/structures";
+import {
+  createStructure,
+  updateStructure,
+  deleteStructure,
+} from "../../utils/api/structures";
 import React, { useState, useRef, useEffect } from "react";
 import DirectionsComponent from "../DirectionsComponent";
 import { getAllClients } from "../../utils/api/clients";
@@ -19,6 +23,7 @@ import { GoGear } from "react-icons/go";
 import { useLoading } from "../../context/LoadingContext";
 import {
   FaRegCalendarCheck,
+  FaRegTrashCan,
   FaRegBuilding,
   FaListCheck,
 } from "react-icons/fa6";
@@ -623,6 +628,34 @@ const InspectionDrawer = ({
     }
   };
 
+  const bulkDeleteStructures = async (scheduleStart, scheduleEnd) => {
+    if (!session) return;
+
+    showLoading(`Updating ${selectedStructures.length} Structures`);
+
+    try {
+      const allResponses = await Promise.all(
+        selectedStructures.map(async (structure) => {
+          const apiParams = {
+            jwt: session.accessToken,
+            id: structure.id,
+            query: "", // Make sure this is correctly formatted
+          };
+          const response = await deleteStructure(apiParams);
+          return response;
+        })
+      );
+
+      await refreshInspectionData(inspection.id);
+      showSuccess("Deleted All Structures");
+      return allResponses;
+    } catch (error) {
+      console.error(error);
+      showError("Failed to update structures");
+      return []; // Return an empty array or handle the error appropriately
+    }
+  };
+
   const CsvUpload = () => {
     const [uploadedStructures, setUploadedStructures] = useState([]);
     const [duplicateWarning, setDuplicateWarning] = useState(false);
@@ -980,6 +1013,12 @@ const InspectionDrawer = ({
                           </div>
                           <div
                             className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
+                            onClick={() => setBulkUpdateView("delete")}
+                          >
+                            <FaRegTrashCan className="my-auto h-3" />
+                          </div>
+                          <div
+                            className="p-2 rounded-md border border-gray-200 hover:border-gray-900 hover:text-gray-900 cursor-pointer text-gray-300"
                             onClick={() => setBulkUpdateView("type")}
                           >
                             <FaRegBuilding className="my-auto h-3" />
@@ -994,6 +1033,23 @@ const InspectionDrawer = ({
                       </div>
                     </div>
                   )}
+
+                  {bulkUpdateView === "delete" &&
+                    selectedStructures.length > 0 && (
+                      <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs" htmlFor="structureType">
+                            Delete Structures
+                          </Label>
+                        </div>
+                        <Button
+                          className="bg-dark-blue-700"
+                          onClick={() => bulkDeleteStructures()}
+                        >
+                          Delete Structures
+                        </Button>
+                      </div>
+                    )}
 
                   {bulkUpdateView === "type" &&
                     selectedStructures.length > 0 && (
