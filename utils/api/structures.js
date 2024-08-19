@@ -464,7 +464,7 @@ export const uploadFilesAlt = async (
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      const scaleFactor = Math.min(1, 800 / img.width); // Target width of 800px or less
+      const scaleFactor = Math.min(1, 1750 / img.width); // Target width of 800px or less
       canvas.width = img.width * scaleFactor;
       canvas.height = img.height * scaleFactor;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);

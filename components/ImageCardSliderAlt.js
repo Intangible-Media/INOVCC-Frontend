@@ -277,6 +277,7 @@ const ImageSlider = ({
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
                 fill
+                className=" object-cover"
                 src={ensureDomain(activeImage.attributes.url)}
                 alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
                 loading="lazy"
@@ -349,6 +350,7 @@ const ImageSlider = ({
                   <div className="relative w-full h-full">
                     <Image
                       fill
+                      className=" object-cover"
                       src={uploadedImages[currentIndex].url}
                       alt={uploadedImages[currentIndex].alt || "Uploaded Image"} // Add an alt attribute for accessibility
                       loading="lazy"
@@ -519,7 +521,7 @@ const ImageSlider = ({
                         fill
                         src={ensureDomain(smallestImageResolution)}
                         alt="travel image"
-                        className="rounded-md" // Preserves the rounded corners
+                        className="object-cover rounded-md" // Preserves the rounded corners
                         loading="lazy"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
