@@ -19,6 +19,11 @@ import {
   MdOutlineSaveAlt,
 } from "react-icons/md";
 import { useSession } from "next-auth/react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export const useImageUpload = (
   session,
@@ -209,6 +214,7 @@ const ImageSlider = ({
   const [uploadImage, setUploadImage] = useState(false);
   const [addGeoTag, setAddGeoTag] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [numPages, setNumPages] = useState(0);
   const [useCamera, setUseCamera] = useState(null);
   const { showLoading, showSuccess, showError, resetLoading } = useLoading();
 
@@ -265,6 +271,11 @@ const ImageSlider = ({
     ]);
   };
 
+  function onDocumentLoadSuccess({ numPages }) {
+    console.log("numPages", numPages);
+    setNumPages(numPages);
+  }
+
   return (
     <>
       {activeImage && (
@@ -273,7 +284,7 @@ const ImageSlider = ({
           className="image-modal flex flex-col align-middle justify-center fixed top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10 animate-fadeInFast"
           onClick={exitModal}
         >
-          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative aspect-square w-full md:w-[600px] md:h-[600px] m-auto">
+          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative w-full md:w-[800px] md:h-[800px] m-auto">
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
                 fill
@@ -284,13 +295,22 @@ const ImageSlider = ({
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             ) : activeImage.attributes.mime === "application/pdf" ? (
-              <div style={{ height: "750px", width: "100%" }}>
-                <iframe
-                  src={ensureDomain(activeImage.attributes.url)}
-                  width="100%"
-                  height="750px"
-                  style={{ border: "none" }}
-                ></iframe>
+              <div
+                style={{ height: "100%", width: "100%" }}
+                className="overflow-auto"
+              >
+                <Document
+                  file={ensureDomain(activeImage.attributes.url)}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                >
+                  {Array.from(new Array(numPages), (_el, index) => (
+                    <Page
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      width={800}
+                    />
+                  ))}
+                </Document>
               </div>
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
