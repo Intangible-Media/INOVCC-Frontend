@@ -1149,17 +1149,23 @@ const InspectionDrawer = ({
                     selectedStructures.length > 0 && (
                       <div className="flex flex-col p-4 border border-gray-200 bg-white rounded-md gap-4">
                         <div className="flex flex-col gap-2">
-                          <Label className="text-xs" htmlFor="structureStatus">
+                          <Label
+                            className="text-xs"
+                            htmlFor="structureAdminStatus"
+                          >
                             Structure Admin Status
                           </Label>
                           <select
-                            id="structureStatus"
+                            id="structureAdminStatus"
                             className="pl-0 border-x-0 border-t-0 border-b-2 border-b-gray-200"
                             defaultValue={bulkStructuresAdminStatus}
                             onChange={(e) =>
                               setBulkStructuresAdminStatus(e.target.value)
                             }
                           >
+                            <option value={"empty"}>
+                              Choose an Admin Status
+                            </option>
                             {adminStatuses.map((item) => (
                               <option key={item} value={item}>
                                 {item}

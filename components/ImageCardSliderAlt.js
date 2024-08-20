@@ -276,6 +276,17 @@ const ImageSlider = ({
     setNumPages(numPages);
   }
 
+  useEffect(() => {
+    if (activeImage) {
+      document.body.classList.add("overflow-hidden");
+    }
+
+    // Cleanup function to remove the class when the component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [activeImage]); // Re-run if the className changes
+
   return (
     <>
       {activeImage && (
@@ -284,7 +295,7 @@ const ImageSlider = ({
           className="image-modal flex flex-col align-middle justify-center fixed top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10 animate-fadeInFast"
           onClick={exitModal}
         >
-          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative w-full md:w-[800px] md:h-[800px] m-auto">
+          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative w-full h-[600px] md:w-[800px] md:h-[800px] m-auto">
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
                 fill

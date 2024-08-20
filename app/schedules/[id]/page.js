@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { CiSearch } from "react-icons/ci";
 import SearchStructureSchedule from "../../../components/SearchStructuresSchedule";
 import InspectedStructuresTable from "../../../components/Tables/InspectedStructuresTable";
+import StructuresTable from "../../../components/Tables/StructuresTable";
 import MapTabsDropdowns from "../../../components/MapTabsDropdowns";
 import StructuresInspectedHeatmap from "../../../components/Charts/StructuresInspectedHeatmap";
 import ScheduleDate from "../../../components/ScheduleDate";
@@ -206,23 +207,16 @@ export default async function Page({ params, searchParams }) {
           </div>
 
           <div className="flex flex-col gap-4 mt-8">
-            <h3 className="text-md font-bold dark:text-white">
+            <div className="flex flex-col gap-0">
+              <StructuresTable structures={structures.data} />
+            </div>
+
+            <h3 className="text-md font-bold dark:text-white mt-4">
               Maps Scheduled{" - "}
               <span className="font-light text-gray-500">
                 {date.toLocaleDateString()}
               </span>
             </h3>
-
-            {/* <form onSubmit={handleSubmit}>
-              <TextInput
-                name="searchQuery"
-                placeholder="Search in Maps"
-                icon={CiSearch}
-                defaultValue={searchQuery}
-              />
-            </form> */}
-
-            {/* <SearchStructureSchedule params={params} /> */}
 
             <MapTabsDropdowns
               groupedStructures={filteredGroupedArray}
