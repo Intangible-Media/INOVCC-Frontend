@@ -277,16 +277,25 @@ const ImageSlider = ({
             {activeImage.attributes.mime.startsWith("image/") ? (
               <Image
                 fill
-                className=" object-cover"
+                className="object-cover"
                 src={ensureDomain(activeImage.attributes.url)}
                 alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
                 loading="lazy"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
+            ) : activeImage.attributes.mime === "application/pdf" ? (
+              <div style={{ height: "750px", width: "100%" }}>
+                <iframe
+                  src={ensureDomain(activeImage.attributes.url)}
+                  width="100%"
+                  height="750px"
+                  style={{ border: "none" }}
+                ></iframe>
+              </div>
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
                 <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-square p-14">
-                  <h6 className=" text-xl text-gray-400 font-medium">
+                  <h6 className="text-xl text-gray-400 font-medium">
                     {activeImage.attributes.ext}
                   </h6>
                 </div>

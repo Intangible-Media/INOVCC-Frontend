@@ -1,3 +1,4 @@
+import { FaRegCalendarCheck } from "react-icons/fa6";
 import { formatDateToMonthDay } from "../utils/strings";
 
 export default function StructureScheduledTag({ structure }) {
@@ -18,16 +19,15 @@ export default function StructureScheduledTag({ structure }) {
   const formattedEndDate = formatLocalDate(scheduleEnd);
 
   return (
-    <div className="flex gap-2">
-      <h5 className="font-medium text-xs leading-none text-gray-800">
-        Scheduled
-      </h5>
+    <div className="flex gap-1.5">
+      <FaRegCalendarCheck className="text-gray-400" size={11.5} />
+
       {formattedStartDate && formattedEndDate ? (
-        <p className="font-medium text-xs leading-none text-gray-500">
+        <p className="font-medium text-xs leading-none text-gray-400">
           {`${formattedStartDate} - ${formattedEndDate}`}
         </p>
       ) : (
-        <p className="font-medium text-xs leading-none text-gray-500">
+        <p className="font-medium text-xs leading-none text-gray-400">
           Not Scheduled
         </p>
       )}

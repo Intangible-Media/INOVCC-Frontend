@@ -158,7 +158,7 @@ export default async function Page({ params }) {
           </div>
         </div>
 
-        <div className="flex gap-3 align-middle">
+        <div className="flex gap-3 align-middle my-auto">
           <ProtectedContent requiredRoles={["Admin"]}>
             {inspection && (
               <InspectionDrawer
