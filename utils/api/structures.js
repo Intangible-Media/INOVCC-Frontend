@@ -445,13 +445,15 @@ export const uploadFilesAlt = async (
   files,
   structureId,
   fieldName,
+  addGeoTag,
+  cordinates,
   maxRetries = 3
 ) => {
   const retryDelays = [1000, 3000, 5000]; // Delays between retries in milliseconds
   const successCount = 0;
   const errorMessages = [];
 
-  const compressImage = async (file) => {
+  const compressImage = async (file, addGeoTag, cordinates) => {
     try {
       const img = document.createElement("img");
       img.src = URL.createObjectURL(file);
@@ -464,10 +466,34 @@ export const uploadFilesAlt = async (
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      const scaleFactor = Math.min(1, 1750 / img.width); // Target width of 800px or less
+      const scaleFactor = Math.min(1, 1750 / img.width); // Target width of 1750px or less
       canvas.width = img.width * scaleFactor;
       canvas.height = img.height * scaleFactor;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      if (addGeoTag) {
+        const fontSize = 40;
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.shadowColor = "black";
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 4;
+
+        const padding = 10;
+        ctx.fillText(
+          `Longitude: ${cordinates.longitude}`,
+          canvas.width - padding,
+          padding
+        );
+        ctx.fillText(
+          `Latitude: ${cordinates.latitude}`,
+          canvas.width - padding,
+          padding + fontSize + 5
+        );
+      }
 
       return new Promise((resolve) => {
         canvas.toBlob(
@@ -480,7 +506,7 @@ export const uploadFilesAlt = async (
             );
           },
           "image/jpeg",
-          0.7 // Slightly higher quality to balance size and quality
+          0.8 // Slightly higher quality to balance size and quality
         );
       });
     } catch (error) {
@@ -492,7 +518,7 @@ export const uploadFilesAlt = async (
   const uploadFile = async (file) => {
     let compressedFile = file;
     if (file.type.startsWith("image/")) {
-      compressedFile = await compressImage(file);
+      compressedFile = await compressImage(file, addGeoTag, cordinates);
     }
 
     const formData = new FormData();
