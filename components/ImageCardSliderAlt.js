@@ -115,19 +115,6 @@ export const useImageUpload = (
     try {
       const allImages = [...uploadedImageObjs, ...capturedImages];
 
-      // const processedFiles = await Promise.all(
-      //   allImages.map(
-      //     (file) =>
-      //       new Promise((resolve, reject) => {
-      //         if (file.type.startsWith("image/") && addGeoTag) {
-      //           processImageForFinal(file, resolve);
-      //         } else {
-      //           resolve(file); // Return non-image files as they are
-      //         }
-      //       })
-      //   )
-      // );
-
       const processedFiles = allImages.map((file) => file);
 
       const response = await uploadFilesAlt(
