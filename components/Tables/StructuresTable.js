@@ -16,7 +16,7 @@ import { FaCheck } from "react-icons/fa6";
 
 const CheckMark = () => <FaCheck size={11} color="white" />;
 
-const InspectedStructuresTable = ({ date, structures }) => {
+const InspectedStructuresTable = ({ structures }) => {
   const { selectedStructure, setSelectedStructure } = useSelectedStructure();
   const [searchTerm, setSearchTerm] = useState("");
 

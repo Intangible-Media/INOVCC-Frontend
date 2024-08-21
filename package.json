@@ -30,6 +30,7 @@
     "next-iron-session": "^4.2.0",
     "openai": "^4.26.0",
     "papaparse": "^5.4.1",
+    "pdf-lib": "^1.17.1",
     "pdfmake": "^0.2.8",
     "pica": "^9.0.1",
     "qs": "^6.11.2",
