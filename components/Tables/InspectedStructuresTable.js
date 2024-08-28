@@ -29,7 +29,7 @@ const InspectedStructuresTable = ({ date, structures }) => {
 
   return (
     <>
-      <div className="flex justify-between">
+      <div className="flex flex-col md:flex-row gap-2 justify-between">
         <h3 className="text-md font-bold dark:text-white my-auto">
           Inspected Structures{" - "}
           <span className=" font-light text-gray-500">

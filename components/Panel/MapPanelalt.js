@@ -1276,6 +1276,7 @@ const AddInspectorForm = ({
             </h4>
 
             <Modal
+              className="hello-world therjekwjrkl z-[99999]"
               show={openInspectorsModal}
               onClose={() => setOpenInspectorsModal(false)}
             >

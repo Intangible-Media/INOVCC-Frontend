@@ -6,6 +6,7 @@ import {
   TableBody,
   TableHead,
   TableHeadCell,
+  Button,
   TableRow,
   TextInput,
   TableCell,
@@ -26,7 +27,7 @@ const InspectedStructuresTable = ({ structures }) => {
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <div className="flex justify-between">
         <TextInput
           placeholder="Search by name..."
@@ -34,15 +35,19 @@ const InspectedStructuresTable = ({ structures }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"
         />
+        <Button>D</Button>
       </div>
 
       {/* Smooth transition wrapper */}
       <div className={`transition-opacity duration-300 ease-in-out`}>
-        <div className="flex flex-col gap-0 border">
+        <div className="flex flex-col gap-0 ">
           <div className="max-h-[600px] overflow-auto relative">
             <Table striped className="relative">
               <TableHead className="sticky top-0 bg-white dark:bg-gray-800 z-10">
                 <TableHeadCell>Name</TableHeadCell>
+                <TableHeadCell>Type</TableHeadCell>
+                <TableHeadCell>longitude</TableHeadCell>
+                <TableHeadCell>latitude</TableHeadCell>
                 <TableHeadCell>Status</TableHeadCell>
               </TableHead>
               <TableBody className="divide-y">
@@ -54,6 +59,15 @@ const InspectedStructuresTable = ({ structures }) => {
                     >
                       <TableCell className="whitespace-nowrap font-medium text-dark-blue-700 dark:text-white cursor-pointer">
                         {structure.attributes.mapSection}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap font-medium  dark:text-white cursor-pointer">
+                        {structure.attributes.type}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap font-medium  dark:text-white cursor-pointer">
+                        {structure.attributes.longitude}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap font-medium  dark:text-white cursor-pointer">
+                        {structure.attributes.latitude}
                       </TableCell>
                       <TableCell>
                         <StructureStatusBadge

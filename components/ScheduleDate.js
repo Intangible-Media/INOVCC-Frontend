@@ -18,7 +18,7 @@ export default function ScheduleDate({ date, teamId }) {
   return (
     <>
       <Datepicker
-        className=" w-[400px]"
+        className="w-full md:w-[400px]"
         defaultDate={date}
         onSelectedDateChanged={(selectedDate) => redirectPage(selectedDate)}
       />
