@@ -1,9 +1,27 @@
 import { Badge } from "flowbite-react";
 import { CheckMark } from "../public/icons/intangible-icons";
+import { Popover } from "flowbite-react";
 
-export default function StructureStatusBadge({ status, adminStatus }) {
+export default function StructureStatusBadge({
+  status,
+  wpPassFail,
+  adminStatus,
+}) {
+  console.log(wpPassFail);
   return (
-    <>
+    <div className="flex gap-1">
+      {wpPassFail === "failed" && (
+        <Badge className=" inline-block" color="red">
+          Fail
+        </Badge>
+      )}
+
+      {wpPassFail === "passed" && (
+        <Badge className=" inline-block" color="green">
+          Pass
+        </Badge>
+      )}
+
       {status === "Inspected" && adminStatus === "Uploaded" && (
         <div className="inline-block">
           <Badge
@@ -26,6 +44,6 @@ export default function StructureStatusBadge({ status, adminStatus }) {
           {status}
         </Badge>
       )}
-    </>
+    </div>
   );
 }

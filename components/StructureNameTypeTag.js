@@ -7,13 +7,13 @@ export default function StructureNameTypeTag({ structure }) {
   const loadIcon = (color) => structurePinStatus[color] || "/location-red.png";
 
   return (
-    <div className="flex">
+    <div className="flex w-full">
       <img
         src={loadIcon(getColorBasedOnStatus(structure.attributes.status))}
         style={{ height: 27 }}
       />
       <div className="flex flex-col justify-between pt-0 pb-0 pl-4 pr-4 leading-normal">
-        <h5 className="flex flex-col md:flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark0blue-700 dark:text-white cursor-pointer">
+        <h5 className="flex flex-row flex-shrink-0 mb-1 text-sm font-bold tracking-tight text-dark0blue-700 dark:text-white cursor-pointer">
           <span className=" inline-block max-w-32 shorten-text mr-0">
             {structure.attributes.mapSection}
           </span>

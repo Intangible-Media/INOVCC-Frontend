@@ -65,6 +65,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                       <StructureNameTypeTag structure={structure} />
 
                       <StructureStatusBadge
+                        wpPassFail={structure.attributes.wpPassFail}
                         status={structure.attributes.status}
                         adminStatus={structure.attributes.adminStatus}
                       />
@@ -103,18 +104,18 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
                     {structureGroup.structures.map((structure) => (
                       <div
                         key={`${structure.id}-${index}`}
-                        className="flex flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
-                        onClick={() => {
-                          console.log("structure", structure);
-                          setSelectedStructure(structure);
-                        }}
+                        className="flex flex-col md:flex-row cursor-pointer justify-between items-center bg-white border-0 border-b-2 border-gray-100 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 mb-0 w-full"
+                        onClick={() => setSelectedStructure(structure)}
                       >
                         <StructureNameTypeTag structure={structure} />
 
-                        <StructureStatusBadge
-                          status={structure.attributes.status}
-                          adminStatus={structure.attributes.adminStatus}
-                        />
+                        <div className="ml-[38px] mr-auto mt-3">
+                          <StructureStatusBadge
+                            wpPassFail={structure.attributes.wpPassFail}
+                            status={structure.attributes.status}
+                            adminStatus={structure.attributes.adminStatus}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
