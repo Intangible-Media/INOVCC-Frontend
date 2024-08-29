@@ -233,7 +233,7 @@ export const downloadFilesAsZip = async (files, zipFilename) => {
  * @returns {Array.<{name: string, files: Array.<{url: string, name: string}>}>} The formatted array of objects.
  */
 export const convertInspectionsToZipArgs = (structures) => {
-  console.log("this isthe structures", structures);
+  console.log("this is the structures", structures);
   return structures.map((structure) => {
     const { mapSection, images, wpPassFail } = structure.attributes;
     const files =
@@ -241,6 +241,8 @@ export const convertInspectionsToZipArgs = (structures) => {
         url: ensureDomain(image.attributes.url),
         name: image.attributes.name,
       })) || [];
+
+    console.log("files", files);
 
     return {
       name: mapSection,
