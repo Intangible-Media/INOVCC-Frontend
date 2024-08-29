@@ -19,6 +19,7 @@ import {
   convertInspectionsToZipArgs,
   downloadFilesAsZipWithSubfolders,
 } from "../../utils/strings";
+import { adminStatuses } from "../../utils/collectionListAttributes";
 
 const CheckMark = () => <FaCheck size={11} color="white" />;
 
@@ -43,17 +44,14 @@ const InspectedStructuresTable = ({ date, structures }) => {
           size={"xs"}
           onClick={async (e) => {
             const inspectedStructures = structures.filter((structure) => {
-              const { status, inspectionDate } = structure.attributes;
+              const { status, adminStatus, inspectionDate } =
+                structure.attributes;
 
-              if (status === "Inspected" && inspectionDate) {
+              if (status === "Inspected" && adminStatus !== "Uploaded") {
                 const inspectionDateObj = new Date(inspectionDate);
 
                 // Check if inspectionDate is today
-                return (
-                  inspectionDateObj.getFullYear() === date.getFullYear() &&
-                  inspectionDateObj.getMonth() === date.getMonth() &&
-                  inspectionDateObj.getDate() === date.getDate()
-                );
+                return structure;
               }
 
               return false;

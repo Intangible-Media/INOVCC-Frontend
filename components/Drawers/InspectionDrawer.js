@@ -542,7 +542,7 @@ const InspectionDrawer = ({
             },
           };
 
-          const currentDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+          const currentDate = new Date().toISOString(); // Format as YYYY-MM-DD
 
           if (bulkStructuresStatus === "Inspected") {
             apiParams.payload.data.inspectionDate = currentDate;
