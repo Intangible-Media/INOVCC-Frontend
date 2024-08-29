@@ -348,10 +348,10 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
         <div className="flex flex-col gap-2 w-auto shrink">
           <h6
-            className=" text-dark-blue-700 text-xxs flex gap-0.5 cursor-pointer"
+            className=" text-dark-blue-700 text-sm flex gap-0.5 cursor-pointer align-middle"
             onClick={() => setSelectedStructure(null)}
           >
-            <MdArrowBackIos size={8} />
+            <MdArrowBackIos size={12} className="my-auto" />
             Back
           </h6>
           <h4 className="leading-none text-xs font-medium text-gray-500">
