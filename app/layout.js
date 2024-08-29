@@ -3,6 +3,7 @@
 import { ThemeModeScript, Badge } from "flowbite-react";
 import { Inter } from "next/font/google";
 import AuthProvider from "../context/AuthProvider";
+import { ConfirmationProvider } from "../context/ConfirmationContext";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import qs from "qs";
@@ -648,20 +649,22 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <AlertProvider>
             <LoadingProvider>
-              <MobileNavbar />
+              <ConfirmationProvider>
+                <MobileNavbar />
 
-              <DesktopNavbar />
+                <DesktopNavbar />
 
-              <div
-                className={`p-0 ${
-                  isCollapsed ? "sm:ml-16" : "sm:ml-64"
-                } mt-16 transition-all	`}
-              >
-                <DynamicBreadcrumb />
-                <div className="px-4 md:px-6 pb-8">{children}</div>
-              </div>
+                <div
+                  className={`p-0 ${
+                    isCollapsed ? "sm:ml-16" : "sm:ml-64"
+                  } mt-16 transition-all	`}
+                >
+                  <DynamicBreadcrumb />
+                  <div className="px-4 md:px-6 pb-8">{children}</div>
+                </div>
 
-              <LoadingScreen />
+                <LoadingScreen />
+              </ConfirmationProvider>
             </LoadingProvider>
           </AlertProvider>
         </AuthProvider>

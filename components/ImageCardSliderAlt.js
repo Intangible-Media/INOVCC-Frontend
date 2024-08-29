@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Checkbox, Button, FileInput, Label, Spinner } from "flowbite-react";
 import { deleteFile } from "../utils/api/media";
 import { ensureDomain, getUrls, downloadFilesAsZip } from "../utils/strings";
+import { useConfirmation } from "../context/ConfirmationContext";
 import {
   uploadFiles,
   uploadFilesNew,
@@ -157,15 +158,30 @@ export const useImageUpload = (
   };
 };
 
-export const useImageActions = (session, images, setActiveImage) => {
+export const useImageActions = (
+  session,
+  images,
+  setActiveImage,
+  refreshStructure
+) => {
+  const { requestConfirmation } = useConfirmation();
+
   const handleDelete = async (id) => {
     if (!session) return console.error("Not authenticated");
-    try {
-      await deleteFile({ id, jwt: session.accessToken });
-      setActiveImage(null);
-    } catch (error) {
-      console.error(error);
-    }
+
+    requestConfirmation(
+      "Are you sure you want to delete this item?",
+      async () => {
+        try {
+          await deleteFile({ id, jwt: session.accessToken });
+          await refreshStructure();
+
+          setActiveImage(null);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    );
   };
 
   const downloadImage = async (file) => {
@@ -229,7 +245,8 @@ const ImageSlider = ({
   const { handleDelete, downloadImage } = useImageActions(
     session,
     images,
-    setActiveImage
+    setActiveImage,
+    refreshStructure
   );
 
   const exitModal = (event) => {

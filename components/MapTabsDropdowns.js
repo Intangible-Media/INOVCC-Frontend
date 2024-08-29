@@ -27,12 +27,7 @@ const MapStructuresTabs = ({ groupedStructures, structuresRescheduled }) => {
   return (
     <>
       {selectedStructure ? (
-        <MapPanelalt
-          key={selectedStructure.id}
-          structureId={selectedStructure.id}
-          setSelectedStructure={setSelectedStructure}
-          page="schedule"
-        />
+        <></>
       ) : (
         <div className="flex flex-col gap-2">
           <div className="flex flex-col border border-gray-300 rounded-md">

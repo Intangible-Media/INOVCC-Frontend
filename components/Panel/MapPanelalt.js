@@ -24,6 +24,7 @@ import StructureStatusBadge from "../StructureStatusBadge";
 import { useLoading } from "../../context/LoadingContext";
 import { getLocationDetails } from "../../utils/api/mapbox";
 import { formatReadableDate, timeAgo, getUrls } from "../../utils/strings";
+import { useConfirmation } from "../../context/ConfirmationContext";
 import ActivityLog from "../ActivityLog";
 import AvatarImage from "../AvatarImage";
 import { MdArrowBackIos } from "react-icons/md";
@@ -57,6 +58,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const { showLoading, showError, showSuccess } = useLoading();
+  const { requestConfirmation } = useConfirmation();
 
   const getStructureAddress = async () => {
     try {
@@ -217,27 +219,32 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   const removeStructure = async () => {
     if (!session) return;
 
-    showLoading("Deleting Structure");
+    requestConfirmation(
+      "Are you sure you want to delete this structure?",
+      async () => {
+        showLoading("Deleting Structure");
 
-    const apiParams = {
-      jwt: session?.accessToken,
-      id: updatedStructure.id,
-      query: "",
-    };
+        const apiParams = {
+          jwt: session?.accessToken,
+          id: updatedStructure.id,
+          query: "",
+        };
 
-    setSelectedStructure(null);
+        setSelectedStructure(null);
 
-    try {
-      const response = await deleteStructure(apiParams);
-      await refreshInspectionData(
-        updatedStructure?.attributes.inspection.data?.id
-      );
+        try {
+          const response = await deleteStructure(apiParams);
+          await refreshInspectionData(
+            updatedStructure?.attributes.inspection.data?.id
+          );
 
-      showSuccess("Finished Deleting");
-    } catch (error) {
-      console.error(error);
-      showError("Error Deleting");
-    }
+          showSuccess("Finished Deleting");
+        } catch (error) {
+          console.error(error);
+          showError("Error Deleting");
+        }
+      }
+    );
   };
 
   const getGeoLocationForStructure = async () => {
@@ -344,7 +351,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   };
 
   return (
-    <div className="fixed md:absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000] md:z-[10] max-h-screen overflow-auto md:max-h-max">
+    <div className="fixed md:absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000] md:z-[10] max-h-screen overflow-auto">
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
         <div className="flex flex-col gap-2 w-auto shrink">
           <h6

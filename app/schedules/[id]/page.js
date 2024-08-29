@@ -18,6 +18,7 @@ import StructuresInspectedHeatmap from "../../../components/Charts/StructuresIns
 import ScheduleDate from "../../../components/ScheduleDate";
 import { refreshSchedulenQueryData } from "../../actions";
 import { TextInput } from "flowbite-react";
+import MapPanelContainer from "../../../components/MapPanelContainer";
 
 const MapboxMap = dynamic(() => import("../../../components/MapBox"), {
   ssr: false,
@@ -198,37 +199,41 @@ export default async function Page({ params, searchParams }) {
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm">
-        <div className="p-3 md:p-6 gap-3 col-span-2 h-[700px] md:h-[650px] order-2 md:order-1 overflow-y-auto relative">
-          <div className="flex flex-col gap-4">
-            <StructureStatusStats
-              allStructureTypes={allStructureTypes}
-              totalStructures={structures.data.length}
-            />
-          </div>
+        <div className="gap-3 col-span-2 h-[700px] md:h-[650px] order-2 md:order-1 relative overflow-hidden">
+          <MapPanelContainer />
 
-          <div className="flex flex-col gap-4 mt-8">
-            <div className="flex flex-col gap-0">
-              <StructuresTable structures={structures.data} />
+          <div className="absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[9] overflow-auto p-3 md:p-6">
+            <div className="flex flex-col gap-4">
+              <StructureStatusStats
+                allStructureTypes={allStructureTypes}
+                totalStructures={structures.data.length}
+              />
             </div>
 
-            <h3 className="text-md font-bold dark:text-white mt-4">
-              Maps Scheduled{" - "}
-              <span className="font-light text-gray-500">
-                {date.toLocaleDateString()}
-              </span>
-            </h3>
+            <div className="flex flex-col gap-4 mt-8">
+              <div className="flex flex-col gap-0">
+                <StructuresTable structures={structures.data} />
+              </div>
 
-            <MapTabsDropdowns
-              groupedStructures={filteredGroupedArray}
-              structuresRescheduled={structuresRescheduled}
-            />
-          </div>
+              <h3 className="text-md font-bold dark:text-white mt-4">
+                Maps Scheduled{" - "}
+                <span className="font-light text-gray-500">
+                  {date.toLocaleDateString()}
+                </span>
+              </h3>
 
-          <div className="flex flex-col gap-4 mt-8">
-            <InspectedStructuresTable
-              date={date}
-              structures={structuresInspectedToday}
-            />
+              <MapTabsDropdowns
+                groupedStructures={filteredGroupedArray}
+                structuresRescheduled={structuresRescheduled}
+              />
+            </div>
+
+            <div className="flex flex-col gap-4 mt-8">
+              <InspectedStructuresTable
+                date={date}
+                structures={structuresInspectedToday}
+              />
+            </div>
           </div>
         </div>
         <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2 hidden md:block">
