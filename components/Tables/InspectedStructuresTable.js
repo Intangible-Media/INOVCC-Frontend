@@ -30,8 +30,10 @@ const InspectedStructuresTable = ({ date, structures }) => {
   return (
     <>
       <div className="flex flex-col md:flex-row gap-2 justify-between">
-        <h3 className="text-md font-bold dark:text-white my-auto">
-          Inspected Structures{" - "}
+        <h3 className="flex text-md font-bold dark:text-white my-auto">
+          Inspected Structures{" "}
+          <Badge className="mt-0.5 mx-1">{structures.length}</Badge>
+          {" - "}
           <span className=" font-light text-gray-500">
             {date.toLocaleDateString()}
           </span>
@@ -66,7 +68,8 @@ const InspectedStructuresTable = ({ date, structures }) => {
 
             try {
               const response = await downloadFilesAsZipWithSubfolders(
-                formattedStructures
+                formattedStructures,
+                date.toLocaleDateString()
               );
 
               showSuccess("Download finished successfully!");
