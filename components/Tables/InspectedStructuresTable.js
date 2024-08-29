@@ -48,8 +48,6 @@ const InspectedStructuresTable = ({ date, structures }) => {
                 structure.attributes;
 
               if (status === "Inspected" && adminStatus !== "Uploaded") {
-                const inspectionDateObj = new Date(inspectionDate);
-
                 // Check if inspectionDate is today
                 return structure;
               }
