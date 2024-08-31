@@ -303,16 +303,17 @@ const ImageSlider = ({
           className="image-modal flex flex-col align-middle justify-center fixed top-0 bottom-0 left-0 right-0 w-full z-50 p-4 md:p-10 animate-fadeInFast"
           onClick={exitModal}
         >
-          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative w-full h-[600px] md:w-[800px] md:h-[800px] m-auto">
+          <div className=" flex flex-col justify-center bg-white rounded-lg overflow-hidden relative w-full max-w-[800px] max-h-screen m-auto">
             {activeImage.attributes.mime.startsWith("image/") ? (
-              <Image
-                fill
-                className="object-cover"
-                src={ensureDomain(activeImage.attributes.url)}
-                alt={activeImage.attributes.alt || "Image"} // Add an alt attribute for accessibility
-                loading="lazy"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
+              <div className="relative w-full h-[300px] md:h-[500px]">
+                <Image
+                  src={ensureDomain(activeImage.attributes.url)}
+                  className=" object-cover"
+                  alt={activeImage.attributes.alt || "Image"}
+                  loading="lazy"
+                  fill={true}
+                />
+              </div>
             ) : activeImage.attributes.mime === "application/pdf" ? (
               <div
                 style={{ height: "100%", width: "100%" }}
@@ -331,9 +332,21 @@ const ImageSlider = ({
                   ))}
                 </Document>
               </div>
+            ) : activeImage.attributes.mime === "video/mp4" ? (
+              <video
+                controls
+                className="object-cover w-full h-full"
+                preload="metadata"
+              >
+                <source
+                  src={ensureDomain(activeImage.attributes.url)}
+                  type="video/mp4"
+                />
+                Your browser does not support the video tag.
+              </video>
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center w-full h-full bg-white text-gray-800">
-                <div className="flex flex-col justify-center border border-gray-300 rounded-md aspect-square p-14">
+                <div className="flex flex-col justify-center border border-gray-300 aspect-square p-14">
                   <h6 className="text-xl text-gray-400 font-medium">
                     {activeImage.attributes.ext}
                   </h6>
@@ -344,10 +357,10 @@ const ImageSlider = ({
               </div>
             )}
 
-            <div className="flex justify-between p-4 absolute bottom-0 left-0 right-0 bg-gradient-to-b from-transparent to-[#000000] bg-opacity-50">
+            <div className="flex justify-between p-3 bg-white">
               <div className="flex justify-between w-full">
                 <button
-                  className="bg-tranparent p-0 hover:p-0 hover:bg-transparent cursor-pointer"
+                  className="bg-red-700 p-0 hover:p-0 hover:bg-transparent cursor-pointer"
                   onClick={() => handleDelete(activeImage.id)}
                 >
                   <FaRegTrashCan
@@ -358,7 +371,7 @@ const ImageSlider = ({
                   />
                 </button>
                 <button
-                  className="bg-tranparent p-0 hover:p-0 hover:bg-transparent cursor-pointer"
+                  className="bg-dark-blue-700 p-0 hover:p-0 hover:bg-transparent cursor-pointer"
                   onClick={() => downloadImage(activeImage)}
                 >
                   <MdOutlineSaveAlt
@@ -539,7 +552,7 @@ const ImageSlider = ({
       )}
 
       <section className="relative w-full h-full">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
           {images.data && images.data.length > 0 ? (
             images.data.map((image, index) => {
               const smallestImageResolution = getUrls(image, "smallest")[0];
@@ -575,17 +588,27 @@ const ImageSlider = ({
                       />
                     </div>
                   </div>
-                  // <div
-                  //   className="flex-shrink-0 w-full cursor-pointer"
-                  //   key={index}
-                  //   onClick={() => setActiveImage(image)}
-                  // >
-                  //   <img
-                  //     src={ensureDomain(smallestImageResolution)}
-                  //     alt="travel image"
-                  //     className="w-full h-full object-cover object-center aspect-square z-10 rounded-md"
-                  //   />
-                  // </div>
+                );
+              } else if (image.attributes.mime === "video/mp4") {
+                return (
+                  <div
+                    className="flex-shrink-0 w-full cursor-pointer"
+                    key={index}
+                    onClick={() => setActiveImage(image)}
+                  >
+                    <div className="relative w-full h-full aspect-square z-10 rounded-md">
+                      <video
+                        className="object-cover rounded-md w-full h-full"
+                        preload="metadata"
+                      >
+                        <source
+                          src={ensureDomain(rawImageResolution)}
+                          type="video/mp4"
+                        />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </div>
                 );
               }
               return (

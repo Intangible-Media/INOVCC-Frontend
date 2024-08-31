@@ -10,6 +10,7 @@ import {
   Datepicker,
   Checkbox,
   Modal,
+  Tooltip,
 } from "flowbite-react";
 import { getAllUsers } from "../../utils/api/users";
 import {
@@ -102,7 +103,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
             populate: "*",
           },
           inspection: {
-            fields: ["name"],
+            fields: ["name", "projectId"],
           },
           images: {
             populate: "*",
@@ -140,15 +141,6 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   const activePanelClasses = (panelTab) => {
     if (panelTab === currentPanel)
       return "border-b-2 border-dark-blue-700 text-dark-blue-700";
-  };
-
-  const getInspectionColor = (status) => {
-    if (status.toLowerCase() == "uploaded") return "text-white bg-green-800";
-    if (status.toLowerCase() == "inspected")
-      return "text-green-800 bg-green-100";
-    if (status.toLowerCase() == "not inspected")
-      return "text-yellow-800 bg-yellow-100";
-    else return "text-red-800 bg-red-100";
   };
 
   const submitStructure = async () => {
@@ -353,7 +345,7 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
   return (
     <div className="fixed md:absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[1000] md:z-[10] max-h-screen overflow-auto">
       <div className="flex justify-between px-6 pt-6 md:px-8 md:pt-8 pb-2 gap-4 w-full">
-        <div className="flex flex-col gap-2 w-auto shrink">
+        <div className="flex flex-col gap-1 w-auto shrink">
           <h6
             className=" text-dark-blue-700 text-sm flex gap-0.5 cursor-pointer align-middle"
             onClick={() => setSelectedStructure(null)}
@@ -361,16 +353,12 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
             <MdArrowBackIos size={12} className="my-auto" />
             Back
           </h6>
-          <h4 className="leading-none text-xs font-medium text-gray-500">
-            {updatedStructure?.attributes.inspection.data?.attributes.name ||
-              ""}
-          </h4>
-          <div className="flex shrink">
-            <h3 className="text-base leading-none font-medium shorten-text">
-              {updatedStructure?.attributes.mapSection || ""}{" "}
+
+          <div className="flex">
+            <h3 className="text-base font-medium leading-none shorten-text flex-shrink">
+              {updatedStructure?.attributes.mapSection || ""}
             </h3>
-            <span className="text-base leading-none font-medium text-gray-500 shrink-0">
-              {" "}
+            <span className="text-base font-medium leading-none text-gray-500 flex-shrink-0">
               / {updatedStructure?.attributes.type || ""}
             </span>
           </div>
@@ -436,28 +424,16 @@ export default function MapPanel({ structureId, setSelectedStructure, page }) {
               <div className="flex gap-4 border-b px-6 md:px-8  pb-8">
                 <ul className="space-y-3 text-left text-gray-500 dark:text-gray-400 w-full">
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                    >
-                      <path
-                        d="M8.00032 1.33325C6.5863 1.3347 5.23062 1.87712 4.23076 2.84148C3.23089 3.80584 2.66851 5.11338 2.667 6.47719C2.66485 7.57743 3.03235 8.64874 3.71447 9.53063C3.72736 9.55225 3.74161 9.57309 3.75713 9.59304L7.43143 14.3886C7.49756 14.4748 7.58373 14.5449 7.68302 14.5931C7.78231 14.6414 7.89196 14.6666 8.00317 14.6666C8.11437 14.6666 8.22402 14.6414 8.32331 14.5931C8.4226 14.5449 8.50877 14.4748 8.5749 14.3886L12.2464 9.59304C12.2619 9.57333 12.2761 9.55271 12.289 9.53131C12.9701 8.64883 13.3366 7.57733 13.3336 6.47719C13.3321 5.11338 12.7697 3.80584 11.7699 2.84148C10.77 1.87712 9.41434 1.3347 8.00032 1.33325ZM11.1015 8.76795C11.0819 8.79283 11.0641 8.81896 11.0481 8.84614L8.00032 12.8241L4.95322 8.84614C4.93678 8.81887 4.91874 8.79254 4.89917 8.76727C4.37311 8.11178 4.08816 7.3061 4.08922 6.47719C4.08922 5.47673 4.50128 4.51725 5.23475 3.80983C5.96823 3.1024 6.96303 2.70497 8.00032 2.70497C9.03761 2.70497 10.0324 3.1024 10.7659 3.80983C11.4994 4.51725 11.9114 5.47673 11.9114 6.47719C11.9126 7.30633 11.6277 8.11228 11.1015 8.76795Z"
-                        fill="#312E8E"
-                      />
-                      <path
-                        d="M8.00032 3.81743C7.43774 3.81743 6.8878 3.97833 6.42004 4.27978C5.95227 4.58123 5.58769 5.0097 5.3724 5.511C5.15711 6.01229 5.10079 6.5639 5.21054 7.09608C5.32029 7.62825 5.5912 8.11708 5.989 8.50076C6.3868 8.88444 6.89363 9.14572 7.4454 9.25158C7.99717 9.35744 8.56909 9.30311 9.08884 9.09546C9.60859 8.88782 10.0528 8.53619 10.3654 8.08503C10.6779 7.63388 10.8448 7.10346 10.8448 6.56086C10.8438 5.83354 10.5438 5.13626 10.0106 4.62196C9.47737 4.10767 8.75442 3.81834 8.00032 3.81743ZM8.00032 7.93258C7.71903 7.93258 7.44406 7.85213 7.21018 7.7014C6.9763 7.55068 6.79401 7.33644 6.68636 7.08579C6.57872 6.83515 6.55055 6.55934 6.60543 6.29325C6.66031 6.02717 6.79576 5.78275 6.99466 5.59091C7.19356 5.39907 7.44698 5.26843 7.72286 5.2155C7.99874 5.16257 8.2847 5.18974 8.54458 5.29356C8.80446 5.39738 9.02658 5.5732 9.18285 5.79878C9.33913 6.02435 9.42254 6.28956 9.42254 6.56086C9.42254 6.92466 9.2727 7.27356 9.00598 7.53081C8.73926 7.78806 8.37752 7.93258 8.00032 7.93258Z"
-                        fill="#312E8E"
-                      />
-                    </svg>
-                    <DirectionsComponent
-                      destinationLongitude={
-                        updatedStructure.attributes.longitude
-                      }
-                      destinationLatitude={updatedStructure.attributes.latitude}
-                    />
+                    <span className="leading-none font-medium text-xs text-gray-900">
+                      {updatedStructure?.attributes.inspection.data?.attributes
+                        .name || ""}
+                    </span>
+                  </li>
+                  <li className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <span className="leading-none font-medium text-xs text-gray-900">
+                      {updatedStructure?.attributes.inspection.data?.attributes
+                        .projectId || ""}
+                    </span>
                   </li>
                   <li className="flex items-center space-x-3 rtl:space-x-reverse">
                     <svg

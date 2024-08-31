@@ -24,7 +24,8 @@ export const statusColors = {
   Reschedule: "#F472B6",
   "Access Issue": "#EF4444",
   Staking: "#EF4444",
-  Fielding: "D946EF",
+  Fielding: "#D946EF",
+  fielding: "#D946EF",
   Uninspectable: "#000000",
   Total: "#312E8E",
 };

@@ -31,17 +31,25 @@ const InspectedStructuresTable = ({ date, structures }) => {
   return (
     <>
       <div className="flex flex-col md:flex-row gap-2 justify-between">
-        <h3 className="flex text-md font-bold dark:text-white my-auto">
-          Inspected Structures{" "}
-          <Badge className="mt-0.5 mx-1">{structures.length}</Badge>
-          {" - "}
-          <span className=" font-light text-gray-500">
-            {date.toLocaleDateString()}
-          </span>
-        </h3>
+        <div>
+          <h3 className="flex text-md font-bold dark:text-white my-auto">
+            Structures Inspected{" "}
+            <Badge className="mt-0.5 mx-1">{structures.length}</Badge>
+          </h3>
+          <h6 className="text-sm font-light">
+            These are structures inspected on{" "}
+            <span className=" font-bold text-gray-600">
+              {date.toLocaleDateString()}
+            </span>
+          </h6>
+        </div>
+        {/* <h3 className=" font-light text-gray-500">
+          {date.toLocaleDateString()}
+        </h3> */}
+
         <Button
-          className="bg-dark-blue-700 text-white"
-          size={"xs"}
+          className="bg-dark-blue-700 text-white flex-grow-0 my-auto"
+          size={"sm"}
           onClick={async (e) => {
             const inspectedStructures = structures.filter((structure) => {
               const { status, adminStatus, inspectionDate } =
@@ -79,11 +87,11 @@ const InspectedStructuresTable = ({ date, structures }) => {
         </Button>
       </div>
       <div className="flex flex-col gap-0 border">
-        <div className="max-h-[400px] overflow-auto overflow-x-auto w-full">
+        <div className=" overflow-auto overflow-x-auto w-full">
           <Table striped className="">
             <TableHead className="sticky">
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell>Type</TableHeadCell>
+              <TableHeadCell>Map Section</TableHeadCell>
+              <TableHeadCell>Map & Project #</TableHeadCell>
               <TableHeadCell>Status</TableHeadCell>
               <TableHeadCell>Time</TableHeadCell>
             </TableHead>
@@ -94,13 +102,26 @@ const InspectedStructuresTable = ({ date, structures }) => {
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
                   <TableCell
-                    className="whitespace-nowrap font-medium text-dark-blue-700 dark:text-white cursor-pointer"
+                    className=" cursor-pointer"
                     onClick={() => setSelectedStructure(structure)}
                   >
-                    {structure.attributes.mapSection}
+                    <h4 className="font-medium text-base text-dark-blue-700 dark:text-white">
+                      {structure.attributes.mapSection}
+                    </h4>
+                    <p className=" text-xs">{structure.attributes.type}</p>
                   </TableCell>
+
                   <TableCell>
-                    <p className="w-24">{structure.attributes.type}</p>
+                    <div className="flex flex-col gap-1">
+                      <span className="leading-none font-medium text-xs text-gray-900">
+                        {structure?.attributes.inspection.data?.attributes
+                          .name || ""}
+                      </span>
+                      <span className="leading-none font-medium text-xs text-gray-900">
+                        {structure?.attributes.inspection.data?.attributes
+                          .projectId || ""}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <StructureStatusBadge

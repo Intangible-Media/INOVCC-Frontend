@@ -9,28 +9,19 @@ export default function StructureStatusBadge({
 }) {
   console.log(wpPassFail);
   return (
-    <div className="flex gap-1">
-      {wpPassFail === "failed" && (
-        <Badge className=" inline-block" color="red">
-          Fail
-        </Badge>
-      )}
-
-      {wpPassFail === "passed" && (
-        <Badge className=" inline-block" color="green">
-          Pass
-        </Badge>
-      )}
-
+    <div className="flex flex-col gap-1 w-[90px]">
       {status === "Inspected" && adminStatus === "Uploaded" && (
-        <div className="inline-block">
+        <>
           <Badge
             icon={CheckMark}
             className="bg-dark-green text-xs h-fit text-white rounded-md px-2 py-0.5 flex-row-reverse "
           >
             {adminStatus}
           </Badge>
-        </div>
+          <Badge className=" inline-block" color="green">
+            {status}
+          </Badge>
+        </>
       )}
 
       {status === "Inspected" && adminStatus !== "Uploaded" && (
@@ -42,6 +33,18 @@ export default function StructureStatusBadge({
       {status !== "Inspected" && (
         <Badge className=" inline-block" color="yellow">
           {status}
+        </Badge>
+      )}
+
+      {wpPassFail === "failed" && (
+        <Badge className=" inline-block" color="red">
+          Fail
+        </Badge>
+      )}
+
+      {wpPassFail === "passed" && (
+        <Badge className=" inline-block" color="green">
+          Pass
         </Badge>
       )}
     </div>

@@ -16,12 +16,13 @@ export default function ScheduleDate({ date, teamId }) {
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-1 my-auto">
+      <h6 className="text-sm font-light">Select a date to view the schedule</h6>
       <Datepicker
-        className="w-full md:w-[400px]"
+        className="w-full md:w-[400px] datepicker-background"
         defaultDate={date}
         onSelectedDateChanged={(selectedDate) => redirectPage(selectedDate)}
       />
-    </>
+    </div>
   );
 }

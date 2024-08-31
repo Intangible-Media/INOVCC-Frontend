@@ -30,7 +30,7 @@ const InspectedStructuresTable = ({ structures }) => {
     <>
       <div className="flex justify-between">
         <TextInput
-          placeholder="Search by name..."
+          placeholder="Search Sturctures..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"

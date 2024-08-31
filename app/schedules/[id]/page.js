@@ -75,7 +75,7 @@ export default async function Page({ params, searchParams }) {
       },
       populate: {
         inspection: {
-          fields: ["name"],
+          fields: ["name", "projectId"],
         },
         images: {
           populate: "*",
@@ -187,48 +187,57 @@ export default async function Page({ params, searchParams }) {
   return (
     <div className="flex gap-4 flex-col justify-between py-6">
       <section className="flex flex-col md:flex-row gap-3 justify-between">
-        <h1 className="leading-tight text-2xl font-medium">
-          {team?.data.data.attributes.name || "Team Name"}
-          {" - "}
-          <span className="font-light text-gray-500">
-            {date.toLocaleDateString()}
-          </span>
-        </h1>
+        <div className="flex flex-col gap-1 my-auto">
+          <h1 className="leading-tight text-2xl font-medium">
+            {team?.data.data.attributes.name || "Team Name"}
+            {" - "}
+            <span className="font-light text-gray-500">
+              {date.toLocaleDateString()}
+            </span>
+          </h1>
+          <h6 className="text-sm font-light">
+            These are Maps scheduled for{" "}
+            <span className=" font-bold text-gray-600">
+              {date.toLocaleDateString()}
+            </span>
+          </h6>
+        </div>
 
         <ScheduleDate date={date} teamId={params.id} />
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-5 p-0 bg-white rounded-md gap-0 mx-h-[800px] md:h-[650px] shadow-sm">
-        <div className="gap-3 col-span-2 h-[700px] md:h-[650px] order-2 md:order-1 relative overflow-hidden">
-          <MapPanelContainer />
-
-          <div className="absolute top-0 left-0 bottom-0 right-0 bg-white animate-slideUp z-[9] overflow-auto p-3 md:p-6">
+      <section className="grid grid-cols-1 lg:grid-cols-6 p-0 mx-h-[800px] lg:h-[650px] gap-4">
+        <div className="relative border-white border-2 dark:border-gray-600 bg-white rounded-lg h-[500px] lg:h-full col-span-1 lg:col-span-3  overflow-auto">
+          <div className="bg-white rounded-md p-4 md:p-6">
             <div className="flex flex-col gap-4">
-              <StructureStatusStats
-                allStructureTypes={allStructureTypes}
-                totalStructures={structures.data.length}
-              />
-            </div>
+              <div>
+                <h3 className="text-md font-bold dark:text-white ">
+                  Maps Scheduled
+                </h3>
+                <h6 className="text-sm font-light">
+                  These are Maps scheduled for{" "}
+                  <span className=" font-bold text-gray-600">
+                    {date.toLocaleDateString()}
+                  </span>
+                </h6>
+              </div>
 
-            <div className="flex flex-col gap-4 mt-8">
               <div className="flex flex-col gap-0">
                 <StructuresTable structures={structures.data} />
               </div>
-
-              <h3 className="text-md font-bold dark:text-white mt-4">
-                Maps Scheduled{" - "}
-                <span className="font-light text-gray-500">
-                  {date.toLocaleDateString()}
-                </span>
-              </h3>
 
               <MapTabsDropdowns
                 groupedStructures={filteredGroupedArray}
                 structuresRescheduled={structuresRescheduled}
               />
             </div>
+          </div>
+        </div>
+        <div className="gap-3 col-span-1 lg:col-span-3 h-[500px] md:h-[650px]  relative overflow-hidden rounded-md">
+          <MapPanelContainer />
 
-            <div className="flex flex-col gap-4 mt-8">
+          <div className="absolute flex flex-col gap-6 top-0 left-0 bottom-0 right-0 bg-white z-[9] overflow-auto p-4 md:p-6">
+            <div className="flex flex-col gap-4 ">
               <InspectedStructuresTable
                 date={date}
                 structures={structuresInspectedToday}
@@ -236,13 +245,13 @@ export default async function Page({ params, searchParams }) {
             </div>
           </div>
         </div>
-        <div className="relative border-white border-2 dark:border-gray-600 bg-gray-200 rounded-lg h-[275px] md:h-full col-span-3 order-1 md:order-2 hidden md:block">
-          <MapboxMap
-            lng={0}
-            lat={0}
-            zoom={16}
-            style="mapbox://styles/mapbox/standard-beta"
-            coordinates={structures.data}
+      </section>
+
+      <section className="grid grid-cols-1 p-6 bg-white rounded-md">
+        <div className="flex flex-col gap-4">
+          <StructureStatusStats
+            allStructureTypes={allStructureTypes}
+            totalStructures={structures.data.length}
           />
         </div>
       </section>

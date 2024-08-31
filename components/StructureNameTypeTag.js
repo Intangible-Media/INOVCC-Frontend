@@ -7,7 +7,7 @@ export default function StructureNameTypeTag({ structure }) {
   const loadIcon = (color) => structurePinStatus[color] || "/location-red.png";
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-[250px]">
       <img
         src={loadIcon(getColorBasedOnStatus(structure.attributes.status))}
         style={{ height: 27 }}

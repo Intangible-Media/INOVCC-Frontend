@@ -667,3 +667,7 @@ html body .apexcharts-bar-series .apexcharts-bar {
 .avatar-image img {
   object-fit: cover !important;
 }
+
+.datepicker-background input {
+  background-color: white;
+}

@@ -62,7 +62,7 @@ export const useBackgroundClass = (searchString) => {
 };
 export default function RootLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -409,7 +409,7 @@ export default function RootLayout({ children }) {
         }`}
       >
         <button
-          className={`hidden mt-[7px] mb-[16px] lg:block ease-in-out transition-all  ${
+          className={`hidden mt-[7px] mb-[16px] md:block ease-in-out transition-all  ${
             isCollapsed && " rotate-180 mx-auto"
           }`}
           onClick={toggleSidebar}
