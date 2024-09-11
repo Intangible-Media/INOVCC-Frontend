@@ -1,6 +1,6 @@
 export const CheckMark = () => (
   <svg
-    className="m-auto"
+    className=""
     xmlns="http://www.w3.org/2000/svg"
     width="10"
     height="7"

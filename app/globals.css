@@ -671,3 +671,11 @@ html body .apexcharts-bar-series .apexcharts-bar {
 .datepicker-background input {
   background-color: white;
 }
+
+button.black-text span {
+  color: #000000 !important;
+}
+
+.hide-extra-tooltip > [data-testid="flowbite-tooltip"] {
+  display: none;
+}

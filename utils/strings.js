@@ -80,6 +80,15 @@ export const formatDateToMonthDay = (dateString) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
+export const formatToMMDDYYYY = (dateString) => {
+  const date = new Date(dateString); // Convert the input date string to a Date object
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month and ensure two digits
+  const day = String(date.getDate()).padStart(2, "0"); // Get day and ensure two digits
+  const year = date.getFullYear(); // Get the full year
+
+  return `${month}/${day}/${year}`;
+};
+
 export const getInspectionColor = (status) => {
   switch (status.toLowerCase()) {
     case "uploaded":

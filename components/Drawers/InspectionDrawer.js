@@ -531,6 +531,8 @@ const InspectionDrawer = ({
     try {
       const allResponses = await Promise.all(
         selectedStructures.map(async (structure) => {
+          const currentDate = new Date().toISOString(); // Format as YYYY-MM-DD
+
           const apiParams = {
             jwt: session.accessToken,
             id: structure.id,
@@ -538,11 +540,10 @@ const InspectionDrawer = ({
             payload: {
               data: {
                 status: bulkStructuresStatus,
+                statusUpdated: currentDate,
               },
             },
           };
-
-          const currentDate = new Date().toISOString(); // Format as YYYY-MM-DD
 
           if (bulkStructuresStatus === "Inspected") {
             apiParams.payload.data.inspectionDate = currentDate;

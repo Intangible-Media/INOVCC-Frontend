@@ -19,6 +19,7 @@ import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
 import {
   camelCaseToTitleCase,
   formatDateToString,
+  formatToMMDDYYYY,
 } from "../../../utils/strings";
 import Link from "next/link";
 import InvoiceDrawer from "../../../components/Drawers/InvoiceDrawer";
@@ -27,8 +28,6 @@ import ProtectedContent from "../../../components/ProtectedContent";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
-
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const docDefinition = {
   content: [
@@ -44,7 +43,7 @@ const docDefinition = {
               margin: [0, 0, 0, 15], // Bottom margin
             },
             {
-              text: "Your Tagline or Slogan",
+              text: "Innovative Consulting Concepts",
               style: "tagline",
             },
           ],
@@ -92,8 +91,8 @@ const docDefinition = {
     {
       // Address and contact information
       text: [
-        "Address: 123 Business Road, City, Country\n",
-        "Phone: (123) 456-7890 | Email: contact@example.com",
+        "Address: 10574 Acacia St., Ste D-4, Rancho Cucamonga , CA. 91730, United States\n",
+        "Phone: (909) 912-0149 | Email: Business@inovcc.com",
       ],
       style: "subheader",
       margin: [0, 10, 0, 10], // Top margin
@@ -103,11 +102,6 @@ const docDefinition = {
       text: ["Bill To:\n"],
       style: "subheader",
       margin: [0, 10, 0, 8], // Top margin
-    },
-    {
-      text: ["Scottsdale Power\n", "4338 N 20th St Phoenix AZ 815016"],
-      style: "subheaderLight",
-      margin: [0, 0, 0, 25], // Top margin
     },
   ],
 
@@ -177,6 +171,8 @@ const docDefinition = {
   // [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
   pageMargins: [40, 60, 40, 60],
 };
+
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Page({ params }) {
   //const pdfMake = usePdfMake();
@@ -398,12 +394,18 @@ export default function Page({ params }) {
           {
             table: {
               headerRows: 1,
-              widths: [40, 120, 75, "*", "*"],
+              widths: [20, 80, 80, 75, "*", "*"],
               body: [
                 // This is the header row
                 [
                   {
-                    text: "ID",
+                    text: "#",
+                    style: "tableHeader",
+                    fillColor: "#f9fafb",
+                    border: [false, false, false, false],
+                  },
+                  {
+                    text: "Asset #",
                     style: "tableHeader",
                     fillColor: "#f9fafb",
                     border: [false, false, false, false],
@@ -421,13 +423,13 @@ export default function Page({ params }) {
                     border: [false, false, false, false],
                   },
                   {
-                    text: "Inspected",
+                    text: "Date",
                     style: "tableHeader",
                     fillColor: "#f9fafb",
                     border: [false, false, false, false],
                   },
                   {
-                    text: "Date",
+                    text: "Project #",
                     style: "tableHeader",
                     fillColor: "#f9fafb",
                     border: [false, false, false, false],
@@ -437,7 +439,7 @@ export default function Page({ params }) {
                 ...structures.map((structure, index) => {
                   return [
                     {
-                      text: structure.id,
+                      text: index + 1,
                       style: "tableBody",
                       fillColor: "#ffffff",
                       border: [false, false, false, false],
@@ -449,22 +451,29 @@ export default function Page({ params }) {
                       border: [false, false, false, false],
                     },
                     {
+                      text: structure.attributes.inspection.data.attributes
+                        .name,
+                      style: "tableBody",
+                      fillColor: "#ffffff",
+                      border: [false, false, false, false],
+                    },
+                    {
                       text: type,
                       style: "tableBody",
                       fillColor: "#ffffff",
                       border: [false, false, false, false],
                     },
                     {
-                      text: structure.attributes.status,
+                      text: formatToMMDDYYYY(
+                        structure.attributes.inspectionDate
+                      ),
                       style: "tableBody",
                       fillColor: "#ffffff",
                       border: [false, false, false, false],
                     },
                     {
-                      text: formatDateToString(
-                        structure.attributes.inspectionDate,
-                        false
-                      ),
+                      text: structure.attributes.inspection.data.attributes
+                        .projectId,
                       style: "tableBody",
                       fillColor: "#ffffff",
                       border: [false, false, false, false],
@@ -700,6 +709,15 @@ export default function Page({ params }) {
     console.log("docDefinition", docDefinition);
   }, [structures.length]);
 
+  useEffect(() => {
+    if (client.address == "" || client.name == "") return;
+    docDefinition.content.splice(4, 0, {
+      text: [`${client.name}\n`, `${client.address}`],
+      style: "subheaderLight",
+      margin: [0, 0, 0, 25], // Top margin
+    });
+  }, [client]);
+
   const generatePdf = () => {
     pdfMake.createPdf(docDefinition).open();
   };
@@ -833,44 +851,65 @@ export default function Page({ params }) {
                     <div className="group-type-table border border-gray-200 rounded-md overflow-hidden mt-4">
                       <Table striped hoverable key={type}>
                         <Table.Head>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                            ID
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            #
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            Asset #
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                             Map Section
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                             Type
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                            Inspection Date
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            Date
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            Project #
                           </Table.HeadCell>
                         </Table.Head>
                         <Table.Body className="divide-y">
-                          {groupedStructures[type].map((structure) => {
+                          {groupedStructures[type].map((structure, index) => {
                             return (
                               <Table.Row
                                 className="bg-white dark:border-gray-700 dark:bg-gray-800"
                                 key={structure.id}
                               >
-                                <Table.Cell className="whitespace-nowrap font-medium dark:text-white pt-4 pb-5 px-5 text-xs text-gray-900">
-                                  {structure.id}
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {index + 1}
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                                   <Link
-                                    className="text-dark-blue-600 hover:underline"
+                                    className="text-dark-blue-600 hover:underline shorten-text w-[100px] block"
                                     href={`/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`}
                                   >
                                     {structure.attributes.mapSection}
                                   </Link>
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  <Link
+                                    className="text-dark-blue-600 hover:underline"
+                                    href={`/inspections/${structure.attributes.inspection.data.id}`}
+                                  >
+                                    {
+                                      structure.attributes.inspection.data
+                                        .attributes.name
+                                    }
+                                  </Link>
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                                   {structure.attributes.type}
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                                  {formatDateToString(
-                                    structure.attributes.inspectionDate
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {formatToMMDDYYYY(
+                                    structure.attributes.statusUpdated
                                   )}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {structure.attributes.inspection.data
+                                    .attributes.projectId || ""}
                                 </Table.Cell>
                               </Table.Row>
                             );

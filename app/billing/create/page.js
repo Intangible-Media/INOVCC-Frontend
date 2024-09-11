@@ -25,10 +25,13 @@ import Link from "next/link";
 import { FaCalendarDays } from "react-icons/fa6";
 import InvoiceHeading from "../../../components/Invoice/Heading";
 import { structureStatuses } from "../../../utils/collectionListAttributes";
+import { useLoading } from "../../../context/LoadingContext";
 import { updateStructure } from "../../../utils/api/structures";
 import {
   camelCaseToTitleCase,
   titleCaseToKebabCase,
+  formatDate,
+  formatToMMDDYYYY,
   formatDateToString,
 } from "../../../utils/strings";
 
@@ -136,7 +139,7 @@ const docDefinition = {
 
 export default function Page({ params }) {
   const router = useRouter();
-
+  const { showLoading, showSuccess, showError, resetLoading } = useLoading();
   const { data: session, loading } = useSession();
   const [structures, setStructures] = useState([]);
   const [groupedStructures, setGroupedStructures] = useState({});
@@ -268,39 +271,44 @@ export default function Page({ params }) {
   }, [selectedClientId, status, startDate, endDate]);
 
   const getInvoicehData = async () => {
-    if (session?.accessToken) {
-      try {
-        const structuresResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${query}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`,
-            },
-          }
-        );
+    if (!session) return;
 
-        const clientResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients/${selectedClientId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`,
-            },
-          }
-        );
+    try {
+      showLoading("Getting Updated Data");
 
-        console.log(structuresResponse);
-        setStructures(structuresResponse.data.data);
-        setClient(clientResponse.data.data.attributes);
+      const structuresResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/structures?${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      );
 
-        Object.keys(groupedStructures).map((type) => {
-          setInputValues((prevValues) => ({
-            ...prevValues,
-            [type.toLowerCase().replace(" ", "-")]: 0,
-          }));
-        });
-      } catch (error) {
-        console.error("Error fetching data", error.response || error);
-      }
+      const clientResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/clients/${selectedClientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      );
+
+      resetLoading();
+
+      console.log(structuresResponse);
+      setStructures(structuresResponse.data.data);
+      setClient(clientResponse.data.data.attributes);
+
+      Object.keys(groupedStructures).map((type) => {
+        setInputValues((prevValues) => ({
+          ...prevValues,
+          [type.toLowerCase().replace(" ", "-")]: 0,
+        }));
+      });
+    } catch (error) {
+      showError("Error getting data");
+      console.error("Error fetching data", error.response || error);
     }
   };
 
@@ -330,6 +338,8 @@ export default function Page({ params }) {
       return;
     }
 
+    showLoading("Creating New Invoice!");
+
     try {
       const invoiceData = {
         data: {
@@ -351,9 +361,11 @@ export default function Page({ params }) {
         }
       );
 
+      showSuccess("Successfully Created New Invoice");
       setShowSuccessAlert(true);
       return invoiceResponse;
     } catch (error) {
+      showError("Failed tring to create invoice");
       console.error("Error fetching data", error.response || error);
     }
   };
@@ -681,44 +693,65 @@ export default function Page({ params }) {
                     <div className="group-type-table border border-gray-200 rounded-md overflow-hidden mt-4">
                       <Table striped hoverable key={type}>
                         <Table.Head>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                            ID
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            #
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            Asset #
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                             Map Section
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                             Type
                           </Table.HeadCell>
-                          <Table.HeadCell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                             Date
+                          </Table.HeadCell>
+                          <Table.HeadCell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                            Project #
                           </Table.HeadCell>
                         </Table.Head>
                         <Table.Body className="divide-y">
-                          {groupedStructures[type].map((structure) => {
+                          {groupedStructures[type].map((structure, index) => {
                             return (
                               <Table.Row
                                 className="bg-white dark:border-gray-700 dark:bg-gray-800"
                                 key={structure.id}
                               >
-                                <Table.Cell className="whitespace-nowrap font-medium dark:text-white pt-4 pb-5 px-5 text-xs text-gray-900">
-                                  {structure.id}
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {index}
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                                   <Link
-                                    className="text-dark-blue-600 hover:underline"
+                                    className="text-dark-blue-600 hover:underline shorten-text w-[100px] block"
                                     href={`/inspections/${structure.attributes.inspection.data.id}?structure=${structure.id}`}
                                   >
                                     {structure.attributes.mapSection}
                                   </Link>
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  <Link
+                                    className="text-dark-blue-600 hover:underline"
+                                    href={`/inspections/${structure.attributes.inspection.data.id}`}
+                                  >
+                                    {
+                                      structure.attributes.inspection.data
+                                        .attributes.name
+                                    }
+                                  </Link>
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
                                   {structure.attributes.type}
                                 </Table.Cell>
-                                <Table.Cell className="pt-4 pb-5 px-5 text-xs text-gray-900">
-                                  {formatDateToString(
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {formatToMMDDYYYY(
                                     structure.attributes.statusUpdated
                                   )}
+                                </Table.Cell>
+                                <Table.Cell className="pt-4 pb-5 px-3 text-xs text-gray-900">
+                                  {structure.attributes.inspection.data
+                                    .attributes.projectId || ""}
                                 </Table.Cell>
                               </Table.Row>
                             );
