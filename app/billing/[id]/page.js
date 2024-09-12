@@ -63,10 +63,6 @@ const docDefinition = {
               text: "Invoice Date: 2023-12-05",
               style: "invoiceDetails",
             },
-            {
-              text: "Due Date: 2024-01-05",
-              style: "invoiceDetails",
-            },
           ],
           alignment: "right",
         },
@@ -102,6 +98,11 @@ const docDefinition = {
       text: ["Bill To:\n"],
       style: "subheader",
       margin: [0, 10, 0, 8], // Top margin
+    },
+    {
+      text: [`Fill In data\n`, `Temp data`],
+      style: "subheaderLight",
+      margin: [0, 0, 0, 25], // Top margin
     },
   ],
 
@@ -278,6 +279,12 @@ export default function Page({ params }) {
             },
           }
         );
+
+        // We need to update the doc to reflec the correct text
+        docDefinition.content[0].columns[1].stack[1].text = `Invoice Number: #${invoiceResponse.data.data.id}`;
+        docDefinition.content[0].columns[1].stack[2].text = `Invoice Date: ${formatToMMDDYYYY(
+          invoiceResponse.data.data.attributes.createdAt
+        )}`;
 
         console.log(
           "Client Pricing",
@@ -711,11 +718,12 @@ export default function Page({ params }) {
 
   useEffect(() => {
     if (client.address == "" || client.name == "") return;
-    docDefinition.content.splice(4, 0, {
+
+    docDefinition.content[4] = {
       text: [`${client.name}\n`, `${client.address}`],
       style: "subheaderLight",
       margin: [0, 0, 0, 25], // Top margin
-    });
+    };
   }, [client]);
 
   const generatePdf = () => {

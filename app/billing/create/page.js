@@ -330,6 +330,19 @@ export default function Page({ params }) {
     return checkIfValueExistOrIsZero(value);
   });
 
+  const subTotalAmount = Object.keys(groupedStructures).reduce(
+    (total, type) => {
+      const pricePerType = Number(inputValues[titleCaseToKebabCase(type)] || 0);
+      const quantityPerType = groupedStructures[type].length;
+      return total + pricePerType * quantityPerType;
+    },
+    0
+  );
+
+  const discount = 0;
+
+  const totalAmount = subTotalAmount - Number(discount);
+
   const createInvoice = async () => {
     if (!session) return;
 
@@ -348,6 +361,7 @@ export default function Page({ params }) {
           structures: structures.map((structure) => structure.id),
           paid: false,
           pricing: inputValues,
+          total: totalAmount,
         },
       };
 
@@ -559,19 +573,6 @@ export default function Page({ params }) {
     const lineTotal = pricePerUnit * quantity;
     return acc + lineTotal;
   }, 0);
-
-  const subTotalAmount = Object.keys(groupedStructures).reduce(
-    (total, type) => {
-      const pricePerType = Number(inputValues[titleCaseToKebabCase(type)] || 0);
-      const quantityPerType = groupedStructures[type].length;
-      return total + pricePerType * quantityPerType;
-    },
-    0
-  );
-
-  const discount = 0;
-
-  const totalAmount = subTotalAmount - Number(discount);
 
   return (
     <>

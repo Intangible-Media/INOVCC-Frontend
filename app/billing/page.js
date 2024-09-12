@@ -78,7 +78,12 @@ export default function Page() {
                     className="bg-white dark:border-gray-700 dark:bg-gray-800"
                   >
                     <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {invoice.attributes.name}
+                      <Link
+                        href={`/billing/${invoice.id}`}
+                        className="whitespace-nowrap font-medium text-dark-blue-700 dark:text-white cursor-pointer"
+                      >
+                        {`Invoice-${invoice.id}`}
+                      </Link>
                     </Table.Cell>
                     <Table.Cell>
                       {invoice.attributes.client.data.attributes.name}
@@ -90,7 +95,7 @@ export default function Page() {
                     >{`${
                       invoice.attributes.paid ? "Paid" : "Outstanding"
                     }`}</Table.Cell>
-                    <Table.Cell>$2999</Table.Cell>
+                    <Table.Cell>${invoice.attributes.total}</Table.Cell>
                     <Table.Cell>
                       <Link
                         href={`/billing/${invoice.id}`}
