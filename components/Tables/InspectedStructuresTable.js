@@ -78,7 +78,7 @@ const InspectedStructuresTable = ({
                 const { status, adminStatus, inspectionDate } =
                   structure.attributes;
 
-                if (status === "Inspected" && adminStatus !== "Uploaded") {
+                if (status === "Inspected") {
                   // Check if inspectionDate is today
                   return structure;
                 }
